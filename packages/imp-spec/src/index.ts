@@ -12,3 +12,5 @@ export type {
   Edge,
   Graph,
 } from "./graph.ts"
+
+export type { NodeType, NodeLibrary } from "./library.ts"

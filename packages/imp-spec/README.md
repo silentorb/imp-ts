@@ -1,9 +1,23 @@
 # imp-spec
 
-Core Imp graph **TypeScript type interfaces**. No runtime logic.
+Core Imp graph and library **TypeScript type interfaces**. No runtime logic.
 
-The language-agnostic data model lives in [`docs/features/graph-model.md`](../../docs/features/graph-model.md). Types in `src/` must match that spec and are regenerable from it.
+| Spec | Types |
+| --- | --- |
+| [`docs/features/graph-model.md`](../../docs/features/graph-model.md) | `Graph`, `Node`, `Edge`, ports, signal types |
+| [`docs/features/node-libraries.md`](../../docs/features/node-libraries.md) | `NodeType`, `NodeLibrary` |
+
+Types in `src/` must match those specs and are regenerable from them.
 
 ```ts
-import type { Graph, Node, Edge, Port, Ports, SignalType } from "imp-spec"
+import type {
+  Graph,
+  Node,
+  Edge,
+  Port,
+  Ports,
+  SignalType,
+  NodeType,
+  NodeLibrary,
+} from "imp-spec"
 ```

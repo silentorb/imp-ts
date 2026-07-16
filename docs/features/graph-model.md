@@ -20,7 +20,7 @@ All of the following are **strings**:
 | --- | --- |
 | `NodeId` | Key for a node in `Graph.nodes` |
 | `EdgeId` | Key for an edge in `Graph.edges` |
-| `NodeTypeId` | Discriminator / type name for a node (function definition id) |
+| `NodeTypeId` | Discriminator / type name for a node (function definition id); identity of a catalog `NodeType` — see [node-libraries.md](./node-libraries.md) |
 | `PortId` | Key for an input or output port on a node |
 | `SignalTypeId` | Identity of an Imp signal type |
 
@@ -149,6 +149,8 @@ Maps in other languages should use that language's idiomatic string-keyed dictio
 - **`SignalType`** names the Imp type of a signal on a port; starting with `id` only leaves room for aliases and constraints later without renaming the port maps.
 - **Record/map keyed by id** makes merge, lookup, and partial update straightforward for transmission and UI state.
 - **Separate `EdgeId`** allows multiple edges and stable identity without encoding topology into the id.
+- **Lightweight instances** — Imp’s graph model is lean enough that a node *instance* does not need a heavy dedicated structure beyond identity: essential instance data is the **node id** and **type id** (`Node.type` ↔ catalog `NodeType.id`). Other graph formats often carry richer per-instance payloads; much of that is usually cosmetic (labels, visual coordinates) and belongs in presentation layers / converters (e.g. React Flow), not in the core Imp transmission model. Ports remain on `Node` in the current revision; catalog types are separate ([node-libraries.md](./node-libraries.md)).
+- **Lean core graph / separate maps** — if `imp-spec` later needs more per-node or per-edge data, prefer **separate maps keyed by id** (relational style — e.g. `Record<NodeId, …>` alongside `Graph.nodes`) rather than widening the core `Node` / `Graph` value shapes. Keep the core graph format lean.
 
 ## Behavior / pipeline
 
@@ -188,5 +190,7 @@ None.
 
 ## See also
 
+- [node-libraries.md](./node-libraries.md) — `NodeType` / `NodeLibrary` catalogs
+- [registry.md](./registry.md) — loading libraries and looking up types
 - [react-flow.md](./react-flow.md)
 - Root [AGENTS.md](../../AGENTS.md)

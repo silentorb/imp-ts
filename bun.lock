@@ -19,6 +19,16 @@
         "@xyflow/react": "^12.0.0",
       },
     },
+    "packages/imp-registry": {
+      "name": "imp-registry",
+      "version": "0.1.0",
+      "dependencies": {
+        "imp-spec": "workspace:*",
+      },
+      "devDependencies": {
+        "typescript": "5.8.2",
+      },
+    },
     "packages/imp-spec": {
       "name": "imp-spec",
       "version": "0.1.0",
@@ -65,6 +75,8 @@
     "d3-zoom": ["d3-zoom@3.0.0", "", { "dependencies": { "d3-dispatch": "1 - 3", "d3-drag": "2 - 3", "d3-interpolate": "1 - 3", "d3-selection": "2 - 3", "d3-transition": "2 - 3" } }, "sha512-b8AmV3kfQaqWAuacbPuNbL6vahnOJflOhexLzMMNLga62+/nh0JzvJ0aO/5a5MVgUFGS7Hu1P9P03o3fJkDCyw=="],
 
     "imp-react-flow": ["imp-react-flow@workspace:packages/imp-react-flow"],
+
+    "imp-registry": ["imp-registry@workspace:packages/imp-registry"],
 
     "imp-spec": ["imp-spec@workspace:packages/imp-spec"],
 

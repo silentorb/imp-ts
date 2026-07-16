@@ -12,6 +12,8 @@ Each file in this directory is the **authoritative design spec** for one major I
 | Feature | Doc |
 | --- | --- |
 | Core graph model | [graph-model.md](./graph-model.md) |
+| Node libraries (`NodeType` / `NodeLibrary`) | [node-libraries.md](./node-libraries.md) |
+| Registry (load / lookup type libraries) | [registry.md](./registry.md) |
 | React Flow integration | [react-flow.md](./react-flow.md) |
 
 ## Split of concerns

@@ -14,7 +14,9 @@ Imp is the successor to [imp-kotlin](https://github.com/silentorb/imp-kotlin), n
 
 | Package | Role |
 | --- | --- |
-| [`imp-spec`](./packages/imp-spec/) | Core graph types and language-agnostic model specs |
+| [`imp-spec`](./packages/imp-spec/) | Core graph + library type interfaces |
+| [`imp-registry`](./packages/imp-registry/) | Load type libraries and look up `NodeType`s |
+| [`imp-react-flow`](./packages/imp-react-flow/) | Imp ↔ React Flow converters |
 
 ## Development
 
