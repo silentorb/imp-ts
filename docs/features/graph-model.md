@@ -20,15 +20,32 @@ All of the following are **strings**:
 | --- | --- |
 | `NodeId` | Key for a node in `Graph.nodes` |
 | `EdgeId` | Key for an edge in `Graph.edges` |
-| `NodeTypeId` | Discriminator / type name for a node |
+| `NodeTypeId` | Discriminator / type name for a node (function definition id) |
 | `PortId` | Key for an input or output port on a node |
+| `SignalTypeId` | Identity of an Imp signal type |
 
-### Port payloads (stubs)
+### SignalType
 
-| Name | Shape | Notes |
+| Field | Type | Required |
 | --- | --- | --- |
-| `Input` | empty object `{}` | Stub — fields TBD; still a distinct named type |
-| `Output` | empty object `{}` | Stub — fields TBD; still a distinct named type |
+| `id` | `SignalTypeId` | must |
+
+Minimal signal-type identity for this revision. Ports are typed slots (parameters / returns); the full Imp type system (aliases, constraints, etc.) may extend `SignalType` in later revisions.
+
+### Port (pair)
+
+| Field | Type | Required |
+| --- | --- | --- |
+| `id` | `PortId` | must |
+| `type` | `SignalType` | must |
+
+One port: identity plus signal type. Nodes are like functions; inputs are parameters and outputs are return slots — both use this pair.
+
+### Ports (container)
+
+`Ports` is a map `PortId` → `Port`. Used for both `Node.inputs` and `Node.outputs`.
+
+A port's `id` must equal its key in the parent `Ports` map when the graph is well-formed.
 
 ### PortReference
 
@@ -45,8 +62,8 @@ Identifies a specific port on a specific node.
 | --- | --- | --- |
 | `id` | `NodeId` | must |
 | `type` | `NodeTypeId` | must |
-| `inputs` | map `PortId` → `Input` | must (may be empty) |
-| `outputs` | map `PortId` → `Output` | must (may be empty) |
+| `inputs` | `Ports` | must (may be empty) |
+| `outputs` | `Ports` | must (may be empty) |
 
 A node's `id` must equal its key in `Graph.nodes` when the graph is well-formed.
 
@@ -73,10 +90,10 @@ An edge's identity is its key in `Graph.edges` (`EdgeId`); the `Edge` value itse
 These are design requirements for validators and converters (not yet enforced by runtime code in `imp-spec`):
 
 1. Every `Node.id` must equal its key in `Graph.nodes`.
-2. For every edge, `from.node` and `to.node` must exist in `Graph.nodes`.
-3. For every edge, `from.port` must exist in that node's `outputs`, and `to.port` must exist in that node's `inputs`.
-4. The graph is intended to be a **DAG** (no directed cycles) for Imp transmission use cases; cycle detection is a future validation concern.
-5. `Input` / `Output` remain empty stubs until a later revision of this doc fills them in.
+2. Every `Port.id` must equal its key in the parent `Ports` map (`Node.inputs` or `Node.outputs`).
+3. For every edge, `from.node` and `to.node` must exist in `Graph.nodes`.
+4. For every edge, `from.port` must exist in that node's `outputs`, and `to.port` must exist in that node's `inputs`.
+5. The graph is intended to be a **DAG** (no directed cycles) for Imp transmission use cases; cycle detection is a future validation concern.
 
 ### TypeScript binding (illustrative)
 
@@ -87,9 +104,18 @@ type NodeId = string
 type EdgeId = string
 type NodeTypeId = string
 type PortId = string
+type SignalTypeId = string
 
-interface Input {}
-interface Output {}
+interface SignalType {
+  id: SignalTypeId
+}
+
+interface Port {
+  id: PortId
+  type: SignalType
+}
+
+type Ports = Record<PortId, Port>
 
 interface PortReference {
   node: NodeId
@@ -99,8 +125,8 @@ interface PortReference {
 interface Node {
   id: NodeId
   type: NodeTypeId
-  inputs: Record<PortId, Input>
-  outputs: Record<PortId, Output>
+  inputs: Ports
+  outputs: Ports
 }
 
 interface Edge {
@@ -119,9 +145,10 @@ Maps in other languages should use that language's idiomatic string-keyed dictio
 ## Design rationale
 
 - **Port-level edges** keep connectivity precise when a node has many inputs/outputs, and align with handle-based UI graphs (see [react-flow.md](./react-flow.md)).
+- **Nodes as functions** — `inputs` / `outputs` are parameter and return slots; both use the same `Port` / `Ports` types.
+- **`SignalType`** names the Imp type of a signal on a port; starting with `id` only leaves room for aliases and constraints later without renaming the port maps.
 - **Record/map keyed by id** makes merge, lookup, and partial update straightforward for transmission and UI state.
 - **Separate `EdgeId`** allows multiple edges and stable identity without encoding topology into the id.
-- **Empty `Input`/`Output` stubs** reserve named types so later fields do not require renaming the ports maps.
 
 ## Behavior / pipeline
 

@@ -6,7 +6,8 @@
     "packages/*"
   ],
   "scripts": {
-    "typecheck": "bun run --filter imp-spec typecheck"
+    "typecheck": "bun run --filter '*' typecheck",
+    "test": "bun test"
   },
   "devDependencies": {}
 }

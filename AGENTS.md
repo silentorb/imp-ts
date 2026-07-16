@@ -9,6 +9,7 @@ Imp succeeds [imp-kotlin](https://github.com/silentorb/imp-kotlin) but keeps onl
 | Package | Role |
 | --- | --- |
 | `packages/imp-spec/` | Core graph TypeScript interfaces (types only) |
+| `packages/imp-react-flow/` | Imp ↔ React Flow converters |
 
 Each package has a brief **`README.md`** (context) and **`AGENTS.md`** (how to work in the package). See [`packages/README.md`](./packages/README.md).
 
@@ -36,7 +37,7 @@ When docs and code disagree, update the doc or the code explicitly — do not le
 | If your task involves… | Read |
 | --- | --- |
 | Core graph model (`Graph`, `Node`, `Edge`, ports) | [`docs/features/graph-model.md`](./docs/features/graph-model.md) |
-| React Flow integration / converters (future) | [`docs/features/react-flow.md`](./docs/features/react-flow.md) |
+| React Flow integration / converters | [`docs/features/react-flow.md`](./docs/features/react-flow.md) |
 
 See [`docs/features/README.md`](./docs/features/README.md) for the feature-doc template.
 

@@ -2,7 +2,7 @@
 
 ## What it is
 
-**Code interfaces** for the Imp graph model (`Graph`, `Node`, `Edge`, ports). Types only — no runtime validation or conversion logic.
+**Code interfaces** for the Imp graph model (`Graph`, `Node`, `Edge`, ports, signal types). Types only — no runtime validation or conversion logic.
 
 ## Specs vs code
 
@@ -17,7 +17,7 @@ When the model changes, update the feature doc first, then regenerate or edit th
 
 | Path | Contents |
 | --- | --- |
-| `src/graph.ts` | Core id aliases, `Input`/`Output` stubs, `Node`, `Edge`, `Graph` |
+| `src/graph.ts` | Id aliases, `SignalType`, `Port` / `Ports`, `Node`, `Edge`, `Graph` |
 | `src/index.ts` | Public re-exports |
 
 ## Run
@@ -29,5 +29,5 @@ bun run typecheck   # from this package or via root `bun run typecheck`
 ## See also
 
 - [graph-model.md](../../docs/features/graph-model.md)
-- [react-flow.md](../../docs/features/react-flow.md) — future converter notes
+- [react-flow.md](../../docs/features/react-flow.md) — Imp ↔ React Flow converters
 - Root [AGENTS.md](../../AGENTS.md)

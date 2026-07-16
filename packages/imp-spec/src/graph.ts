@@ -4,12 +4,21 @@ export type NodeId = string
 export type EdgeId = string
 export type NodeTypeId = string
 export type PortId = string
+export type SignalTypeId = string
 
-/** Port input payload. Stub — fields TBD. */
-export interface Input {}
+/** Imp signal type. Minimal — identity only; fields may grow later. */
+export interface SignalType {
+  id: SignalTypeId
+}
 
-/** Port output payload. Stub — fields TBD. */
-export interface Output {}
+/** One port: identity + signal type (parameter or return slot). */
+export interface Port {
+  id: PortId
+  type: SignalType
+}
+
+/** Container of ports — used for both Node.inputs and Node.outputs. */
+export type Ports = Record<PortId, Port>
 
 export interface PortReference {
   node: NodeId
@@ -19,8 +28,8 @@ export interface PortReference {
 export interface Node {
   id: NodeId
   type: NodeTypeId
-  inputs: Record<PortId, Input>
-  outputs: Record<PortId, Output>
+  inputs: Ports
+  outputs: Ports
 }
 
 export interface Edge {
