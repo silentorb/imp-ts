@@ -23,15 +23,13 @@ function requireHandle(
   return handle
 }
 
-function requireNodeData(
-  node: ImpReactFlowNode,
-): ImpReactFlowNodeData {
+function requireNodeData(node: ImpReactFlowNode): ImpReactFlowNodeData {
   const data = node.data
   if (data == null || typeof data !== "object") {
-    throw new Error(`React Flow node "${node.id}" is missing Imp data (inputs/outputs)`)
+    throw new Error(`React Flow node "${node.id}" is missing Imp data (inputValues)`)
   }
-  if (!("inputs" in data) || !("outputs" in data)) {
-    throw new Error(`React Flow node "${node.id}" data must include inputs and outputs Ports`)
+  if (!("inputValues" in data)) {
+    throw new Error(`React Flow node "${node.id}" data must include inputValues`)
   }
   return data as ImpReactFlowNodeData
 }
@@ -43,8 +41,7 @@ export function impToReactFlow(graph: Graph): ReactFlowGraph {
     type: node.type,
     position: { ...DEFAULT_POSITION },
     data: {
-      inputs: node.inputs,
-      outputs: node.outputs,
+      inputValues: node.inputs,
     },
   }))
 
@@ -70,8 +67,7 @@ export function reactFlowToImp(
     impNodes[node.id] = {
       id: node.id,
       type: node.type ?? "",
-      inputs: data.inputs,
-      outputs: data.outputs,
+      inputs: data.inputValues,
     }
   }
 

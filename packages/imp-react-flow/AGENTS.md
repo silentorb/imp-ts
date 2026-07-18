@@ -11,13 +11,13 @@ Runtime converters between Imp `Graph` and React Flow `{ nodes, edges }`. Uses `
 | Human/agent specs | [`docs/features/react-flow.md`](../../docs/features/react-flow.md) | No — authored source of truth |
 | Converter implementation | `src/*.ts` | Implement to match the react-flow feature doc |
 
-Core Imp shapes (`Graph`, `Port`, `Ports`, `SignalType`) come from [`imp-spec`](../imp-spec/) / [graph-model.md](../../docs/features/graph-model.md).
+Core Imp shapes (`Graph`, `InputValues`, `Port`, `Ports`, `SignalType`) come from [`imp-spec`](../imp-spec/) / [graph-model.md](../../docs/features/graph-model.md).
 
 ## Layout
 
 | Path | Contents |
 | --- | --- |
-| `src/types.ts` | `ImpReactFlowNodeData` (`inputs` / `outputs` as Imp `Ports`) |
+| `src/types.ts` | `ImpReactFlowNodeData` (`inputValues` as Imp `InputValues`) |
 | `src/convert.ts` | `impToReactFlow`, `reactFlowToImp` |
 | `src/index.ts` | Public re-exports |
 | `src/*.test.ts` | Round-trip tests |
@@ -29,7 +29,7 @@ bun run typecheck
 bun test
 ```
 
-From repo root: `bun run typecheck`, `bun test` (when wired).
+From repo root: `bun run typecheck`, `bun test`.
 
 ## See also
 

@@ -32,20 +32,39 @@ All of the following are **strings**:
 
 Minimal signal-type identity for this revision. Ports are typed slots (parameters / returns); the full Imp type system (aliases, constraints, etc.) may extend `SignalType` in later revisions.
 
+### PrimitiveValue
+
+A **literal** value that may appear on a node instance input or as a port `defaultValue`:
+
+| Kind | TypeScript |
+| --- | --- |
+| string | `string` |
+| number | `number` |
+| boolean | `boolean` |
+| null | `null` |
+
+```ts
+type PrimitiveValue = string | number | boolean | null
+```
+
 ### Port (pair)
 
 | Field | Type | Required |
 | --- | --- | --- |
 | `id` | `PortId` | must |
 | `type` | `SignalType` | must |
+| `defaultValue` | `PrimitiveValue` | may |
 
-One port: identity plus signal type. Nodes are like functions; inputs are parameters and outputs are return slots — both use this pair.
+One port template: identity, signal type, and optional default. Used on **catalog** `NodeType.inputs` / `NodeType.outputs` — not on graph node instances.
+
+- **`defaultValue` unset** — input port is **required** (must resolve via an incoming edge or a local instance literal).
+- **`defaultValue` set** — input port is **optional**; falls back to that value when unwired and no local literal is present.
 
 ### Ports (container)
 
-`Ports` is a map `PortId` → `Port`. Used for both `Node.inputs` and `Node.outputs`.
+`Ports` is a map `PortId` → `Port`. Used for both `NodeType.inputs` and `NodeType.outputs`.
 
-A port's `id` must equal its key in the parent `Ports` map when the graph is well-formed.
+A port's `id` must equal its key in the parent `Ports` map when the graph/library is well-formed.
 
 ### PortReference
 
@@ -56,14 +75,25 @@ A port's `id` must equal its key in the parent `Ports` map when the graph is wel
 
 Identifies a specific port on a specific node.
 
+### InputValues
+
+Local **literal values** on a graph node instance, keyed by input `PortId`:
+
+```ts
+type InputValues = Partial<Record<PortId, PrimitiveValue>>
+```
+
+Only keys that are valid input ports on the node's `NodeType` should appear. Keys may be omitted when the value comes from an edge or a catalog `defaultValue`.
+
 ### Node
 
 | Field | Type | Required |
 | --- | --- | --- |
 | `id` | `NodeId` | must |
 | `type` | `NodeTypeId` | must |
-| `inputs` | `Ports` | must (may be empty) |
-| `outputs` | `Ports` | must (may be empty) |
+| `inputs` | `InputValues` | must (may be empty) |
+
+A **node instance**: identity, type reference, and local literal input values. Port templates (signal types, defaults, output ports) live on the catalog `NodeType` — see [node-libraries.md](./node-libraries.md).
 
 A node's `id` must equal its key in `Graph.nodes` when the graph is well-formed.
 
@@ -85,15 +115,42 @@ An edge's identity is its key in `Graph.edges` (`EdgeId`); the `Edge` value itse
 | `nodes` | map `NodeId` → `Node` | must (may be empty) |
 | `edges` | map `EdgeId` → `Edge` | must (may be empty) |
 
+### Input port resolution
+
+Each input port on a node instance may have a **local literal** in `Node.inputs`, an **incoming edge**, both, or neither. Storage is not mutually exclusive. Resolution order:
+
+1. **Edge** — if an edge targets the port, use the wired value (overrides any local literal).
+2. Else **local literal** — `Node.inputs[portId]` when present.
+3. Else **`Port.defaultValue`** from the catalog `NodeType` input template.
+4. Else **error** — the port is required and unsatisfied.
+
+When an edge is removed in an editor, the node reverts to its stored local literal (or catalog default) instead of going blank.
+
+### Core boundary nodes
+
+Graphs act as **subgraphs** with an external interface. Core Imp ships two boundary `NodeType`s in `coreNodeLibrary` (`id: "imp.core"`) from `imp-spec`:
+
+| NodeType | Ports | Role |
+| --- | --- | --- |
+| `input` | outputs: single `value` port | Brings a value **into** the graph from outside |
+| `output` | inputs: single `value` port | Sends a value **out** of the graph to the host |
+
+**One node instance per boundary port** (not a multi-port patch board). A subgraph with three inputs and one output is three `input` nodes + one `output` node. Editors may group boundary nodes visually without changing the transmission model.
+
+A host wires external values into `input` nodes and reads results from `output` nodes. Future work may add a composite `GraphType` catalog that declares a subgraph's full interface as a reusable `NodeType`; that is out of scope for this revision.
+
 ### Invariants (well-formed graphs)
 
 These are design requirements for validators and converters (not yet enforced by runtime code in `imp-spec`):
 
 1. Every `Node.id` must equal its key in `Graph.nodes`.
-2. Every `Port.id` must equal its key in the parent `Ports` map (`Node.inputs` or `Node.outputs`).
+2. Every `Port.id` must equal its key in the parent `Ports` map on a `NodeType`.
 3. For every edge, `from.node` and `to.node` must exist in `Graph.nodes`.
-4. For every edge, `from.port` must exist in that node's `outputs`, and `to.port` must exist in that node's `inputs`.
-5. The graph is intended to be a **DAG** (no directed cycles) for Imp transmission use cases; cycle detection is a future validation concern.
+4. For every edge, `from.port` must exist in that node's `NodeType.outputs`, and `to.port` must exist in that node's `NodeType.inputs` (when types are known via a registry).
+5. `Node.inputs` keys must be valid input `PortId`s for the node's `NodeType` (when type is known).
+6. Required input ports (no `defaultValue`, no incoming edge, no local literal) are ill-formed when validated.
+7. An input port **may** have both an edge and a local literal; the edge wins at resolution.
+8. The graph is intended to be a **DAG** (no directed cycles) for Imp transmission use cases; cycle detection is a future validation concern.
 
 ### TypeScript binding (illustrative)
 
@@ -106,6 +163,8 @@ type NodeTypeId = string
 type PortId = string
 type SignalTypeId = string
 
+type PrimitiveValue = string | number | boolean | null
+
 interface SignalType {
   id: SignalTypeId
 }
@@ -113,9 +172,12 @@ interface SignalType {
 interface Port {
   id: PortId
   type: SignalType
+  defaultValue?: PrimitiveValue
 }
 
 type Ports = Record<PortId, Port>
+
+type InputValues = Partial<Record<PortId, PrimitiveValue>>
 
 interface PortReference {
   node: NodeId
@@ -125,8 +187,7 @@ interface PortReference {
 interface Node {
   id: NodeId
   type: NodeTypeId
-  inputs: Ports
-  outputs: Ports
+  inputs: InputValues
 }
 
 interface Edge {
@@ -145,12 +206,14 @@ Maps in other languages should use that language's idiomatic string-keyed dictio
 ## Design rationale
 
 - **Port-level edges** keep connectivity precise when a node has many inputs/outputs, and align with handle-based UI graphs (see [react-flow.md](./react-flow.md)).
-- **Nodes as functions** — `inputs` / `outputs` are parameter and return slots; both use the same `Port` / `Ports` types.
+- **Nodes as functions** — catalog `NodeType` ports are parameter and return slots; instance `Node.inputs` hold local literal values for parameters.
+- **Instance literals on the node** — initial values must live somewhere; storing them on the instance (not a side map) matches common dataflow tooling and lets an edge override without discarding the local fallback.
+- **`defaultValue` on port templates** — required vs optional is expressed by omitting or setting a default on the catalog `Port`, not a separate flags field.
 - **`SignalType`** names the Imp type of a signal on a port; starting with `id` only leaves room for aliases and constraints later without renaming the port maps.
 - **Record/map keyed by id** makes merge, lookup, and partial update straightforward for transmission and UI state.
 - **Separate `EdgeId`** allows multiple edges and stable identity without encoding topology into the id.
-- **Lightweight instances** — Imp’s graph model is lean enough that a node *instance* does not need a heavy dedicated structure beyond identity: essential instance data is the **node id** and **type id** (`Node.type` ↔ catalog `NodeType.id`). Other graph formats often carry richer per-instance payloads; much of that is usually cosmetic (labels, visual coordinates) and belongs in presentation layers / converters (e.g. React Flow), not in the core Imp transmission model. Ports remain on `Node` in the current revision; catalog types are separate ([node-libraries.md](./node-libraries.md)).
-- **Lean core graph / separate maps** — if `imp-spec` later needs more per-node or per-edge data, prefer **separate maps keyed by id** (relational style — e.g. `Record<NodeId, …>` alongside `Graph.nodes`) rather than widening the core `Node` / `Graph` value shapes. Keep the core graph format lean.
+- **Boundary `input` / `output` nodes** — one instance per port — let a graph act as a subgraph with a clear host interface without variable-arity patch-board types in the core model.
+- **Catalog vs instance** — `NodeType` holds port templates; `Node` holds identity, type id, and local input values (`Node.type` ↔ `NodeType.id`). See [node-libraries.md](./node-libraries.md).
 
 ## Behavior / pipeline
 
@@ -162,16 +225,28 @@ This feature is a **data shape** only. Serialization format (JSON, etc.), valida
 | --- | --- |
 | This doc | Authoritative model spec |
 | `packages/imp-spec/src/graph.ts` | TypeScript interfaces regenerated from this doc |
+| `packages/imp-spec/src/core-library.ts` | Core boundary `NodeLibrary` (`input`, `output`) |
 
 ## Quick start
 
 ```ts
 import type { Graph } from "imp-spec"
+import { coreNodeLibrary } from "imp-spec"
 
 const graph: Graph = {
-  nodes: {},
-  edges: {},
+  nodes: {
+    in: { id: "in", type: "input", inputs: {} },
+    out: { id: "out", type: "output", inputs: {} },
+  },
+  edges: {
+    e1: {
+      from: { node: "in", port: "value" },
+      to: { node: "out", port: "value" },
+    },
+  },
 }
+
+void coreNodeLibrary
 ```
 
 ## Configuration

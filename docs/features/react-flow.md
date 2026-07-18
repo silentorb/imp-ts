@@ -16,7 +16,7 @@ A primary Imp consumer is **React Flow** ([`@xyflow/react`](https://reactflow.de
 
 Converters **must**:
 
-1. Round-trip Imp `Graph` ↔ React Flow `{ nodes, edges }` without losing Imp topology (node ids, port ids, edge ids, `from`/`to` port references) or full `Ports` maps (including each `Port.type` / `SignalType.id`).
+1. Round-trip Imp `Graph` ↔ React Flow `{ nodes, edges }` without losing Imp topology (node ids, edge ids, `from`/`to` port references) or instance `InputValues`.
 2. Map Imp port ids to React Flow **handle** ids (`sourceHandle` / `targetHandle`).
 3. Map Imp edges (`from` / `to` as `PortReference`) to React Flow edges (`source` / `target` plus handle ids).
 4. Require `sourceHandle` and `targetHandle` on every React Flow edge when converting RF→Imp (Imp fidelity — no single-port shortcut).
@@ -25,6 +25,7 @@ Converters **should**:
 
 - Keep Imp free of React Flow layout/UI fields (`position`, `selected`, style, etc.). Those belong on the React Flow side (or in a separate overlay), not in the core Imp model.
 - Preserve Imp as the canonical transmission format when persisting or sending graphs between systems.
+- Resolve port **templates** (signal types, output handles) from a `NodeLibrary` / registry via `Node.type` — not by stashing `Ports` on RF `node.data`.
 
 ### Conceptual mapping
 
@@ -32,9 +33,9 @@ Converters **should**:
 | --- | --- |
 | `Node.id` | `Node.id` |
 | `Node.type` | `Node.type` (RF node component type) |
-| `Ports` keys on `outputs` (`Port.id`) | source `Handle` `id` |
-| `Ports` keys on `inputs` (`Port.id`) | target `Handle` `id` |
-| `Ports` values (`Port`, including `SignalType`) | stashed on RF `node.data` |
+| `Node.inputs` (`InputValues`) | `node.data.inputValues` |
+| Catalog `NodeType.outputs` port ids | source `Handle` `id` (looked up via registry) |
+| Catalog `NodeType.inputs` port ids | target `Handle` `id` (looked up via registry) |
 | `Edge` key (`EdgeId`) | `Edge.id` |
 | `Edge.from.node` | `Edge.source` |
 | `Edge.from.port` | `Edge.sourceHandle` |
@@ -43,13 +44,13 @@ Converters **should**:
 
 ### React Flow `node.data` shape
 
-Package-local type (reuses Imp `Ports`):
+Package-local type (reuses Imp `InputValues`):
 
 ```ts
-{ inputs: Ports; outputs: Ports }
+{ inputValues: InputValues }
 ```
 
-Without stashing `Ports` on `data`, RF→Imp cannot recover unused ports (React Flow has no first-class port list independent of custom node UI and edge handles).
+Port templates live on `NodeType` in a registry/library. Editors that need handle lists look up `getNodeType(registry, node.type)`.
 
 ### Layout policy
 
@@ -57,17 +58,16 @@ Imp does **not** require a `position` field; React Flow nodes typically do. Conv
 
 ## Design rationale
 
-React Flow is a common web graph editor. Aligning Imp ports with RF handles keeps Imp usable as the shared model behind interactive UIs without baking UI concerns into [`graph-model.md`](./graph-model.md). Stashing full `Ports` on `node.data` preserves signal types and unused ports across round-trips.
+React Flow is a common web graph editor. Aligning Imp ports with RF handles keeps Imp usable as the shared model behind interactive UIs without baking UI concerns into [`graph-model.md`](./graph-model.md). Stashing `InputValues` on `node.data` preserves instance literals across round-trips; catalog port shapes stay in libraries.
 
 ## Behavior / pipeline
 
 1. `impToReactFlow(graph): { nodes, edges }`
-   - One RF node per Imp node; copy `id`, `type`; set `data.inputs` / `data.outputs` from Imp `Ports`; default `position`.
+   - One RF node per Imp node; copy `id`, `type`; set `data.inputValues` from Imp `Node.inputs`; default `position`.
    - One RF edge per Imp edge; `id` from `EdgeId`; `source` / `target` / `sourceHandle` / `targetHandle` from port references.
 2. `reactFlowToImp(nodes, edges): Graph`
-   - Rebuild `Graph.nodes` from RF nodes (require `data.inputs` and `data.outputs`).
+   - Rebuild `Graph.nodes` from RF nodes (require `data.inputValues`).
    - Rebuild `Graph.edges` from RF edges; require both handle ids.
-   - Do not invent signal types or ports from edges alone.
 
 Exact TypeScript types for RF nodes/edges use `@xyflow/react` `Node` / `Edge` (types only in this package — no React components).
 
@@ -96,7 +96,7 @@ None.
 ## Verification
 
 - `bun run typecheck` from the repo root must succeed for `imp-react-flow`.
-- Round-trip tests: empty graph and multi-node multi-port graphs preserve node ids, edge ids, and full `Ports` (port ids + `SignalType.id`).
+- Round-trip tests: empty graph and multi-node graphs preserve node ids, edge ids, and `InputValues`.
 
 ## Implementation pointers
 

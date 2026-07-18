@@ -20,7 +20,11 @@ Declarative **catalogs of node types** that library packages can ship without de
 | `inputs` | `Ports` | must (may be empty) |
 | `outputs` | `Ports` | must (may be empty) |
 
-A **catalog entry** for a node type: port templates keyed by the same `NodeTypeId` used on graph `Node.type`. Informal “node definition” in prose maps to `NodeType`.
+A **catalog entry** for a node type: **port templates** keyed by the same `NodeTypeId` used on graph `Node.type`. Informal “node definition” in prose maps to `NodeType`.
+
+- `NodeType.inputs` / `outputs` are `Ports` maps of `Port` templates (`id`, `type`, optional `defaultValue`).
+- Graph **`Node.inputs`** are **local literal values** (`InputValues`), not `Ports` — see [graph-model.md](./graph-model.md).
+- **`defaultValue` on an input `Port`** makes that port optional; omitting it means the port is required.
 
 A type’s `id` must equal its key in the parent `NodeLibrary.types` map when the library is well-formed. Port map key / `Port.id` equality matches [graph-model.md](./graph-model.md).
 
@@ -34,6 +38,10 @@ A type’s `id` must equal its key in the parent `NodeLibrary.types` map when th
 A named, declarative collection of `NodeType`s. Libraries **must not** require `imp-registry`; they implement this interface from `imp-spec` alone.
 
 A library does not execute nodes. Executable bindings to types, if added later, may stay separate.
+
+### Naming convention
+
+Use **full words** for `NodeTypeId`s unless the abbreviation is a widely understood term on its own (e.g. `filter`, `sort`, `limit` are fine; prefer `equals` / `not_equals` over `eq` / `neq`).
 
 ### TypeScript binding (illustrative)
 
@@ -55,6 +63,7 @@ interface NodeLibrary {
 - **`Node` stays the graph instance**; **`NodeType` is the catalog** so instance vs type naming stays clear (`Node.type` ↔ `NodeType.id`).
 - Library packages depend only on **`imp-spec`**, so they can be published and composed without pulling registry machinery.
 - Catalogs are **data shapes** (plain objects), not classes with behavior.
+- Port templates on the catalog carry signal types and defaults; instance literals live on `Node.inputs`.
 
 ## Behavior / pipeline
 
@@ -66,6 +75,7 @@ This feature is a **data shape** only. Loading and conflict policy are documente
 | --- | --- |
 | This doc | Authoritative library model spec |
 | `packages/imp-spec/src/library.ts` | TypeScript interfaces regenerated from this doc |
+| `packages/imp-spec/src/core-library.ts` | Core boundary library (`imp.core`) |
 
 ## Quick start
 
@@ -79,7 +89,7 @@ const math: NodeLibrary = {
       id: "add",
       inputs: {
         a: { id: "a", type: { id: "number" } },
-        b: { id: "b", type: { id: "number" } },
+        b: { id: "b", type: { id: "number" }, defaultValue: 0 },
       },
       outputs: {
         sum: { id: "sum", type: { id: "number" } },

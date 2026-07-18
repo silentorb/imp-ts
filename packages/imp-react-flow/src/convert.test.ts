@@ -1,5 +1,7 @@
 import { describe, expect, test } from "bun:test"
 import type { Graph } from "imp-spec"
+import { coreNodeLibrary } from "imp-spec"
+import { createRegistry, getNodeType, loadLibrary } from "imp-registry"
 import { impToReactFlow, reactFlowToImp } from "./convert.ts"
 
 describe("imp ↔ React Flow converters", () => {
@@ -11,36 +13,24 @@ describe("imp ↔ React Flow converters", () => {
     expect(reactFlowToImp(nodes, edges)).toEqual(graph)
   })
 
-  test("round-trips a multi-node multi-port graph", () => {
+  test("round-trips a multi-node graph with input literals and edges", () => {
     const graph: Graph = {
       nodes: {
         a: {
           id: "a",
-          type: "source",
-          inputs: {},
-          outputs: {
-            out: { id: "out", type: { id: "float" } },
-            gate: { id: "gate", type: { id: "bool" } },
-          },
+          type: "literal",
+          inputs: { value: 42 },
         },
         b: {
           id: "b",
-          type: "sink",
-          inputs: {
-            in: { id: "in", type: { id: "float" } },
-            enable: { id: "enable", type: { id: "bool" } },
-          },
-          outputs: {},
+          type: "filter",
+          inputs: { column: "status" },
         },
       },
       edges: {
         e1: {
-          from: { node: "a", port: "out" },
-          to: { node: "b", port: "in" },
-        },
-        e2: {
-          from: { node: "a", port: "gate" },
-          to: { node: "b", port: "enable" },
+          from: { node: "a", port: "value" },
+          to: { node: "b", port: "predicate" },
         },
       },
     }
@@ -48,36 +38,36 @@ describe("imp ↔ React Flow converters", () => {
     const { nodes, edges } = impToReactFlow(graph)
 
     expect(nodes).toHaveLength(2)
-    expect(edges).toHaveLength(2)
+    expect(edges).toHaveLength(1)
 
     const nodeA = nodes.find((n) => n.id === "a")
-    expect(nodeA?.type).toBe("source")
+    expect(nodeA?.type).toBe("literal")
     expect(nodeA?.position).toEqual({ x: 0, y: 0 })
-    expect(nodeA?.data.outputs.out.type.id).toBe("float")
-    expect(nodeA?.data.outputs.gate.type.id).toBe("bool")
+    expect(nodeA?.data.inputValues).toEqual({ value: 42 })
+
+    const nodeB = nodes.find((n) => n.id === "b")
+    expect(nodeB?.data.inputValues).toEqual({ column: "status" })
 
     const edge1 = edges.find((e) => e.id === "e1")
     expect(edge1).toMatchObject({
       source: "a",
-      sourceHandle: "out",
+      sourceHandle: "value",
       target: "b",
-      targetHandle: "in",
+      targetHandle: "predicate",
     })
 
     expect(reactFlowToImp(nodes, edges)).toEqual(graph)
   })
 
-  test("preserves unused ports that have no edges", () => {
+  test("preserves local literals when there are no edges", () => {
     const graph: Graph = {
       nodes: {
         n: {
           id: "n",
-          type: "passthrough",
+          type: "sort",
           inputs: {
-            unusedIn: { id: "unusedIn", type: { id: "string" } },
-          },
-          outputs: {
-            unusedOut: { id: "unusedOut", type: { id: "string" } },
+            column: "title",
+            direction: "asc",
           },
         },
       },
@@ -93,15 +83,13 @@ describe("imp ↔ React Flow converters", () => {
       nodes: {
         a: {
           id: "a",
-          type: "a",
+          type: "input",
           inputs: {},
-          outputs: { out: { id: "out", type: { id: "t" } } },
         },
         b: {
           id: "b",
-          type: "b",
-          inputs: { in: { id: "in", type: { id: "t" } } },
-          outputs: {},
+          type: "output",
+          inputs: {},
         },
       },
       edges: {},
@@ -112,5 +100,11 @@ describe("imp ↔ React Flow converters", () => {
         { id: "bad", source: "a", target: "b" },
       ]),
     ).toThrow(/sourceHandle/)
+  })
+
+  test("core library supplies port templates for boundary nodes", () => {
+    const registry = loadLibrary(createRegistry(), coreNodeLibrary)
+    expect(getNodeType(registry, "input")?.outputs.value?.id).toBe("value")
+    expect(getNodeType(registry, "output")?.inputs.value?.id).toBe("value")
   })
 })

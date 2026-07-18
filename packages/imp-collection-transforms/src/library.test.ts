@@ -1,0 +1,23 @@
+import { describe, expect, test } from "bun:test"
+import { createRegistry, getNodeType, loadLibrary } from "imp-registry"
+import { collectionTransformsLibrary } from "./library.ts"
+
+describe("collectionTransformsLibrary", () => {
+  test("has expected identity and transform types", () => {
+    expect(collectionTransformsLibrary.id).toBe("imp.collection.transforms")
+    expect(collectionTransformsLibrary.types.filter.id).toBe("filter")
+    expect(collectionTransformsLibrary.types.sort.inputs.direction?.defaultValue).toBe("asc")
+    expect(collectionTransformsLibrary.types.equals).toBeDefined()
+    expect(collectionTransformsLibrary.types.not_equals).toBeDefined()
+    expect(collectionTransformsLibrary.types.less_than).toBeDefined()
+    expect(collectionTransformsLibrary.types.greater_than).toBeDefined()
+    expect(collectionTransformsLibrary.types.column).toBeDefined()
+    expect(collectionTransformsLibrary.types.literal).toBeDefined()
+  })
+
+  test("loads into imp-registry without conflicts", () => {
+    const registry = loadLibrary(createRegistry(), collectionTransformsLibrary)
+    expect(getNodeType(registry, "filter")?.outputs.collection?.type.id).toBe("collection")
+    expect(getNodeType(registry, "equals")?.outputs.value?.type.id).toBe("boolean")
+  })
+})

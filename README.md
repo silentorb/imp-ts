@@ -14,9 +14,11 @@ Imp is the successor to [imp-kotlin](https://github.com/silentorb/imp-kotlin), n
 
 | Package | Role |
 | --- | --- |
-| [`imp-spec`](./packages/imp-spec/) | Core graph + library type interfaces |
+| [`imp-spec`](./packages/imp-spec/) | Core graph + library type interfaces; core boundary `NodeLibrary` |
 | [`imp-registry`](./packages/imp-registry/) | Load type libraries and look up `NodeType`s |
 | [`imp-react-flow`](./packages/imp-react-flow/) | Imp ↔ React Flow converters |
+| [`imp-collection-transforms`](./packages/imp-collection-transforms/) | Collection combinator `NodeLibrary` |
+| [`imp-sql`](./packages/imp-sql/) | Imp collection graphs → SQL via Kysely |
 
 ## Development
 
@@ -25,6 +27,7 @@ Requires [Bun](https://bun.sh/). From the repo root:
 ```bash
 bun install
 bun run typecheck
+bun test
 ```
 
 In **silentorb-workbench**, this repo mounts at `/workspaces/imp` (host default `~/dev/imp`, or `IMP_REPO`).

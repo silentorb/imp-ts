@@ -1,5 +1,5 @@
 {
-  "name": "imp-spec",
+  "name": "imp-sql",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -10,8 +10,13 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "bun test"
   },
-  "devDependencies": {
+  "dependencies": {
+    "imp-collection-transforms": "workspace:*",
     "imp-registry": "workspace:*",
+    "imp-spec": "workspace:*",
+    "kysely": "^0.28.2"
+  },
+  "devDependencies": {
     "typescript": "5.8.2"
   }
 }

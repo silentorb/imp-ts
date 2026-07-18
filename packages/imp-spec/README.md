@@ -1,10 +1,10 @@
 # imp-spec
 
-Core Imp graph and library **TypeScript type interfaces**. No runtime logic.
+Core Imp graph and library **TypeScript type interfaces**, plus the core boundary `NodeLibrary`.
 
-| Spec | Types |
+| Spec | Types / values |
 | --- | --- |
-| [`docs/features/graph-model.md`](../../docs/features/graph-model.md) | `Graph`, `Node`, `Edge`, ports, signal types |
+| [`docs/features/graph-model.md`](../../docs/features/graph-model.md) | `Graph`, `Node`, `Edge`, ports, `InputValues`, `coreNodeLibrary` |
 | [`docs/features/node-libraries.md`](../../docs/features/node-libraries.md) | `NodeType`, `NodeLibrary` |
 
 Types in `src/` must match those specs and are regenerable from them.
@@ -16,8 +16,10 @@ import type {
   Edge,
   Port,
   Ports,
+  InputValues,
   SignalType,
   NodeType,
   NodeLibrary,
 } from "imp-spec"
+import { coreNodeLibrary } from "imp-spec"
 ```
