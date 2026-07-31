@@ -2,7 +2,7 @@
 
 ## What it is
 
-Runtime lowering of Imp collection-transform graphs to Kysely select queries, plus `compileSql` for SQL string + bindings.
+Runtime lowering of Imp collection-transform and pathing graphs to Kysely select queries, plus `compileSql` for SQL string + bindings.
 
 ## Specs vs code
 
@@ -32,4 +32,5 @@ bun test
 
 - [sql.md](../../docs/features/sql.md)
 - [collection-transforms.md](../../docs/features/collection-transforms.md)
+- [pathing.md](../../docs/features/pathing.md)
 - Root [AGENTS.md](../../AGENTS.md)

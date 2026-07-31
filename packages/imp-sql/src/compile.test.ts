@@ -2,15 +2,29 @@ import { describe, expect, test } from "bun:test"
 import type { Graph } from "imp-spec"
 import { coreNodeLibrary } from "imp-spec"
 import { collectionTransformsLibrary } from "imp-collection-transforms"
+import { pathingLibrary } from "imp-pathing"
 import { createRegistry, loadLibrary } from "imp-registry"
 import { compileSql, graphToKysely } from "./compile.ts"
 
 function testRegistry() {
   return loadLibrary(
-    loadLibrary(createRegistry(), coreNodeLibrary),
-    collectionTransformsLibrary,
+    loadLibrary(
+      loadLibrary(createRegistry(), coreNodeLibrary),
+      collectionTransformsLibrary,
+    ),
+    pathingLibrary,
   )
 }
+
+const testEdgesSchema = {
+  table: "items",
+  edges: {
+    table: "edges",
+    sourceColumn: "source_id",
+    targetColumn: "target_id",
+    typeColumn: "type",
+  },
+} as const
 
 /** input → filter(status = "active") → sort(title asc) → limit(10) → output */
 function pipelineGraph(): Graph {
@@ -152,6 +166,74 @@ describe("imp-sql", () => {
         schema: { table: "t" },
       }),
     ).toThrow(/unsatisfied/)
+  })
+
+  test("lowers traverse to a join through schema.edges", () => {
+    const graph: Graph = {
+      nodes: {
+        in: { id: "in", type: "input", inputs: {} },
+        hop: {
+          id: "hop",
+          type: "traverse",
+          inputs: { edgeType: "knows" },
+        },
+        out: { id: "out", type: "output", inputs: {} },
+      },
+      edges: {
+        e1: {
+          from: { node: "in", port: "value" },
+          to: { node: "hop", port: "collection" },
+        },
+        e2: {
+          from: { node: "hop", port: "collection" },
+          to: { node: "out", port: "value" },
+        },
+      },
+    }
+
+    const { sql, parameters } = compileSql(
+      graphToKysely(graph, {
+        registry: testRegistry(),
+        schema: testEdgesSchema,
+      }),
+    )
+    expect(sql.toLowerCase()).toContain("join")
+    expect(sql).toContain("edges")
+    expect(sql).toContain("source_id")
+    expect(sql).toContain("target_id")
+    expect(sql.toLowerCase()).toContain("distinct")
+    expect(parameters).toContain("knows")
+  })
+
+  test("throws when traverse is used without schema.edges", () => {
+    const graph: Graph = {
+      nodes: {
+        in: { id: "in", type: "input", inputs: {} },
+        hop: {
+          id: "hop",
+          type: "traverse",
+          inputs: { edgeType: "knows" },
+        },
+        out: { id: "out", type: "output", inputs: {} },
+      },
+      edges: {
+        e1: {
+          from: { node: "in", port: "value" },
+          to: { node: "hop", port: "collection" },
+        },
+        e2: {
+          from: { node: "hop", port: "collection" },
+          to: { node: "out", port: "value" },
+        },
+      },
+    }
+
+    expect(() =>
+      graphToKysely(graph, {
+        registry: testRegistry(),
+        schema: { table: "items" },
+      }),
+    ).toThrow(/schema\.edges/)
   })
 
   test("uses schema.column mapper", () => {

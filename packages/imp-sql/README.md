@@ -1,6 +1,6 @@
 # imp-sql
 
-Lower Imp graphs (core boundary nodes + `imp-collection-transforms`) to SQL via [Kysely](https://kysely.dev/).
+Lower Imp graphs (core boundary nodes + `imp-collection-transforms` + `imp-pathing`) to SQL via [Kysely](https://kysely.dev/).
 
 ```ts
 import { graphToKysely, compileSql } from "imp-sql"

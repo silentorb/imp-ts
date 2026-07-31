@@ -3,11 +3,23 @@
 import type { Expression } from "kysely"
 import { sql } from "kysely"
 
+export interface RelationalEdgesSchema {
+  table: string
+  sourceColumn: string
+  targetColumn: string
+  typeColumn: string
+}
+
 export interface RelationalSchema {
   /** Base relation for SELECT … FROM (host / test placeholder; Tome resolver later). */
   table: string
   /** Map a logical column name to a SQL column identifier or expression. Default: identity. */
   column?(name: string): string
+  /**
+   * Optional edges relation for path operators (`traverse`).
+   * Source collection rows must expose an `id` column joined to `sourceColumn`.
+   */
+  edges?: RelationalEdgesSchema
 }
 
 export function resolveColumn(schema: RelationalSchema, name: string): string {

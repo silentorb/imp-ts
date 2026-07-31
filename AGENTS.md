@@ -12,6 +12,7 @@ Imp succeeds [imp-kotlin](https://github.com/silentorb/imp-kotlin) but keeps onl
 | `packages/imp-registry/` | Load `NodeLibrary` values and look up `NodeType`s |
 | `packages/imp-react-flow/` | Imp ↔ React Flow converters |
 | `packages/imp-collection-transforms/` | Collection combinator `NodeLibrary` |
+| `packages/imp-pathing/` | GQL-like path operator `NodeLibrary` |
 | `packages/imp-sql/` | Imp collection graphs → SQL via Kysely |
 
 Each package has a brief **`README.md`** (context) and **`AGENTS.md`** (how to work in the package). See [`packages/README.md`](./packages/README.md).
@@ -44,6 +45,7 @@ When docs and code disagree, update the doc or the code explicitly — do not le
 | Registry load / lookup | [`docs/features/registry.md`](./docs/features/registry.md) |
 | React Flow integration / converters | [`docs/features/react-flow.md`](./docs/features/react-flow.md) |
 | Collection transform combinators | [`docs/features/collection-transforms.md`](./docs/features/collection-transforms.md) |
+| Path / hop operators | [`docs/features/pathing.md`](./docs/features/pathing.md) |
 | Imp → SQL (Kysely) | [`docs/features/sql.md`](./docs/features/sql.md) |
 
 See [`docs/features/README.md`](./docs/features/README.md) for the feature-doc template.

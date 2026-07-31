@@ -2,7 +2,7 @@
 
 ## Summary
 
-**`imp-sql`** lowers Imp graphs that use core boundary nodes and `imp-collection-transforms` into SQL via [Kysely](https://kysely.dev/). Primary API returns a compiled Kysely query; a helper exposes SQL string + bindings for hosts such as Tome’s `queryAll`.
+**`imp-sql`** lowers Imp graphs that use core boundary nodes, `imp-collection-transforms`, and `imp-pathing` into SQL via [Kysely](https://kysely.dev/). Primary API returns a compiled Kysely query; a helper exposes SQL string + bindings for hosts such as Tome’s `queryAll`.
 
 ## When to read this
 
@@ -23,8 +23,8 @@
 
 | Field | Required | Behavior |
 | --- | --- | --- |
-| `registry` | must | Must include `imp.core` and `imp.collection.transforms` (and any app libraries) |
-| `schema` | must | `RelationalSchema` — at least a base `table` name; optional `column(name)` mapper |
+| `registry` | must | Must include `imp.core` and `imp.collection.transforms` (and `imp.pathing` when using path ops) |
+| `schema` | must | `RelationalSchema` — at least a base `table` name; optional `column(name)` mapper; optional `edges` for path ops |
 | `source` | may | `{ node, port }` — default: the sole core `input` node’s `value` output |
 | `sink` | may | `{ node, port }` — default: the sole core `output` node’s `value` input |
 | `dialect` | may | `"sqlite"` (default). Other dialects may be added later |
@@ -32,13 +32,21 @@
 ### RelationalSchema
 
 ```ts
+interface RelationalEdgesSchema {
+  table: string
+  sourceColumn: string
+  targetColumn: string
+  typeColumn: string
+}
+
 interface RelationalSchema {
   table: string
   column?(name: string): string
+  edges?: RelationalEdgesSchema
 }
 ```
 
-v1 has **no** Imp `from` node. The host collection is the graph boundary `input`; SQL still needs a `FROM` target, provided by `schema.table` (placeholder for tests; later a Tome resolver maps logical relations to `nodes` / `relationship_projections`).
+v1 has **no** Imp `from` node. The host collection is the graph boundary `input`; SQL still needs a `FROM` target, provided by `schema.table`. Path operators require `schema.edges`; source collection rows must expose an `id` column joined to `edges.sourceColumn`.
 
 ### Input resolution
 
@@ -60,12 +68,13 @@ For each input port, resolve in order (see [graph-model.md](./graph-model.md)):
 | `limit` | `LIMIT count` |
 | `offset` | `OFFSET count` |
 | `project` | `SELECT` listed columns (comma-separated `columns` string); otherwise `SELECT *` |
+| `traverse` | Join source collection through `schema.edges` filtered by `edgeType`; select distinct target rows from `schema.table` |
 | `column` | Column reference via `schema.column` or identity |
 | `literal` | Bound parameter / literal |
 | `equals` / `not_equals` / `less_than` / `greater_than` | Comparison |
 | `and` / `or` / `not` | Boolean combinators |
 
-Unsupported or unknown `Node.type` values **must throw**.
+Unsupported or unknown `Node.type` values **must throw**. `traverse` **must throw** when `schema.edges` is absent.
 
 ### Errors
 
@@ -76,14 +85,15 @@ Must throw on:
 - Missing / ambiguous default `input` or `output` boundary when `source` / `sink` omitted
 - Cycles in the dependency walk
 
-### Future Tome integration (out of scope)
+### Host schema binding
 
-A later `RelationalSchema` (or dedicated resolver) may map:
+Hosts (e.g. Tome’s `tome-imp-sql`) supply `RelationalSchema` that maps:
 
-- Logical collections → `nodes` / `relationship_projections`
-- Property columns → `json_extract(properties, '$.…')`
+- Node collections → `schema.table` (e.g. `nodes`)
+- Edge hops → `schema.edges` (e.g. `relationship_projections`)
+- Property columns → `json_extract(properties, '$.…')` via `column`
 
-Compiled SQL + bindings can feed `TomeQueryCache.queryAll`. No Tome code in this package for v1.
+Compiled SQL + bindings can feed `TomeQueryCache.queryAll`. No Tome code in this package.
 
 ## Design rationale
 
@@ -93,9 +103,9 @@ Compiled SQL + bindings can feed `TomeQueryCache.queryAll`. No Tome code in this
 
 ## Behavior / pipeline
 
-1. Load registry with `coreNodeLibrary` + `collectionTransformsLibrary`.
-2. Build an Imp graph: `input` → transforms → `output`.
-3. `graphToKysely(graph, { registry, schema: { table: "items" } })`.
+1. Load registry with `coreNodeLibrary` + `collectionTransformsLibrary` (+ `pathingLibrary` when needed).
+2. Build an Imp graph: `input` → transforms / `traverse` → `output`.
+3. `graphToKysely(graph, { registry, schema: { table: "items", edges?: … } })`.
 4. `compileSql(query)` → run against a DB.
 
 ## Inputs / outputs / artifacts
@@ -104,19 +114,24 @@ Compiled SQL + bindings can feed `TomeQueryCache.queryAll`. No Tome code in this
 | --- | --- |
 | This doc | Lowering contract |
 | `packages/imp-sql` | Implementation + tests |
-| [collection-transforms.md](./collection-transforms.md) | Node catalog |
+| [collection-transforms.md](./collection-transforms.md) | Collection node catalog |
+| [pathing.md](./pathing.md) | Path node catalog |
 
 ## Quick start
 
 ```ts
 import { coreNodeLibrary } from "imp-spec"
 import { collectionTransformsLibrary } from "imp-collection-transforms"
+import { pathingLibrary } from "imp-pathing"
 import { createRegistry, loadLibrary } from "imp-registry"
 import { graphToKysely, compileSql } from "imp-sql"
 
 const registry = loadLibrary(
-  loadLibrary(createRegistry(), coreNodeLibrary),
-  collectionTransformsLibrary,
+  loadLibrary(
+    loadLibrary(createRegistry(), coreNodeLibrary),
+    collectionTransformsLibrary,
+  ),
+  pathingLibrary,
 )
 
 const compiled = graphToKysely(graph, {
@@ -140,9 +155,11 @@ None beyond `SqlCompileOptions`.
 - Package: [`packages/imp-sql`](../../packages/imp-sql/)
 - Graph model: [graph-model.md](./graph-model.md)
 - Combinators: [collection-transforms.md](./collection-transforms.md)
+- Pathing: [pathing.md](./pathing.md)
 
 ## See also
 
 - [collection-transforms.md](./collection-transforms.md)
+- [pathing.md](./pathing.md)
 - [graph-model.md](./graph-model.md)
 - Root [AGENTS.md](../../AGENTS.md)

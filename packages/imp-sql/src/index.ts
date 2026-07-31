@@ -1,4 +1,4 @@
-export type { RelationalSchema } from "./schema.ts"
+export type { RelationalSchema, RelationalEdgesSchema } from "./schema.ts"
 export { resolveColumn } from "./schema.ts"
 
 export type { SqlCompileOptions, CompiledImpQuery } from "./compile.ts"

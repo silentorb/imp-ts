@@ -16,6 +16,7 @@ Each file in this directory is the **authoritative design spec** for one major I
 | Registry (load / lookup type libraries) | [registry.md](./registry.md) |
 | React Flow integration | [react-flow.md](./react-flow.md) |
 | Collection transforms | [collection-transforms.md](./collection-transforms.md) |
+| Pathing | [pathing.md](./pathing.md) |
 | SQL lowering | [sql.md](./sql.md) |
 
 ## Split of concerns

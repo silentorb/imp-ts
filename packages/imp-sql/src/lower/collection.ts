@@ -2,6 +2,7 @@
 
 import type { Edge, Graph, NodeId, PortId } from "imp-spec"
 import type { Kysely, SelectQueryBuilder } from "kysely"
+import { sql } from "kysely"
 import type { Registry } from "imp-registry"
 import {
   requireNode,
@@ -171,6 +172,54 @@ export function lowerCollectionPort(
           throw new Error(`project.columns on "${nodeId}" must list at least one column`)
         }
         return base.clearSelect().select(cols as never)
+      }
+      case "traverse": {
+        const edges = ctx.schema.edges
+        if (edges == null) {
+          throw new Error(
+            `traverse on "${nodeId}" requires schema.edges (host edges relation)`,
+          )
+        }
+        for (const [label, name] of [
+          ["edges.table", edges.table],
+          ["edges.sourceColumn", edges.sourceColumn],
+          ["edges.targetColumn", edges.targetColumn],
+          ["edges.typeColumn", edges.typeColumn],
+          ["schema.table", ctx.schema.table],
+        ] as const) {
+          if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(name)) {
+            throw new Error(`${label} must be a simple SQL identifier, got "${name}"`)
+          }
+        }
+        const base = followCollectionInput(ctx, nodeId)
+        const edgeType = requireString(
+          resolveLiteralOrThrow(ctx, nodeId, "edgeType", "traverse.edgeType"),
+          "traverse.edgeType",
+        )
+        // sources ⋈ edges(type) ⋈ nodes AS targets → distinct target rows
+        const joined = ctx.db
+          .selectFrom(base.as("sources"))
+          .innerJoin(
+            `${edges.table} as path_edges`,
+            (join) =>
+              join
+                .on(
+                  sql.ref(`path_edges.${edges.sourceColumn}`),
+                  "=",
+                  sql.ref("sources.id"),
+                )
+                .on(sql.ref(`path_edges.${edges.typeColumn}`), "=", edgeType),
+          )
+          .innerJoin(`${ctx.schema.table} as targets`, (join) =>
+            join.on(
+              sql.ref("targets.id"),
+              "=",
+              sql.ref(`path_edges.${edges.targetColumn}`),
+            ),
+          )
+          .selectAll("targets")
+          .distinct()
+        return joined as unknown as AnySelect
       }
       case "output": {
         const resolved = resolveInput(
