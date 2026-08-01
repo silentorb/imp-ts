@@ -26,14 +26,37 @@ export function resolveColumn(schema: RelationalSchema, name: string): string {
   return schema.column?.(name) ?? name
 }
 
+const IDENT_RE = /^[A-Za-z_][A-Za-z0-9_]*$/
+
 /** Simple identifiers use sql.id; other strings (e.g. json_extract) are embedded raw. */
 export function columnExpression(
   schema: RelationalSchema,
   name: string,
 ): Expression<unknown> {
   const mapped = resolveColumn(schema, name)
-  if (/^[A-Za-z_][A-Za-z0-9_]*$/.test(mapped)) {
+  if (IDENT_RE.test(mapped)) {
     return sql.id(mapped)
   }
   return sql.raw(mapped)
+}
+
+/**
+ * SELECT-list expression for `project`: non-identifier mappings (and renamed
+ * identifiers) are aliased to the logical column name so result keys match.
+ */
+export function projectedColumnExpression(
+  schema: RelationalSchema,
+  name: string,
+): Expression<unknown> {
+  if (!IDENT_RE.test(name)) {
+    throw new Error(`project column name must be a simple identifier, got "${name}"`)
+  }
+  const mapped = resolveColumn(schema, name)
+  if (IDENT_RE.test(mapped)) {
+    if (mapped === name) {
+      return sql.id(mapped)
+    }
+    return sql`${sql.id(mapped)} as ${sql.id(name)}`
+  }
+  return sql.raw(`${mapped} as ${name}`)
 }

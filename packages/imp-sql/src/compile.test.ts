@@ -342,5 +342,8 @@ describe("imp-sql", () => {
       }),
     )
     expect(sql).toContain("json_extract")
+    expect(sql.toLowerCase()).toMatch(
+      /json_extract\(properties,\s*'\$\.title'\)\s+as\s+(?:title|"title")/,
+    )
   })
 })

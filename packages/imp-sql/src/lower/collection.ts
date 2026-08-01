@@ -10,7 +10,11 @@ import {
   resolveInput,
   type EdgeTargetKey,
 } from "../resolve.ts"
-import { columnExpression, type RelationalSchema } from "../schema.ts"
+import {
+  columnExpression,
+  projectedColumnExpression,
+  type RelationalSchema,
+} from "../schema.ts"
 import { lowerExprNode, type LowerContext } from "./expressions.ts"
 
 type AnyDb = Record<string, Record<string, unknown>>
@@ -204,7 +208,7 @@ export function lowerCollectionPort(
           .split(",")
           .map((c) => c.trim())
           .filter((c) => c.length > 0)
-          .map((c) => columnExpression(ctx.schema, c))
+          .map((c) => projectedColumnExpression(ctx.schema, c))
         if (cols.length === 0) {
           throw new Error(`project.columns on "${nodeId}" must list at least one column`)
         }
