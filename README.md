@@ -20,6 +20,31 @@ Imp is the successor to [imp-kotlin](https://github.com/silentorb/imp-kotlin), n
 | [`imp-collection-transforms`](./packages/imp-collection-transforms/) | Collection combinator `NodeLibrary` |
 | [`imp-sql`](./packages/imp-sql/) | Imp collection graphs → SQL via Kysely |
 
+```mermaid
+flowchart TB
+  SPEC[imp-spec]
+
+  subgraph libraries [Libraries]
+    REG[imp-registry]
+    CT[imp-collection-transforms]
+  end
+
+  REG --> SPEC
+  CT --> SPEC
+
+  subgraph converters [Converters]
+    RF[imp-react-flow]
+    SQL[imp-sql]
+  end
+
+  RF --> SPEC
+  SQL --> SPEC
+  SQL --> REG
+  SQL --> CT
+```
+
+See [`packages/README.md`](./packages/README.md) for package docs.
+
 ## Development
 
 Requires [Bun](https://bun.sh/). From the repo root:
