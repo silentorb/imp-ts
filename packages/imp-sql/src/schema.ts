@@ -20,6 +20,20 @@ export interface RelationalSchema {
    * Source collection rows must expose an `id` column joined to `sourceColumn`.
    */
   edges?: RelationalEdgesSchema
+  /**
+   * Map Imp `traverse` association + direction onto the edges `typeColumn` filter value.
+   * Default: use `association` alone (direction ignored).
+   */
+  edgeType?(association: string, direction: number): string
+}
+
+/** Resolve the edges.type filter value for a traverse hop. */
+export function resolveEdgeType(
+  schema: RelationalSchema,
+  association: string,
+  direction: number,
+): string {
+  return schema.edgeType?.(association, direction) ?? association
 }
 
 export function resolveColumn(schema: RelationalSchema, name: string): string {

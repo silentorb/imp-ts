@@ -29,7 +29,8 @@ Use **full words** for `NodeTypeId`s unless the abbreviation is a widely underst
 | Id | Role |
 | --- | --- |
 | `collection` | Ordered/unordered row set (typically host nodes) flowing through path ops and collection transforms |
-| `string` | Edge type filters and other string literals |
+| `string` | Association ids and other string literals |
+| `number` | Direction and other numeric literals |
 
 Reuse the same signal ids as [collection-transforms.md](./collection-transforms.md) so path results compose with `filter` / `sort` / `project`.
 
@@ -41,10 +42,12 @@ There is **no** `from` / table-source node. The incoming node collection arrives
 
 | NodeType | Inputs | Outputs | Notes |
 | --- | --- | --- | --- |
-| `traverse` | `collection` (`collection`), `edgeType` (`string`) | `collection` | One hop: for each source row identity (`id`), follow host edges where `source = id` and `type = edgeType`, emit distinct target nodes as the new collection |
+| `traverse` | `collection` (`collection`), `association` (`string`), `direction` (`number`, default `0`) | `collection` | One hop: for each source row identity (`id`), follow host edges where `source = id` and `type = hostEdgeType(association, direction)`, emit distinct target nodes as the new collection |
 
 - Chained hops = multiple `traverse` nodes in the Imp DAG (not recursive / variable-length paths in v1).
-- `edgeType` is an opaque string at the Imp layer. Hosts map domain association labels onto edge type values.
+- `association` and `direction` are **separate** Imp values. Graphs must not pack them into one delimited string.
+- `direction` is `0` or `1` (endpoint index on a two-ended association).
+- Hosts map `(association, direction)` onto their edges `type` column via `RelationalSchema.edgeType` (default: use `association` alone).
 - Result remains a **node collection**, so collection transforms keep working.
 
 ### TypeScript binding (illustrative)
@@ -59,7 +62,7 @@ export const pathingLibrary: NodeLibrary
 
 - Path operators are declarative catalog data so editors and lowerers share one vocabulary.
 - Keeping the catalog SQL-free lets other backends interpret the same graphs.
-- Opaque `edgeType` avoids baking domain association models into Imp.
+- Explicit `association` + `direction` ports keep Imp graphs readable without host-specific string tokenization; hosts may still encode a packed type string at the SQL boundary if their storage requires it.
 
 ## Behavior / pipeline
 

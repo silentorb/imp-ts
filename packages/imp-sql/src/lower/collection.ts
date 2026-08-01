@@ -13,6 +13,7 @@ import {
 import {
   columnExpression,
   projectedColumnExpression,
+  resolveEdgeType,
   type RelationalSchema,
 } from "../schema.ts"
 import { lowerExprNode, type LowerContext } from "./expressions.ts"
@@ -233,10 +234,20 @@ export function lowerCollectionPort(
           }
         }
         const base = followCollectionInput(ctx, nodeId)
-        const edgeType = requireString(
-          resolveLiteralOrThrow(ctx, nodeId, "edgeType", "traverse.edgeType"),
-          "traverse.edgeType",
+        const association = requireString(
+          resolveLiteralOrThrow(ctx, nodeId, "association", "traverse.association"),
+          "traverse.association",
         )
+        const direction = requireNumber(
+          resolveLiteralOrThrow(ctx, nodeId, "direction", "traverse.direction"),
+          "traverse.direction",
+        )
+        if (direction !== 0 && direction !== 1) {
+          throw new Error(
+            `traverse.direction on "${nodeId}" must be 0 or 1, got ${String(direction)}`,
+          )
+        }
+        const edgeType = resolveEdgeType(ctx.schema, association, direction)
         // sources ⋈ edges(type) ⋈ nodes AS targets → distinct target rows
         const joined = ctx.db
           .selectFrom(base.as("sources"))

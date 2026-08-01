@@ -175,7 +175,7 @@ describe("imp-sql", () => {
         hop: {
           id: "hop",
           type: "traverse",
-          inputs: { edgeType: "knows" },
+          inputs: { association: "knows", direction: 0 },
         },
         out: { id: "out", type: "output", inputs: {} },
       },
@@ -212,7 +212,7 @@ describe("imp-sql", () => {
         hop: {
           id: "hop",
           type: "traverse",
-          inputs: { edgeType: "knows" },
+          inputs: { association: "knows", direction: 0 },
         },
         out: { id: "out", type: "output", inputs: {} },
       },
@@ -243,7 +243,7 @@ describe("imp-sql", () => {
         hop: {
           id: "hop",
           type: "traverse",
-          inputs: { edgeType: "knows" },
+          inputs: { association: "knows", direction: 0 },
         },
         except: { id: "except", type: "except", inputs: {} },
         out: { id: "out", type: "output", inputs: {} },

@@ -43,6 +43,8 @@ interface RelationalSchema {
   table: string
   column?(name: string): string
   edges?: RelationalEdgesSchema
+  /** Map traverse association + direction → edges.typeColumn filter value. Default: association alone. */
+  edgeType?(association: string, direction: number): string
 }
 ```
 
@@ -69,7 +71,7 @@ For each input port, resolve in order (see [graph-model.md](./graph-model.md)):
 | `limit` | `LIMIT count` |
 | `offset` | `OFFSET count` |
 | `project` | `SELECT` listed columns (comma-separated `columns` string); otherwise `SELECT *`. When `schema.column` maps a logical name to a non-identifier expression (or a different identifier), the SELECT item is aliased to the logical name so result keys match (`json_extract(…) AS title`) |
-| `traverse` | Join source collection through `schema.edges` filtered by `edgeType`; select distinct target rows from `schema.table` |
+| `traverse` | Join source collection through `schema.edges` filtered by `schema.edgeType(association, direction)` (default: `association`); `direction` must be `0` or `1`; select distinct target rows from `schema.table` |
 | `column` | Column reference via `schema.column` or identity |
 | `literal` | Bound parameter / literal |
 | `equals` / `not_equals` / `less_than` / `greater_than` | Comparison |
@@ -92,6 +94,7 @@ Hosts (e.g. Tome’s `tome-imp-sql`) supply `RelationalSchema` that maps:
 
 - Node collections → `schema.table` (e.g. `nodes`)
 - Edge hops → `schema.edges` (e.g. `relationship_projections`)
+- Traverse association/direction → edges `type` filter via `edgeType` (Tome encodes directed projections here; Imp graphs keep the parts separate)
 - Property columns → `json_extract(properties, '$.…')` via `column`
 
 Compiled SQL + bindings can feed `TomeQueryCache.queryAll`. No Tome code in this package.

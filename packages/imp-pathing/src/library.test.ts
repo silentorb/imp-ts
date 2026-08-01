@@ -7,7 +7,9 @@ describe("pathingLibrary", () => {
     expect(pathingLibrary.id).toBe("imp.pathing")
     expect(pathingLibrary.types.traverse.id).toBe("traverse")
     expect(pathingLibrary.types.traverse.inputs.collection.type.id).toBe("collection")
-    expect(pathingLibrary.types.traverse.inputs.edgeType.type.id).toBe("string")
+    expect(pathingLibrary.types.traverse.inputs.association.type.id).toBe("string")
+    expect(pathingLibrary.types.traverse.inputs.direction.type.id).toBe("number")
+    expect(pathingLibrary.types.traverse.inputs.direction.defaultValue).toBe(0)
     expect(pathingLibrary.types.traverse.outputs.collection.type.id).toBe("collection")
   })
 
