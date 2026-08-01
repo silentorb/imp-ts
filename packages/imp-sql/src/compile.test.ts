@@ -236,6 +236,79 @@ describe("imp-sql", () => {
     ).toThrow(/schema\.edges/)
   })
 
+  test("lowers except to NOT EXISTS anti-membership over exclude subquery", () => {
+    const graph: Graph = {
+      nodes: {
+        in: { id: "in", type: "input", inputs: {} },
+        hop: {
+          id: "hop",
+          type: "traverse",
+          inputs: { edgeType: "knows" },
+        },
+        except: { id: "except", type: "except", inputs: {} },
+        out: { id: "out", type: "output", inputs: {} },
+      },
+      edges: {
+        e_keep: {
+          from: { node: "in", port: "value" },
+          to: { node: "except", port: "collection" },
+        },
+        e_hop_in: {
+          from: { node: "in", port: "value" },
+          to: { node: "hop", port: "collection" },
+        },
+        e_excl: {
+          from: { node: "hop", port: "collection" },
+          to: { node: "except", port: "exclude" },
+        },
+        e_out: {
+          from: { node: "except", port: "collection" },
+          to: { node: "out", port: "value" },
+        },
+      },
+    }
+
+    const { sql, parameters } = compileSql(
+      graphToKysely(graph, {
+        registry: testRegistry(),
+        schema: testEdgesSchema,
+      }),
+    )
+    const lower = sql.toLowerCase()
+    expect(lower).toContain("not exists")
+    expect(lower).toContain("keep")
+    expect(lower).toContain("excl")
+    expect(sql).toContain("edges")
+    expect(parameters).toContain("knows")
+  })
+
+  test("throws when except.exclude is unwired", () => {
+    const graph: Graph = {
+      nodes: {
+        in: { id: "in", type: "input", inputs: {} },
+        except: { id: "except", type: "except", inputs: {} },
+        out: { id: "out", type: "output", inputs: {} },
+      },
+      edges: {
+        e_keep: {
+          from: { node: "in", port: "value" },
+          to: { node: "except", port: "collection" },
+        },
+        e_out: {
+          from: { node: "except", port: "collection" },
+          to: { node: "out", port: "value" },
+        },
+      },
+    }
+
+    expect(() =>
+      graphToKysely(graph, {
+        registry: testRegistry(),
+        schema: { table: "items" },
+      }),
+    ).toThrow(/unsatisfied|except\.exclude|must be wired/)
+  })
+
   test("uses schema.column mapper", () => {
     const graph: Graph = {
       nodes: {

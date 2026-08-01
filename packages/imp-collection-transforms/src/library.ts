@@ -35,6 +35,16 @@ export const collectionTransformsLibrary: NodeLibrary = {
         collection: collectionOut(),
       },
     },
+    except: {
+      id: "except",
+      inputs: {
+        collection: collectionIn(),
+        exclude: port("exclude", collection),
+      },
+      outputs: {
+        collection: collectionOut(),
+      },
+    },
     sort: {
       id: "sort",
       inputs: {

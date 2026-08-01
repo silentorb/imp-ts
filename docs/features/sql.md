@@ -64,6 +64,7 @@ For each input port, resolve in order (see [graph-model.md](./graph-model.md)):
 | `input` | Base `SELECT … FROM schema.table` (passthrough entry) |
 | `output` | Passthrough of its `value` input (sink) |
 | `filter` | `WHERE` predicate |
+| `except` | Keep rows from `collection` whose `id` is absent from `exclude`: compose both branches as SQL selects and apply anti-membership (`NOT EXISTS` correlating on `id`, or equivalent). Must **not** materialize `exclude` into an in-memory set |
 | `sort` | `ORDER BY column ASC\|DESC` |
 | `limit` | `LIMIT count` |
 | `offset` | `OFFSET count` |
@@ -74,7 +75,7 @@ For each input port, resolve in order (see [graph-model.md](./graph-model.md)):
 | `equals` / `not_equals` / `less_than` / `greater_than` | Comparison |
 | `and` / `or` / `not` | Boolean combinators |
 
-Unsupported or unknown `Node.type` values **must throw**. `traverse` **must throw** when `schema.edges` is absent.
+Unsupported or unknown `Node.type` values **must throw**. `traverse` **must throw** when `schema.edges` is absent. Both `collection` and `exclude` on `except` **must** be wired collection ports.
 
 ### Errors
 

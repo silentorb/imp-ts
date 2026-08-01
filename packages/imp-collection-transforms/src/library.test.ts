@@ -6,6 +6,8 @@ describe("collectionTransformsLibrary", () => {
   test("has expected identity and transform types", () => {
     expect(collectionTransformsLibrary.id).toBe("imp.collection.transforms")
     expect(collectionTransformsLibrary.types.filter.id).toBe("filter")
+    expect(collectionTransformsLibrary.types.except.id).toBe("except")
+    expect(collectionTransformsLibrary.types.except.inputs.exclude.type.id).toBe("collection")
     expect(collectionTransformsLibrary.types.sort.inputs.direction?.defaultValue).toBe("asc")
     expect(collectionTransformsLibrary.types.equals).toBeDefined()
     expect(collectionTransformsLibrary.types.not_equals).toBeDefined()
@@ -18,6 +20,7 @@ describe("collectionTransformsLibrary", () => {
   test("loads into imp-registry without conflicts", () => {
     const registry = loadLibrary(createRegistry(), collectionTransformsLibrary)
     expect(getNodeType(registry, "filter")?.outputs.collection?.type.id).toBe("collection")
+    expect(getNodeType(registry, "except")?.inputs.exclude?.type.id).toBe("collection")
     expect(getNodeType(registry, "equals")?.outputs.value?.type.id).toBe("boolean")
   })
 })

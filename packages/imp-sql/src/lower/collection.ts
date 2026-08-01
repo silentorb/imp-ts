@@ -66,21 +66,30 @@ function resolveLiteralOrThrow(
   return resolved.value
 }
 
-function followCollectionInput(
+function followCollectionPort(
   ctx: CollectionLowerContext,
   nodeId: NodeId,
+  portId: PortId,
+  label: string,
 ): AnySelect {
   const resolved = resolveInput(
     ctx.graph,
     ctx.registry,
     ctx.edgesByTarget,
     nodeId,
-    "collection",
+    portId,
   )
   if (resolved.kind === "literal") {
-    throw new Error(`Node "${nodeId}" collection input must be wired, not a literal`)
+    throw new Error(`${label} on "${nodeId}" must be wired, not a literal`)
   }
   return lowerCollectionPort(ctx, resolved.from.node, resolved.from.port)
+}
+
+function followCollectionInput(
+  ctx: CollectionLowerContext,
+  nodeId: NodeId,
+): AnySelect {
+  return followCollectionPort(ctx, nodeId, "collection", "collection input")
 }
 
 /** Lower a collection-producing output port to a select query builder. */
@@ -124,6 +133,34 @@ export function lowerCollectionPort(
         return base.where((eb) =>
           lowerExprNode(ctx, eb as never, pred.from.node, pred.from.port) as never,
         )
+      }
+      case "except": {
+        // Compose keep/exclude as SQL selects; anti-membership via NOT EXISTS (no in-memory subtract).
+        const keep = followCollectionPort(
+          ctx,
+          nodeId,
+          "collection",
+          "except.collection",
+        )
+        const exclude = followCollectionPort(
+          ctx,
+          nodeId,
+          "exclude",
+          "except.exclude",
+        )
+        return ctx.db
+          .selectFrom(keep.as("keep"))
+          .selectAll("keep")
+          .where((eb) =>
+            eb.not(
+              eb.exists(
+                eb
+                  .selectFrom(exclude.as("excl"))
+                  .select(sql.lit(1).as("one"))
+                  .whereRef("excl.id", "=", "keep.id"),
+              ),
+            ),
+          ) as unknown as AnySelect
       }
       case "sort": {
         const base = followCollectionInput(ctx, nodeId)

@@ -45,10 +45,13 @@ There is **no** `from` / table-source node. The incoming collection arrives via 
 | NodeType | Inputs | Outputs | Notes |
 | --- | --- | --- | --- |
 | `filter` | `collection` (`collection`), `predicate` (`boolean`) | `collection` | Keep rows where predicate is true |
+| `except` | `collection` (`collection`), `exclude` (`collection`) | `collection` | Keep rows from `collection` whose `id` does not appear in `exclude` (set difference by identity) |
 | `sort` | `collection` (`collection`), `column` (`string`), `direction` (`string`, default `"asc"`) | `collection` | `direction` is `"asc"` or `"desc"` |
 | `limit` | `collection` (`collection`), `count` (`number`) | `collection` | Take first `count` rows |
 | `offset` | `collection` (`collection`), `count` (`number`) | `collection` | Skip first `count` rows |
 | `project` | `collection` (`collection`), `columns` (`string`) | `collection` | `columns` is a comma-separated column name list (v1) |
+
+`except` is **declarative** only. Lowerers must resolve it lazily (e.g. SQL anti-membership over a subquery). They must **not** materialize `exclude` into an in-memory id set and subtract.
 
 #### Predicates
 
@@ -89,8 +92,9 @@ This package ships **data only**. Compose with `imp-registry` (`loadLibrary`) an
 
 Typical pipeline:
 
-1. Core `input` (collection) → `filter` / `sort` / `limit` / … → core `output`.
+1. Core `input` (collection) → `filter` / `except` / `sort` / `limit` / … → core `output`.
 2. Predicates and scalars attach as subgraphs into `filter.predicate` (and similar).
+3. `except.exclude` is a second collection-producing subgraph (often sharing the same `input`, e.g. via `traverse`).
 
 ## Inputs / outputs / artifacts
 
