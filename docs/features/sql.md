@@ -37,6 +37,8 @@ interface RelationalEdgesSchema {
   sourceColumn: string
   targetColumn: string
   typeColumn: string
+  /** JSON/text column of edge properties for optional traverse edge filters. */
+  propertiesColumn?: string
 }
 
 interface RelationalSchema {
@@ -71,9 +73,10 @@ For each input port, resolve in order (see [graph-model.md](./graph-model.md)):
 | `limit` | `LIMIT count` |
 | `offset` | `OFFSET count` |
 | `project` | `SELECT` listed columns (comma-separated `columns` string); otherwise `SELECT *`. When `schema.column` maps a logical name to a non-identifier expression (or a different identifier), the SELECT item is aliased to the logical name so result keys match (`json_extract(…) AS title`) |
-| `traverse` | Join source collection through `schema.edges` filtered by `schema.edgeType(association, direction)` (default: `association`); `direction` must be `0` or `1`; select distinct target rows from `schema.table` |
+| `traverse` | Join source collection through `schema.edges` filtered by `schema.edgeType(association, direction)` (default: `association`); `direction` must be `0` or `1`; select distinct target rows from `schema.table`. When both `edge_property` and `edge_equals` are non-null, require `schema.edges.propertiesColumn` and add `json_extract(path_edges.{propertiesColumn}, '$.{edge_property}') = edge_equals` to the hop join (`edge_property` must be a simple identifier) |
 | `column` | Column reference via `schema.column` or identity |
 | `literal` | Bound parameter / literal |
+| `parameter` | Same as `literal` — bound parameter / literal from the node’s `value` input (`label` is ignored by SQL) |
 | `equals` / `not_equals` / `less_than` / `greater_than` | Comparison |
 | `and` / `or` / `not` | Boolean combinators |
 

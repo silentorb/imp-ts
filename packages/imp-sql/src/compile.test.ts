@@ -346,4 +346,132 @@ describe("imp-sql", () => {
       /json_extract\(properties,\s*'\$\.title'\)\s+as\s+(?:title|"title")/,
     )
   })
+
+  test("lowers parameter like literal in filter predicate", () => {
+    const graph: Graph = {
+      nodes: {
+        in: { id: "in", type: "input", inputs: {} },
+        col: { id: "col", type: "column", inputs: { name: "status" } },
+        param: {
+          id: "param",
+          type: "parameter",
+          inputs: { label: "Status", value: "active" },
+        },
+        eq: { id: "eq", type: "equals", inputs: {} },
+        filter: { id: "filter", type: "filter", inputs: {} },
+        out: { id: "out", type: "output", inputs: {} },
+      },
+      edges: {
+        e_col: { from: { node: "col", port: "value" }, to: { node: "eq", port: "left" } },
+        e_param: {
+          from: { node: "param", port: "value" },
+          to: { node: "eq", port: "right" },
+        },
+        e_pred: {
+          from: { node: "eq", port: "value" },
+          to: { node: "filter", port: "predicate" },
+        },
+        e_in: {
+          from: { node: "in", port: "value" },
+          to: { node: "filter", port: "collection" },
+        },
+        e_out: {
+          from: { node: "filter", port: "collection" },
+          to: { node: "out", port: "value" },
+        },
+      },
+    }
+
+    const { sql, parameters } = compileSql(
+      graphToKysely(graph, {
+        registry: testRegistry(),
+        schema: { table: "items" },
+      }),
+    )
+    expect(sql.toLowerCase()).toContain("where")
+    expect(parameters).toContain("active")
+  })
+
+  test("traverse with edge_property filter uses json_extract on edges", () => {
+    const graph: Graph = {
+      nodes: {
+        in: { id: "in", type: "input", inputs: {} },
+        hop: {
+          id: "hop",
+          type: "traverse",
+          inputs: {
+            association: "knows",
+            direction: 0,
+            edge_property: "priority",
+            edge_equals: "Consideration",
+          },
+        },
+        out: { id: "out", type: "output", inputs: {} },
+      },
+      edges: {
+        e_in: {
+          from: { node: "in", port: "value" },
+          to: { node: "hop", port: "collection" },
+        },
+        e_out: {
+          from: { node: "hop", port: "collection" },
+          to: { node: "out", port: "value" },
+        },
+      },
+    }
+
+    const { sql, parameters } = compileSql(
+      graphToKysely(graph, {
+        registry: testRegistry(),
+        schema: {
+          table: "items",
+          edges: {
+            table: "edges",
+            sourceColumn: "source_id",
+            targetColumn: "target_id",
+            typeColumn: "type",
+            propertiesColumn: "properties",
+          },
+        },
+      }),
+    )
+    expect(sql.toLowerCase()).toContain("json_extract")
+    expect(sql).toContain("$.priority")
+    expect(parameters).toContain("Consideration")
+  })
+
+  test("throws when traverse edge filter set without propertiesColumn", () => {
+    const graph: Graph = {
+      nodes: {
+        in: { id: "in", type: "input", inputs: {} },
+        hop: {
+          id: "hop",
+          type: "traverse",
+          inputs: {
+            association: "knows",
+            edge_property: "priority",
+            edge_equals: "Low",
+          },
+        },
+        out: { id: "out", type: "output", inputs: {} },
+      },
+      edges: {
+        e_in: {
+          from: { node: "in", port: "value" },
+          to: { node: "hop", port: "collection" },
+        },
+        e_out: {
+          from: { node: "hop", port: "collection" },
+          to: { node: "out", port: "value" },
+        },
+      },
+    }
+
+    expect(() =>
+      graphToKysely(graph, {
+        registry: testRegistry(),
+        schema: testEdgesSchema,
+      }),
+    ).toThrow(/propertiesColumn/)
+  })
 })

@@ -10,6 +10,10 @@ describe("pathingLibrary", () => {
     expect(pathingLibrary.types.traverse.inputs.association.type.id).toBe("string")
     expect(pathingLibrary.types.traverse.inputs.direction.type.id).toBe("number")
     expect(pathingLibrary.types.traverse.inputs.direction.defaultValue).toBe(0)
+    expect(pathingLibrary.types.traverse.inputs.edge_property.type.id).toBe("string")
+    expect(pathingLibrary.types.traverse.inputs.edge_property.defaultValue).toBe(null)
+    expect(pathingLibrary.types.traverse.inputs.edge_equals.type.id).toBe("any")
+    expect(pathingLibrary.types.traverse.inputs.edge_equals.defaultValue).toBe(null)
     expect(pathingLibrary.types.traverse.outputs.collection.type.id).toBe("collection")
   })
 

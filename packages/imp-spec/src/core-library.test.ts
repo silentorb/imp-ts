@@ -19,11 +19,22 @@ describe("coreNodeLibrary", () => {
       },
       outputs: {},
     })
+    expect(coreNodeLibrary.types.parameter).toEqual({
+      id: "parameter",
+      inputs: {
+        label: { id: "label", type: { id: "string" }, defaultValue: "" },
+        value: { id: "value", type: { id: "any" }, defaultValue: null },
+      },
+      outputs: {
+        value: { id: "value", type: { id: "any" } },
+      },
+    })
   })
 
   test("loads into imp-registry", () => {
     const registry = loadLibrary(createRegistry(), coreNodeLibrary)
     expect(getNodeType(registry, "input")?.outputs.value?.id).toBe("value")
     expect(getNodeType(registry, "output")?.inputs.value?.id).toBe("value")
+    expect(getNodeType(registry, "parameter")?.outputs.value?.id).toBe("value")
   })
 })

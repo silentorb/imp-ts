@@ -8,6 +8,8 @@ export interface RelationalEdgesSchema {
   sourceColumn: string
   targetColumn: string
   typeColumn: string
+  /** JSON/text column of edge properties for optional traverse edge filters. */
+  propertiesColumn?: string
 }
 
 export interface RelationalSchema {

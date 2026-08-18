@@ -71,7 +71,8 @@ export function lowerExprNode(
     requireNodeType(ctx.registry, node.type)
 
     switch (node.type) {
-      case "literal": {
+      case "literal":
+      case "parameter": {
         const resolved = resolveInput(
           ctx.graph,
           ctx.registry,

@@ -54,7 +54,8 @@ function resolveLiteralOrThrow(
     portId,
   )
   if (resolved.kind === "wire") {
-    if (requireNode(ctx.graph, resolved.from.node).type === "literal") {
+    const fromType = requireNode(ctx.graph, resolved.from.node).type
+    if (fromType === "literal" || fromType === "parameter") {
       const lit = resolveInput(
         ctx.graph,
         ctx.registry,
@@ -247,20 +248,70 @@ export function lowerCollectionPort(
             `traverse.direction on "${nodeId}" must be 0 or 1, got ${String(direction)}`,
           )
         }
+        const edgePropertyRaw = resolveLiteralOrThrow(
+          ctx,
+          nodeId,
+          "edge_property",
+          "traverse.edge_property",
+        )
+        const edgeEqualsRaw = resolveLiteralOrThrow(
+          ctx,
+          nodeId,
+          "edge_equals",
+          "traverse.edge_equals",
+        )
+        const edgeProperty =
+          edgePropertyRaw === null || edgePropertyRaw === undefined
+            ? null
+            : requireString(edgePropertyRaw, "traverse.edge_property")
+        const edgeEqualsSet = edgeEqualsRaw !== null && edgeEqualsRaw !== undefined
+        if ((edgeProperty !== null) !== edgeEqualsSet) {
+          throw new Error(
+            `traverse on "${nodeId}" requires both edge_property and edge_equals, or neither`,
+          )
+        }
+        if (edgeProperty !== null) {
+          if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(edgeProperty)) {
+            throw new Error(
+              `traverse.edge_property on "${nodeId}" must be a simple identifier, got "${edgeProperty}"`,
+            )
+          }
+          if (!edges.propertiesColumn) {
+            throw new Error(
+              `traverse edge property filter on "${nodeId}" requires schema.edges.propertiesColumn`,
+            )
+          }
+          if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(edges.propertiesColumn)) {
+            throw new Error(
+              `edges.propertiesColumn must be a simple SQL identifier, got "${edges.propertiesColumn}"`,
+            )
+          }
+        }
         const edgeType = resolveEdgeType(ctx.schema, association, direction)
         // sources ⋈ edges(type) ⋈ nodes AS targets → distinct target rows
         const joined = ctx.db
           .selectFrom(base.as("sources"))
           .innerJoin(
             `${edges.table} as path_edges`,
-            (join) =>
-              join
+            (join) => {
+              let j = join
                 .on(
                   sql.ref(`path_edges.${edges.sourceColumn}`),
                   "=",
                   sql.ref("sources.id"),
                 )
-                .on(sql.ref(`path_edges.${edges.typeColumn}`), "=", edgeType),
+                .on(sql.ref(`path_edges.${edges.typeColumn}`), "=", edgeType)
+              if (edgeProperty !== null) {
+                j = j.on(
+                  sql.raw(
+                    `json_extract(path_edges.${edges.propertiesColumn}, '$.${edgeProperty}')`,
+                  ),
+                  "=",
+                  edgeEqualsRaw as string | number | boolean,
+                )
+              }
+              return j
+            },
           )
           .innerJoin(`${ctx.schema.table} as targets`, (join) =>
             join.on(

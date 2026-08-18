@@ -3,10 +3,12 @@
 import type { NodeLibrary } from "./library.ts"
 
 const anySignal = { id: "any" } as const
+const stringSignal = { id: "string" } as const
 
 /**
  * Core Imp boundary nodes — one instance per external port.
  * Host wires values into `input` nodes and reads results from `output` nodes.
+ * `parameter` nodes declare host-configurable values (defaults on the instance).
  */
 export const coreNodeLibrary: NodeLibrary = {
   id: "imp.core",
@@ -24,6 +26,16 @@ export const coreNodeLibrary: NodeLibrary = {
         value: { id: "value", type: anySignal },
       },
       outputs: {},
+    },
+    parameter: {
+      id: "parameter",
+      inputs: {
+        label: { id: "label", type: stringSignal, defaultValue: "" },
+        value: { id: "value", type: anySignal, defaultValue: null },
+      },
+      outputs: {
+        value: { id: "value", type: anySignal },
+      },
     },
   },
 }

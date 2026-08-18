@@ -128,16 +128,17 @@ When an edge is removed in an editor, the node reverts to its stored local liter
 
 ### Core boundary nodes
 
-Graphs act as **subgraphs** with an external interface. Core Imp ships two boundary `NodeType`s in `coreNodeLibrary` (`id: "imp.core"`) from `imp-spec`:
+Graphs act as **subgraphs** with an external interface. Core Imp ships boundary `NodeType`s in `coreNodeLibrary` (`id: "imp.core"`) from `imp-spec`:
 
 | NodeType | Ports | Role |
 | --- | --- | --- |
 | `input` | outputs: single `value` port | Brings a value **into** the graph from outside |
 | `output` | inputs: single `value` port | Sends a value **out** of the graph to the host |
+| `parameter` | inputs: optional `label` (`string`, default `""`), `value` (`any`, default `null`); outputs: `value` | Declares a host-configurable graph parameter. The instance `value` is the default; hosts may override it at execute time. `label` is UI metadata (not used in SQL). Lowers like `literal` (bound parameter / literal from `value`). |
 
 **One node instance per boundary port** (not a multi-port patch board). A subgraph with three inputs and one output is three `input` nodes + one `output` node. Editors may group boundary nodes visually without changing the transmission model.
 
-A host wires external values into `input` nodes and reads results from `output` nodes. Future work may add a composite `GraphType` catalog that declares a subgraph's full interface as a reusable `NodeType`; that is out of scope for this revision.
+A host wires external values into `input` nodes and reads results from `output` nodes. Hosts that expose settings UI discover `parameter` nodes, present `label` + current `value`, and bind overrides into each parameter node’s `inputs.value` before lowering. Future work may add a composite `GraphType` catalog that declares a subgraph's full interface as a reusable `NodeType`; that is out of scope for this revision.
 
 ### Invariants (well-formed graphs)
 
@@ -212,7 +213,7 @@ Maps in other languages should use that language's idiomatic string-keyed dictio
 - **`SignalType`** names the Imp type of a signal on a port; starting with `id` only leaves room for aliases and constraints later without renaming the port maps.
 - **Record/map keyed by id** makes merge, lookup, and partial update straightforward for transmission and UI state.
 - **Separate `EdgeId`** allows multiple edges and stable identity without encoding topology into the id.
-- **Boundary `input` / `output` nodes** — one instance per port — let a graph act as a subgraph with a clear host interface without variable-arity patch-board types in the core model.
+- **Boundary `input` / `output` / `parameter` nodes** — `input`/`output` are one instance per host port; `parameter` declares host-configurable defaults that editors can expose as settings.
 - **Catalog vs instance** — `NodeType` holds port templates; `Node` holds identity, type id, and local input values (`Node.type` ↔ `NodeType.id`). See [node-libraries.md](./node-libraries.md).
 
 ## Behavior / pipeline
@@ -225,7 +226,7 @@ This feature is a **data shape** only. Serialization format (JSON, etc.), valida
 | --- | --- |
 | This doc | Authoritative model spec |
 | `packages/imp-spec/src/graph.ts` | TypeScript interfaces regenerated from this doc |
-| `packages/imp-spec/src/core-library.ts` | Core boundary `NodeLibrary` (`input`, `output`) |
+| `packages/imp-spec/src/core-library.ts` | Core boundary `NodeLibrary` (`input`, `output`, `parameter`) |
 
 ## Quick start
 

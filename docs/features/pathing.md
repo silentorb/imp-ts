@@ -42,12 +42,14 @@ There is **no** `from` / table-source node. The incoming node collection arrives
 
 | NodeType | Inputs | Outputs | Notes |
 | --- | --- | --- | --- |
-| `traverse` | `collection` (`collection`), `association` (`string`), `direction` (`number`, default `0`) | `collection` | One hop: for each source row identity (`id`), follow host edges where `source = id` and `type = hostEdgeType(association, direction)`, emit distinct target nodes as the new collection |
+| `traverse` | `collection` (`collection`), `association` (`string`), `direction` (`number`, default `0`), `edge_property` (`string`, default `null`), `edge_equals` (`any`, default `null`) | `collection` | One hop: for each source row identity (`id`), follow host edges where `source = id` and `type = hostEdgeType(association, direction)`, emit distinct target nodes as the new collection. When both `edge_property` and `edge_equals` are non-null, also require the hop edge’s JSON property named by `edge_property` to equal `edge_equals`. |
 
 - Chained hops = multiple `traverse` nodes in the Imp DAG (not recursive / variable-length paths in v1).
 - `association` and `direction` are **separate** Imp values. Graphs must not pack them into one delimited string.
 - `direction` is `0` or `1` (endpoint index on a two-ended association).
 - Hosts map `(association, direction)` onto their edges `type` column via `RelationalSchema.edgeType` (default: use `association` alone).
+- Optional edge property filter requires `RelationalEdgesSchema.propertiesColumn` at SQL lower time; `edge_property` must be a simple identifier when set.
+- If exactly one of `edge_property` / `edge_equals` is non-null, lowering **must** throw.
 - Result remains a **node collection**, so collection transforms keep working.
 
 ### TypeScript binding (illustrative)
