@@ -1,6 +1,6 @@
 /** Collection pipeline lowering. Spec: docs/features/sql.md */
 
-import type { Edge, Graph, NodeId, PortId } from "imp-spec"
+import type { Edge, Graph, NodeId, PortId, PrimitiveValue } from "imp-spec"
 import type { Kysely, SelectQueryBuilder } from "kysely"
 import { sql } from "kysely"
 import type { Registry } from "imp-registry"
@@ -17,6 +17,7 @@ import {
   type RelationalSchema,
 } from "../schema.ts"
 import { lowerExprNode, type LowerContext } from "./expressions.ts"
+import { encodeStoredPropertyLiteral } from "./encode-property-literal.ts"
 
 type AnyDb = Record<string, Record<string, unknown>>
 export type AnySelect = SelectQueryBuilder<AnyDb, string, object>
@@ -288,6 +289,14 @@ export function lowerCollectionPort(
           }
         }
         const edgeType = resolveEdgeType(ctx.schema, association, direction)
+        const edgeEqualsBound =
+          edgeProperty !== null && edgeEqualsSet
+            ? encodeStoredPropertyLiteral(
+                ctx.schema,
+                edgeProperty,
+                edgeEqualsRaw as PrimitiveValue,
+              )
+            : edgeEqualsRaw
         // sources ⋈ edges(type) ⋈ nodes AS targets → distinct target rows
         const joined = ctx.db
           .selectFrom(base.as("sources"))
@@ -307,7 +316,7 @@ export function lowerCollectionPort(
                     `json_extract(path_edges.${edges.propertiesColumn}, '$.${edgeProperty}')`,
                   ),
                   "=",
-                  edgeEqualsRaw as string | number | boolean,
+                  edgeEqualsBound as string | number | boolean,
                 )
               }
               return j

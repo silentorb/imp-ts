@@ -11,6 +11,11 @@ import {
   type EdgeTargetKey,
 } from "../resolve.ts"
 import { columnExpression, type RelationalSchema } from "../schema.ts"
+import {
+  columnNameFromComparisonPort,
+  encodeStoredPropertyLiteral,
+  literalValueFromComparisonPort,
+} from "./encode-property-literal.ts"
 
 type Eb = ExpressionBuilder<Record<string, Record<string, unknown>>, string>
 
@@ -53,6 +58,62 @@ function resolvePortExpr(
     return literalExpr(resolved.value)
   }
   return lowerExprNode(ctx, eb, resolved.from.node, resolved.from.port)
+}
+
+function comparisonOperands(
+  ctx: LowerContext,
+  eb: Eb,
+  nodeId: NodeId,
+): { left: Expression<unknown>; right: Expression<unknown> } {
+  const leftColumn = columnNameFromComparisonPort(
+    ctx.graph,
+    ctx.registry,
+    ctx.edgesByTarget,
+    nodeId,
+    "left",
+  )
+  const rightColumn = columnNameFromComparisonPort(
+    ctx.graph,
+    ctx.registry,
+    ctx.edgesByTarget,
+    nodeId,
+    "right",
+  )
+  const leftLiteral = literalValueFromComparisonPort(
+    ctx.graph,
+    ctx.registry,
+    ctx.edgesByTarget,
+    nodeId,
+    "left",
+  )
+  const rightLiteral = literalValueFromComparisonPort(
+    ctx.graph,
+    ctx.registry,
+    ctx.edgesByTarget,
+    nodeId,
+    "right",
+  )
+
+  if (leftColumn !== null && rightLiteral !== null) {
+    return {
+      left: resolvePortExpr(ctx, eb, nodeId, "left"),
+      right: literalExpr(
+        encodeStoredPropertyLiteral(ctx.schema, leftColumn, rightLiteral),
+      ),
+    }
+  }
+  if (rightColumn !== null && leftLiteral !== null) {
+    return {
+      left: literalExpr(
+        encodeStoredPropertyLiteral(ctx.schema, rightColumn, leftLiteral),
+      ),
+      right: resolvePortExpr(ctx, eb, nodeId, "right"),
+    }
+  }
+  return {
+    left: resolvePortExpr(ctx, eb, nodeId, "left"),
+    right: resolvePortExpr(ctx, eb, nodeId, "right"),
+  }
 }
 
 /** Lower a node output port to a Kysely expression (predicates / scalars). */
@@ -101,30 +162,22 @@ export function lowerExprNode(
           requireString(nameResolved.value, "column.name"),
         )
       }
-      case "equals":
-        return eb(
-          resolvePortExpr(ctx, eb, nodeId, "left"),
-          "=",
-          resolvePortExpr(ctx, eb, nodeId, "right"),
-        )
-      case "not_equals":
-        return eb(
-          resolvePortExpr(ctx, eb, nodeId, "left"),
-          "!=",
-          resolvePortExpr(ctx, eb, nodeId, "right"),
-        )
-      case "less_than":
-        return eb(
-          resolvePortExpr(ctx, eb, nodeId, "left"),
-          "<",
-          resolvePortExpr(ctx, eb, nodeId, "right"),
-        )
-      case "greater_than":
-        return eb(
-          resolvePortExpr(ctx, eb, nodeId, "left"),
-          ">",
-          resolvePortExpr(ctx, eb, nodeId, "right"),
-        )
+      case "equals": {
+        const { left, right } = comparisonOperands(ctx, eb, nodeId)
+        return eb(left, "=", right)
+      }
+      case "not_equals": {
+        const { left, right } = comparisonOperands(ctx, eb, nodeId)
+        return eb(left, "!=", right)
+      }
+      case "less_than": {
+        const { left, right } = comparisonOperands(ctx, eb, nodeId)
+        return eb(left, "<", right)
+      }
+      case "greater_than": {
+        const { left, right } = comparisonOperands(ctx, eb, nodeId)
+        return eb(left, ">", right)
+      }
       case "and":
         return sql`(${resolvePortExpr(ctx, eb, nodeId, "left")} and ${resolvePortExpr(ctx, eb, nodeId, "right")})`
       case "or":

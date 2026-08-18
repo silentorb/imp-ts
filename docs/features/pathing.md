@@ -42,7 +42,7 @@ There is **no** `from` / table-source node. The incoming node collection arrives
 
 | NodeType | Inputs | Outputs | Notes |
 | --- | --- | --- | --- |
-| `traverse` | `collection` (`collection`), `association` (`string`), `direction` (`number`, default `0`), `edge_property` (`string`, default `null`), `edge_equals` (`any`, default `null`) | `collection` | One hop: for each source row identity (`id`), follow host edges where `source = id` and `type = hostEdgeType(association, direction)`, emit distinct target nodes as the new collection. When both `edge_property` and `edge_equals` are non-null, also require the hop edge’s JSON property named by `edge_property` to equal `edge_equals`. |
+| `traverse` | `collection` (`collection`), `association` (`string`), `direction` (`number`, default `0`), `edge_property` (`string`, default `null`), `edge_equals` (`any`, default `null`) | `collection` | One hop: for each source row identity (`id`), follow host edges where `source = id` and `type = hostEdgeType(association, direction)`, emit distinct target nodes as the new collection. When both `edge_property` and `edge_equals` are non-null, also require the hop edge’s JSON property named by `edge_property` to equal `edge_equals`. Hosts may map `edge_equals` through `RelationalSchema.encodePropertyLiteral` at SQL compile time (e.g. enum labels → cache indices). |
 
 - Chained hops = multiple `traverse` nodes in the Imp DAG (not recursive / variable-length paths in v1).
 - `association` and `direction` are **separate** Imp values. Graphs must not pack them into one delimited string.

@@ -474,4 +474,98 @@ describe("imp-sql", () => {
       }),
     ).toThrow(/propertiesColumn/)
   })
+
+  test("encodePropertyLiteral encodes enum label in equals comparison", () => {
+    const graph: Graph = {
+      nodes: {
+        in: { id: "in", type: "input", inputs: {} },
+        col: { id: "col", type: "column", inputs: { name: "priority" } },
+        lit: { id: "lit", type: "literal", inputs: { value: "Consideration" } },
+        eq: { id: "eq", type: "equals", inputs: {} },
+        filter: { id: "filter", type: "filter", inputs: {} },
+        out: { id: "out", type: "output", inputs: {} },
+      },
+      edges: {
+        e_col: { from: { node: "col", port: "value" }, to: { node: "eq", port: "left" } },
+        e_lit: { from: { node: "lit", port: "value" }, to: { node: "eq", port: "right" } },
+        e_pred: {
+          from: { node: "eq", port: "value" },
+          to: { node: "filter", port: "predicate" },
+        },
+        e_in: {
+          from: { node: "in", port: "value" },
+          to: { node: "filter", port: "collection" },
+        },
+        e_out: {
+          from: { node: "filter", port: "collection" },
+          to: { node: "out", port: "value" },
+        },
+      },
+    }
+
+    const { parameters } = compileSql(
+      graphToKysely(graph, {
+        registry: testRegistry(),
+        schema: {
+          table: "items",
+          column: (name) => `json_extract(properties, '$.${name}')`,
+          encodePropertyLiteral(_key, value) {
+            return value === "Consideration" ? 0 : value
+          },
+        },
+      }),
+    )
+    expect(parameters).toContain(0)
+    expect(parameters).not.toContain("Consideration")
+  })
+
+  test("encodePropertyLiteral encodes traverse edge_equals", () => {
+    const graph: Graph = {
+      nodes: {
+        in: { id: "in", type: "input", inputs: {} },
+        hop: {
+          id: "hop",
+          type: "traverse",
+          inputs: {
+            association: "knows",
+            direction: 0,
+            edge_property: "priority",
+            edge_equals: "Consideration",
+          },
+        },
+        out: { id: "out", type: "output", inputs: {} },
+      },
+      edges: {
+        e_in: {
+          from: { node: "in", port: "value" },
+          to: { node: "hop", port: "collection" },
+        },
+        e_out: {
+          from: { node: "hop", port: "collection" },
+          to: { node: "out", port: "value" },
+        },
+      },
+    }
+
+    const { parameters } = compileSql(
+      graphToKysely(graph, {
+        registry: testRegistry(),
+        schema: {
+          table: "items",
+          encodePropertyLiteral(_key, value) {
+            return value === "Consideration" ? 0 : value
+          },
+          edges: {
+            table: "edges",
+            sourceColumn: "source_id",
+            targetColumn: "target_id",
+            typeColumn: "type",
+            propertiesColumn: "properties",
+          },
+        },
+      }),
+    )
+    expect(parameters).toContain(0)
+    expect(parameters).not.toContain("Consideration")
+  })
 })

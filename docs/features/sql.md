@@ -47,6 +47,8 @@ interface RelationalSchema {
   edges?: RelationalEdgesSchema
   /** Map traverse association + direction → edges.typeColumn filter value. Default: association alone. */
   edgeType?(association: string, direction: number): string
+  /** Map author enum label literals to stored JSON property values before SQL bind. Default: identity. */
+  encodePropertyLiteral?(propertyKey: string, authorValue: PrimitiveValue): PrimitiveValue
 }
 ```
 
@@ -77,7 +79,7 @@ For each input port, resolve in order (see [graph-model.md](./graph-model.md)):
 | `column` | Column reference via `schema.column` or identity |
 | `literal` | Bound parameter / literal |
 | `parameter` | Same as `literal` — bound parameter / literal from the node’s `value` input (`label` is ignored by SQL) |
-| `equals` / `not_equals` / `less_than` / `greater_than` | Comparison |
+| `equals` / `not_equals` / `less_than` / `greater_than` | Comparison; when one side is a `column` and the other a literal/parameter, `schema.encodePropertyLiteral(columnName, literal)` is applied before bind when the hook is defined |
 | `and` / `or` / `not` | Boolean combinators |
 
 Unsupported or unknown `Node.type` values **must throw**. `traverse` **must throw** when `schema.edges` is absent. Both `collection` and `exclude` on `except` **must** be wired collection ports.
@@ -99,6 +101,7 @@ Hosts (e.g. Tome’s `tome-imp-sql`) supply `RelationalSchema` that maps:
 - Edge hops → `schema.edges` (e.g. `relationship_projections`)
 - Traverse association/direction → edges `type` filter via `edgeType` (Tome encodes directed projections here; Imp graphs keep the parts separate)
 - Property columns → `json_extract(properties, '$.…')` via `column`
+- Enum property literals in comparisons → `schema.encodePropertyLiteral` when the host maps labels to stored cache indices (Tome: see [tome-imp-sql.md](../../../tome/docs/features/tome-imp-sql.md))
 
 Compiled SQL + bindings can feed `TomeQueryCache.queryAll`. No Tome code in this package.
 

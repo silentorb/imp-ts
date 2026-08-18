@@ -1,5 +1,6 @@
 /** Relational schema hook for Imp → SQL lowering. Spec: docs/features/sql.md */
 
+import type { PrimitiveValue } from "imp-spec"
 import type { Expression } from "kysely"
 import { sql } from "kysely"
 
@@ -17,6 +18,11 @@ export interface RelationalSchema {
   table: string
   /** Map a logical column name to a SQL column identifier or expression. Default: identity. */
   column?(name: string): string
+  /**
+   * Map an author-facing property literal to the value stored in JSON properties
+   * before SQL comparison against json_extract (or equivalent). Default: identity.
+   */
+  encodePropertyLiteral?(propertyKey: string, authorValue: PrimitiveValue): PrimitiveValue
   /**
    * Optional edges relation for path operators (`traverse`).
    * Source collection rows must expose an `id` column joined to `sourceColumn`.
