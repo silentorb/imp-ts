@@ -217,6 +217,22 @@ export function lowerCollectionPort(
         }
         return base.clearSelect().select(cols as never)
       }
+      case "group": {
+        const base = followCollectionInput(ctx, nodeId)
+        const columnName = requireString(
+          resolveLiteralOrThrow(ctx, nodeId, "column", "group.column"),
+          "group.column",
+        )
+        const directionRaw = requireString(
+          resolveLiteralOrThrow(ctx, nodeId, "direction", "group.direction"),
+          "group.direction",
+        ).toLowerCase()
+        if (directionRaw !== "asc" && directionRaw !== "desc") {
+          throw new Error(`group.direction must be "asc" or "desc", got "${directionRaw}"`)
+        }
+        const col = columnExpression(ctx.schema, columnName)
+        return base.orderBy(col, directionRaw)
+      }
       case "traverse": {
         const edges = ctx.schema.edges
         if (edges == null) {
@@ -297,6 +313,12 @@ export function lowerCollectionPort(
                 edgeEqualsRaw as PrimitiveValue,
               )
             : edgeEqualsRaw
+        const propsCol = edges.propertiesColumn
+        if (propsCol && !/^[A-Za-z_][A-Za-z0-9_]*$/.test(propsCol)) {
+          throw new Error(
+            `edges.propertiesColumn must be a simple SQL identifier, got "${propsCol}"`,
+          )
+        }
         // sources ⋈ edges(type) ⋈ nodes AS targets → distinct target rows
         const joined = ctx.db
           .selectFrom(base.as("sources"))
@@ -329,9 +351,20 @@ export function lowerCollectionPort(
               sql.ref(`path_edges.${edges.targetColumn}`),
             ),
           )
-          .selectAll("targets")
-          .distinct()
-        return joined as unknown as AnySelect
+        const selected = propsCol
+          ? joined
+              .select("targets.id")
+              .select("targets.is_archived")
+              .select(
+                sql
+                  .raw(
+                    `json_patch(coalesce(targets.properties, '{}'), coalesce(path_edges.${propsCol}, '{}'))`,
+                  )
+                  .as("properties"),
+              )
+              .distinct()
+          : joined.selectAll("targets").distinct()
+        return selected as unknown as AnySelect
       }
       case "output": {
         const resolved = resolveInput(

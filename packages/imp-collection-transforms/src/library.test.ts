@@ -9,6 +9,8 @@ describe("collectionTransformsLibrary", () => {
     expect(collectionTransformsLibrary.types.except.id).toBe("except")
     expect(collectionTransformsLibrary.types.except.inputs.exclude.type.id).toBe("collection")
     expect(collectionTransformsLibrary.types.sort.inputs.direction?.defaultValue).toBe("asc")
+    expect(collectionTransformsLibrary.types.group.inputs.direction?.defaultValue).toBe("asc")
+    expect(collectionTransformsLibrary.types.group.inputs.column.type.id).toBe("string")
     expect(collectionTransformsLibrary.types.equals).toBeDefined()
     expect(collectionTransformsLibrary.types.not_equals).toBeDefined()
     expect(collectionTransformsLibrary.types.less_than).toBeDefined()

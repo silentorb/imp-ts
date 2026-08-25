@@ -114,6 +114,38 @@ describe("imp-sql", () => {
     expect(sql.toLowerCase()).toMatch(/order by.*"name".*asc/)
   })
 
+  test("lowers group to ORDER BY on the group column", () => {
+    const graph: Graph = {
+      nodes: {
+        in: { id: "in", type: "input", inputs: {} },
+        group: {
+          id: "group",
+          type: "group",
+          inputs: { column: "priority", direction: "desc" },
+        },
+        out: { id: "out", type: "output", inputs: {} },
+      },
+      edges: {
+        e1: {
+          from: { node: "in", port: "value" },
+          to: { node: "group", port: "collection" },
+        },
+        e2: {
+          from: { node: "group", port: "collection" },
+          to: { node: "out", port: "value" },
+        },
+      },
+    }
+
+    const { sql } = compileSql(
+      graphToKysely(graph, {
+        registry: testRegistry(),
+        schema: { table: "items" },
+      }),
+    )
+    expect(sql.toLowerCase()).toMatch(/order by.*"priority".*desc/)
+  })
+
   test("throws on unknown node type", () => {
     const graph: Graph = {
       nodes: {
@@ -437,6 +469,7 @@ describe("imp-sql", () => {
     )
     expect(sql.toLowerCase()).toContain("json_extract")
     expect(sql).toContain("$.priority")
+    expect(sql.toLowerCase()).toContain("json_patch")
     expect(parameters).toContain("Consideration")
   })
 

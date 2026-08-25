@@ -86,6 +86,17 @@ export const collectionTransformsLibrary: NodeLibrary = {
         collection: collectionOut(),
       },
     },
+    group: {
+      id: "group",
+      inputs: {
+        collection: collectionIn(),
+        column: port("column", string),
+        direction: port("direction", string, "asc"),
+      },
+      outputs: {
+        collection: collectionOut(),
+      },
+    },
     equals: {
       id: "equals",
       inputs: {
