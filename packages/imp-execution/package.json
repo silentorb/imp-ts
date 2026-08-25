@@ -1,0 +1,22 @@
+{
+  "name": "imp-execution",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "bun test"
+  },
+  "dependencies": {
+    "imp-collection-transforms": "workspace:*",
+    "imp-pathing": "workspace:*",
+    "imp-registry": "workspace:*",
+    "imp-spec": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "5.8.2"
+  }
+}

@@ -1,0 +1,383 @@
+/** In-memory collection evaluation. Spec: docs/features/execution.md */
+
+import type { Graph, NodeId, PortId } from "imp-spec";
+import type { Registry } from "imp-registry";
+import type { ExecutionHost, ExecutionRow } from "../host.ts";
+import {
+  indexEdgesByTarget,
+  requireNode,
+  resolveInput,
+  type EdgeTargetKey,
+} from "../resolve.ts";
+
+export interface EvalContext {
+  graph: Graph;
+  registry: Registry;
+  host: ExecutionHost;
+  edgesByTarget: Map<EdgeTargetKey, import("imp-spec").Edge>;
+  visiting: Set<NodeId>;
+  sourceNodeId: NodeId;
+  edgeType?: (association: string, direction: number) => string;
+  currentRow?: ExecutionRow;
+}
+
+function requireNumber(value: unknown, label: string): number {
+  if (typeof value !== "number" || !Number.isFinite(value)) {
+    throw new Error(`${label} must be a finite number`);
+  }
+  return value;
+}
+
+function requireString(value: unknown, label: string): string {
+  if (typeof value !== "string") {
+    throw new Error(`${label} must be a string`);
+  }
+  return value;
+}
+
+function resolveLiteralOrThrow(
+  ctx: EvalContext,
+  nodeId: NodeId,
+  portId: PortId,
+  label: string,
+): unknown {
+  const resolved = resolveInput(
+    ctx.graph,
+    ctx.registry,
+    ctx.edgesByTarget,
+    nodeId,
+    portId,
+  );
+  if (resolved.kind === "wire") {
+    const fromType = requireNode(ctx.graph, resolved.from.node).type;
+    if (fromType === "literal" || fromType === "parameter") {
+      const lit = resolveInput(
+        ctx.graph,
+        ctx.registry,
+        ctx.edgesByTarget,
+        resolved.from.node,
+        "value",
+      );
+      if (lit.kind === "literal") {
+        return lit.value;
+      }
+    }
+    throw new Error(`${label} on "${nodeId}" must resolve to a literal`);
+  }
+  return resolved.value;
+}
+
+function rowColumn(row: ExecutionRow, column: string): unknown {
+  if (column === "id") return row.id;
+  if (column === "is_archived") return row.is_archived ?? false;
+  if (column.startsWith("properties.")) {
+    return row.properties[column.slice("properties.".length)];
+  }
+  return row.properties[column];
+}
+
+function evalExpression(ctx: EvalContext, nodeId: NodeId, portId: PortId): unknown {
+  const resolved = resolveInput(ctx.graph, ctx.registry, ctx.edgesByTarget, nodeId, portId);
+  if (resolved.kind === "literal") {
+    return resolved.value;
+  }
+  const fromNode = requireNode(ctx.graph, resolved.from.node);
+  if (fromNode.type === "column") {
+    if (!ctx.currentRow) {
+      throw new Error(`column "${resolved.from.node}" requires a row context`);
+    }
+    const nameRaw = fromNode.inputs?.name;
+    const columnName = requireString(nameRaw, "column.name");
+    return rowColumn(ctx.currentRow, columnName);
+  }
+  if (fromNode.type === "literal" || fromNode.type === "parameter") {
+    return fromNode.inputs?.value;
+  }
+  if (portId === "result" || portId === "value") {
+    return evalPredicateValue(ctx, resolved.from.node);
+  }
+  throw new Error(`Unsupported expression node type "${fromNode.type}" on "${resolved.from.node}"`);
+}
+
+function evalPredicateValue(ctx: EvalContext, nodeId: NodeId): unknown {
+  const node = requireNode(ctx.graph, nodeId);
+  switch (node.type) {
+    case "equals":
+      return (
+        evalExpression(ctx, nodeId, "left") === evalExpression(ctx, nodeId, "right")
+      );
+    case "not_equals":
+      return (
+        evalExpression(ctx, nodeId, "left") !== evalExpression(ctx, nodeId, "right")
+      );
+    case "less_than":
+      return (
+        Number(evalExpression(ctx, nodeId, "left")) <
+        Number(evalExpression(ctx, nodeId, "right"))
+      );
+    case "greater_than":
+      return (
+        Number(evalExpression(ctx, nodeId, "left")) >
+        Number(evalExpression(ctx, nodeId, "right"))
+      );
+    case "and": {
+      const left = resolveInput(ctx.graph, ctx.registry, ctx.edgesByTarget, nodeId, "left");
+      const right = resolveInput(ctx.graph, ctx.registry, ctx.edgesByTarget, nodeId, "right");
+      if (left.kind !== "wire" || right.kind !== "wire") {
+        throw new Error(`and on "${nodeId}" requires wired boolean inputs`);
+      }
+      return evalPredicate(ctx, left.from.node) && evalPredicate(ctx, right.from.node);
+    }
+    case "or": {
+      const left = resolveInput(ctx.graph, ctx.registry, ctx.edgesByTarget, nodeId, "left");
+      const right = resolveInput(ctx.graph, ctx.registry, ctx.edgesByTarget, nodeId, "right");
+      if (left.kind !== "wire" || right.kind !== "wire") {
+        throw new Error(`or on "${nodeId}" requires wired boolean inputs`);
+      }
+      return evalPredicate(ctx, left.from.node) || evalPredicate(ctx, right.from.node);
+    }
+    case "not": {
+      const inner = resolveInput(ctx.graph, ctx.registry, ctx.edgesByTarget, nodeId, "operand");
+      if (inner.kind !== "wire") {
+        throw new Error(`not on "${nodeId}" requires wired operand`);
+      }
+      return !evalPredicate(ctx, inner.from.node);
+    }
+    default:
+      throw new Error(`Unsupported predicate node type "${node.type}"`);
+  }
+}
+
+function evalPredicate(ctx: EvalContext, nodeId: NodeId): boolean {
+  return Boolean(evalPredicateValue(ctx, nodeId));
+}
+
+async function followCollectionPort(
+  ctx: EvalContext,
+  nodeId: NodeId,
+  portId: PortId,
+  label: string,
+): Promise<ExecutionRow[]> {
+  const resolved = resolveInput(ctx.graph, ctx.registry, ctx.edgesByTarget, nodeId, portId);
+  if (resolved.kind === "literal") {
+    throw new Error(`${label} on "${nodeId}" must be wired, not a literal`);
+  }
+  return evalCollectionPort(ctx, resolved.from.node, resolved.from.port);
+}
+
+function projectRows(rows: ExecutionRow[], columnsCsv: string): ExecutionRow[] {
+  const cols = columnsCsv
+    .split(",")
+    .map((c) => c.trim())
+    .filter(Boolean);
+  if (cols.length === 0) {
+    throw new Error("project.columns must list at least one column");
+  }
+  return rows.map((row) => {
+    const properties: Record<string, unknown> = {};
+    const projected: ExecutionRow = { id: row.id, properties, is_archived: row.is_archived };
+    for (const col of cols) {
+      if (col === "id") {
+        projected.id = String(rowColumn(row, col));
+      } else if (col === "is_archived") {
+        projected.is_archived = Boolean(rowColumn(row, col));
+      } else {
+        const key = col.startsWith("properties.") ? col.slice("properties.".length) : col;
+        properties[key] = rowColumn(row, col);
+      }
+    }
+    return projected;
+  });
+}
+
+export async function evalCollectionPort(
+  ctx: EvalContext,
+  nodeId: NodeId,
+  outputPort: PortId,
+): Promise<ExecutionRow[]> {
+  if (ctx.visiting.has(nodeId)) {
+    throw new Error(`Cycle detected while executing collection at node "${nodeId}"`);
+  }
+  ctx.visiting.add(nodeId);
+  try {
+    const node = requireNode(ctx.graph, nodeId);
+
+    switch (node.type) {
+      case "input": {
+        if (nodeId !== ctx.sourceNodeId) {
+          throw new Error(`Unexpected input node "${nodeId}"`);
+        }
+        if (outputPort !== "value") {
+          throw new Error(`input node "${nodeId}" only has output port "value"`);
+        }
+        return await ctx.host.listInputRows();
+      }
+      case "output": {
+        if (outputPort !== "value") {
+          throw new Error(`output node "${nodeId}" only has input port "value"`);
+        }
+        return followCollectionPort(ctx, nodeId, "value", "output.value");
+      }
+      case "filter": {
+        const base = await followCollectionPort(ctx, nodeId, "collection", "filter.collection");
+        const pred = resolveInput(ctx.graph, ctx.registry, ctx.edgesByTarget, nodeId, "predicate");
+        if (pred.kind === "literal") {
+          throw new Error(`filter.predicate on "${nodeId}" must be wired`);
+        }
+        return base.filter((row) => {
+          ctx.currentRow = row;
+          return evalPredicate(ctx, pred.from.node);
+        });
+      }
+      case "except": {
+        const keep = await followCollectionPort(ctx, nodeId, "collection", "except.collection");
+        const exclude = await followCollectionPort(ctx, nodeId, "exclude", "except.exclude");
+        const excludeIds = new Set(exclude.map((r) => r.id));
+        return keep.filter((r) => !excludeIds.has(r.id));
+      }
+      case "sort": {
+        const base = [...(await followCollectionPort(ctx, nodeId, "collection", "sort.collection"))];
+        const columnName = requireString(
+          resolveLiteralOrThrow(ctx, nodeId, "column", "sort.column"),
+          "sort.column",
+        );
+        const directionRaw = requireString(
+          resolveLiteralOrThrow(ctx, nodeId, "direction", "sort.direction"),
+          "sort.direction",
+        ).toLowerCase();
+        const sign = directionRaw === "desc" ? -1 : 1;
+        base.sort((a, b) => {
+          const av = rowColumn(a, columnName);
+          const bv = rowColumn(b, columnName);
+          if (av === bv) return 0;
+          if (av == null) return 1;
+          if (bv == null) return -1;
+          return av < bv ? -sign : sign;
+        });
+        return base;
+      }
+      case "limit": {
+        const base = await followCollectionPort(ctx, nodeId, "collection", "limit.collection");
+        const count = requireNumber(
+          resolveLiteralOrThrow(ctx, nodeId, "count", "limit.count"),
+          "limit.count",
+        );
+        return base.slice(0, Math.max(0, count));
+      }
+      case "offset": {
+        const base = await followCollectionPort(ctx, nodeId, "collection", "offset.collection");
+        const count = requireNumber(
+          resolveLiteralOrThrow(ctx, nodeId, "count", "offset.count"),
+          "offset.count",
+        );
+        return base.slice(Math.max(0, count));
+      }
+      case "project": {
+        const base = await followCollectionPort(ctx, nodeId, "collection", "project.collection");
+        const columnsRaw = requireString(
+          resolveLiteralOrThrow(ctx, nodeId, "columns", "project.columns"),
+          "project.columns",
+        );
+        return projectRows(base, columnsRaw);
+      }
+      case "group": {
+        const base = [...(await followCollectionPort(ctx, nodeId, "collection", "group.collection"))];
+        const columnName = requireString(
+          resolveLiteralOrThrow(ctx, nodeId, "column", "group.column"),
+          "group.column",
+        );
+        const directionRaw = requireString(
+          resolveLiteralOrThrow(ctx, nodeId, "direction", "group.direction"),
+          "group.direction",
+        ).toLowerCase();
+        const sign = directionRaw === "desc" ? -1 : 1;
+        base.sort((a, b) => {
+          const av = rowColumn(a, columnName);
+          const bv = rowColumn(b, columnName);
+          if (av === bv) return 0;
+          if (av == null) return 1;
+          if (bv == null) return -1;
+          return av < bv ? -sign : sign;
+        });
+        return base;
+      }
+      case "traverse": {
+        const base = await followCollectionPort(ctx, nodeId, "collection", "traverse.collection");
+        const association = requireString(
+          resolveLiteralOrThrow(ctx, nodeId, "association", "traverse.association"),
+          "traverse.association",
+        );
+        const direction = requireNumber(
+          resolveLiteralOrThrow(ctx, nodeId, "direction", "traverse.direction"),
+          "traverse.direction",
+        );
+        if (direction !== 0 && direction !== 1) {
+          throw new Error("traverse.direction must be 0 or 1");
+        }
+        const edgePropertyRaw = resolveLiteralOrThrow(
+          ctx,
+          nodeId,
+          "edge_property",
+          "traverse.edge_property",
+        );
+        const edgeEqualsRaw = resolveLiteralOrThrow(
+          ctx,
+          nodeId,
+          "edge_equals",
+          "traverse.edge_equals",
+        );
+        const edgeProperty =
+          edgePropertyRaw === null || edgePropertyRaw === undefined
+            ? null
+            : requireString(edgePropertyRaw, "traverse.edge_property");
+        const edgeEqualsSet = edgeEqualsRaw !== null && edgeEqualsRaw !== undefined;
+
+        const seen = new Set<string>();
+        const out: ExecutionRow[] = [];
+        for (const source of base) {
+          const targets = await ctx.host.traverse(
+            source.id,
+            association,
+            direction as 0 | 1,
+            edgeProperty,
+            edgeEqualsSet ? edgeEqualsRaw : undefined,
+          );
+          for (const t of targets) {
+            if (seen.has(t.id)) continue;
+            seen.add(t.id);
+            out.push(t);
+          }
+        }
+        return out;
+      }
+      default:
+        throw new Error(`Unsupported collection node type "${node.type}"`);
+    }
+  } finally {
+    ctx.visiting.delete(nodeId);
+  }
+}
+
+export function resultFromRows(rows: ExecutionRow[]): {
+  columns: string[];
+  rows: Record<string, unknown>[];
+} {
+  if (rows.length === 0) {
+    return { columns: ["id"], rows: [] };
+  }
+  const propKeys = new Set<string>();
+  for (const row of rows) {
+    for (const key of Object.keys(row.properties)) {
+      propKeys.add(key);
+    }
+  }
+  const columns = ["id", ...[...propKeys].sort()];
+  const outRows = rows.map((row) => {
+    const record: Record<string, unknown> = { id: row.id };
+    for (const key of propKeys) {
+      record[key] = row.properties[key];
+    }
+    return record;
+  });
+  return { columns, rows: outRows };
+}

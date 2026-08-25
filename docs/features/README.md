@@ -18,6 +18,7 @@ Each file in this directory is the **authoritative design spec** for one major I
 | Collection transforms | [collection-transforms.md](./collection-transforms.md) |
 | Pathing | [pathing.md](./pathing.md) |
 | SQL lowering | [sql.md](./sql.md) |
+| Dynamic execution (imp-execution) | [execution.md](./execution.md) |
 
 ## Split of concerns
 

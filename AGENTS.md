@@ -14,6 +14,7 @@ Imp succeeds [imp-kotlin](https://github.com/silentorb/imp-kotlin) but keeps onl
 | `packages/imp-collection-transforms/` | Collection combinator `NodeLibrary` |
 | `packages/imp-pathing/` | GQL-like path operator `NodeLibrary` |
 | `packages/imp-sql/` | Imp collection graphs → SQL via Kysely |
+| `packages/imp-execution/` | Dynamic runtime for collection/path graphs (read-only host) |
 
 Each package has a brief **`README.md`** (context) and **`AGENTS.md`** (how to work in the package). See [`packages/README.md`](./packages/README.md).
 
@@ -47,6 +48,7 @@ When docs and code disagree, update the doc or the code explicitly — do not le
 | Collection transform combinators | [`docs/features/collection-transforms.md`](./docs/features/collection-transforms.md) |
 | Path / hop operators | [`docs/features/pathing.md`](./docs/features/pathing.md) |
 | Imp → SQL (Kysely) | [`docs/features/sql.md`](./docs/features/sql.md) |
+| Dynamic execution (`imp-execution`) | [`docs/features/execution.md`](./docs/features/execution.md) |
 
 See [`docs/features/README.md`](./docs/features/README.md) for the feature-doc template.
 
