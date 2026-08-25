@@ -97,6 +97,26 @@ export const collectionTransformsLibrary: NodeLibrary = {
         collection: collectionOut(),
       },
     },
+    search: {
+      id: "search",
+      inputs: {
+        collection: collectionIn(),
+        query: port("query", string),
+      },
+      outputs: {
+        collection: collectionOut(),
+      },
+    },
+    contains: {
+      id: "contains",
+      inputs: {
+        haystack: port("haystack", any),
+        needle: port("needle", string),
+      },
+      outputs: {
+        value: port("value", boolean),
+      },
+    },
     equals: {
       id: "equals",
       inputs: {

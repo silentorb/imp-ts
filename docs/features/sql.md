@@ -81,6 +81,8 @@ For each input port, resolve in order (see [graph-model.md](./graph-model.md)):
 | `literal` | Bound parameter / literal |
 | `parameter` | Same as `literal` — bound parameter / literal from the node’s `value` input (`label` is ignored by SQL) |
 | `equals` / `not_equals` / `less_than` / `greater_than` | Comparison; when one side is a `column` and the other a literal/parameter, `schema.encodePropertyLiteral(columnName, literal)` is applied before bind when the hook is defined |
+| `contains` | Substring match: `haystack LIKE '%' \|\| needle \|\| '%'` (escape `\`); adapters may use equivalent SQL |
+| `search` | **Not lowered** by generic `imp-sql` — host-delegated declarative retrieval; hosts intercept at compile or execute |
 | `and` / `or` / `not` | Boolean combinators |
 
 Unsupported or unknown `Node.type` values **must throw**. `traverse` **must throw** when `schema.edges` is absent. Both `collection` and `exclude` on `except` **must** be wired collection ports.

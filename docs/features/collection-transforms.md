@@ -51,6 +51,7 @@ There is **no** `from` / table-source node. The incoming collection arrives via 
 | `offset` | `collection` (`collection`), `count` (`number`) | `collection` | Skip first `count` rows |
 | `project` | `collection` (`collection`), `columns` (`string`) | `collection` | `columns` is a comma-separated column name list (v1) |
 | `group` | `collection` (`collection`), `column` (`string`), `direction` (`string`, default `"asc"`) | `collection` | Partition rows by `column`; `direction` is `"asc"` or `"desc"`. Rows stay flat; hosts use group order for bands/sections. SQL lowering is `ORDER BY` on the group column; partition and enum-weight sort happen after execute. |
+| `search` | `collection` (`collection`), `query` (`string`) | `collection` | Declarative text retrieval. Imp defines intent only — ranking, field coverage, fuzzy matching, case rules, empty-query behavior, and preview metadata are **host-defined**. Generic `imp-sql` does **not** lower `search`; hosts intercept at compile or execute (see [sql.md](./sql.md)). |
 
 `except` is **declarative** only. Lowerers must resolve it lazily (e.g. SQL anti-membership over a subquery). They must **not** materialize `exclude` into an in-memory id set and subtract.
 
@@ -58,6 +59,7 @@ There is **no** `from` / table-source node. The incoming collection arrives via 
 
 | NodeType | Inputs | Outputs |
 | --- | --- | --- |
+| `contains` | `haystack` (`any`), `needle` (`string`) | `value` (`boolean`) | Precise substring match when both operands coerce to strings; adapters define case rules. **Not** a declarative search — use `search` for open-ended retrieval. |
 | `equals` | `left` (`any`), `right` (`any`) | `value` (`boolean`) |
 | `not_equals` | `left` (`any`), `right` (`any`) | `value` (`boolean`) |
 | `less_than` | `left` (`any`), `right` (`any`) | `value` (`boolean`) |

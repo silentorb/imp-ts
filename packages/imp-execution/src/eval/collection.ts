@@ -120,6 +120,14 @@ function evalPredicateValue(ctx: EvalContext, nodeId: NodeId): unknown {
         Number(evalExpression(ctx, nodeId, "left")) >
         Number(evalExpression(ctx, nodeId, "right"))
       );
+    case "contains": {
+      const haystack = evalExpression(ctx, nodeId, "haystack");
+      const needle = evalExpression(ctx, nodeId, "needle");
+      if (typeof haystack !== "string" || typeof needle !== "string") {
+        return false;
+      }
+      return haystack.toLowerCase().includes(needle.toLowerCase());
+    }
     case "and": {
       const left = resolveInput(ctx.graph, ctx.registry, ctx.edgesByTarget, nodeId, "left");
       const right = resolveInput(ctx.graph, ctx.registry, ctx.edgesByTarget, nodeId, "right");
@@ -300,6 +308,15 @@ export async function evalCollectionPort(
           return av < bv ? -sign : sign;
         });
         return base;
+      }
+      case "search": {
+        const base = await followCollectionPort(ctx, nodeId, "collection", "search.collection");
+        const queryRaw = resolveLiteralOrThrow(ctx, nodeId, "query", "search.query");
+        const query = requireString(queryRaw, "search.query");
+        if (!ctx.host.textSearch) {
+          throw new Error('Node type "search" requires ExecutionHost.textSearch');
+        }
+        return await ctx.host.textSearch(base, query);
       }
       case "traverse": {
         const base = await followCollectionPort(ctx, nodeId, "collection", "traverse.collection");

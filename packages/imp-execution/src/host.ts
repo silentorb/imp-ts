@@ -26,6 +26,14 @@ export interface ExecutionHost {
     edgeProperty?: string | null,
     edgeEquals?: unknown,
   ): ExecutionRow[] | Promise<ExecutionRow[]>;
+  /**
+   * Declarative text search over a collection slice. Host defines heuristics
+   * (ranking, fields, fuzzy match). Required when graphs use the `search` transform.
+   */
+  textSearch?(
+    rows: ExecutionRow[],
+    query: string,
+  ): ExecutionRow[] | Promise<ExecutionRow[]>;
 }
 
 export interface ExecutionResult {

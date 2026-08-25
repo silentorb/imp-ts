@@ -233,6 +233,10 @@ export function lowerCollectionPort(
         const col = columnExpression(ctx.schema, columnName)
         return base.orderBy(col, directionRaw)
       }
+      case "search":
+        throw new Error(
+          'Node type "search" is host-delegated and cannot be lowered by generic imp-sql',
+        )
       case "traverse": {
         const edges = ctx.schema.edges
         if (edges == null) {

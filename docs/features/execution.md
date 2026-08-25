@@ -19,7 +19,7 @@ Pair with **`imp-sql`** (compile → SQL) as the two read backends for the same 
 Must execute graphs using:
 
 - `imp.core` boundary nodes (`input`, `output`)
-- `imp.collection.transforms` (`filter`, `sort`, `limit`, `offset`, `project`, `except`, predicates, …)
+- `imp.collection.transforms` (`filter`, `sort`, `limit`, `offset`, `project`, `except`, `search`, predicates including `contains`, …)
 - `imp.pathing` (`traverse` — single hop)
 
 Must **not** revive imp-kotlin language-layer execution (functions, inlining, full type interpreter).
@@ -51,6 +51,14 @@ interface ExecutionHost {
     direction: 0 | 1,
     edgeProperty?: string | null,
     edgeEquals?: unknown,
+  ): ExecutionRow[] | Promise<ExecutionRow[]>;
+  /**
+   * Declarative text search over a collection. Required when graphs use the `search`
+   * transform. Host defines ranking, field coverage, and fuzzy behavior.
+   */
+  textSearch?(
+    rows: ExecutionRow[],
+    query: string,
   ): ExecutionRow[] | Promise<ExecutionRow[]>;
 }
 ```

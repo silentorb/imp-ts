@@ -162,6 +162,21 @@ export function lowerExprNode(
           requireString(nameResolved.value, "column.name"),
         )
       }
+      case "contains": {
+        const haystack = resolvePortExpr(ctx, eb, nodeId, "haystack")
+        const needleResolved = resolveInput(
+          ctx.graph,
+          ctx.registry,
+          ctx.edgesByTarget,
+          nodeId,
+          "needle",
+        )
+        const needle =
+          needleResolved.kind === "literal"
+            ? needleResolved.value
+            : lowerExprNode(ctx, eb, needleResolved.from.node, needleResolved.from.port)
+        return sql`(${haystack} like '%' || ${needle} || '%' escape '\\')`
+      }
       case "equals": {
         const { left, right } = comparisonOperands(ctx, eb, nodeId)
         return eb(left, "=", right)
