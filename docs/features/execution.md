@@ -74,7 +74,7 @@ Imp effects **must** be discrete — behavior from graph + explicit host binding
 3. **Default-deny capabilities** — `ExecutionCapabilities` reserved for granular flags (`mutateGraph`, `externalIO`, …) and future language-level effect annotations.
 4. **Parity with imp-sql** — default effect profile is read-only (SELECT-shaped); queries return collections without mutating backing stores.
 
-v1 may enforce only structural sandboxing (narrow read-only host API); specs **must** document the extension point before effectful operators ship.
+v1 may enforce only structural sandboxing (narrow read-only host API); specs **must** document the extension point before effectful operators ship. The Tome graph-store migration does **not** include Imp mutation operators — Tome hosts keep imperative Base-tier CRUD for writes.
 
 ### Terminology
 
