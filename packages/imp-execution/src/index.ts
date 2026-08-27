@@ -4,5 +4,5 @@ export {
   type ExecutionHost,
   type ExecutionResult,
   type ExecutionRow,
-} from "./host.ts";
-export { executeGraph, type ExecuteGraphOptions } from "./execute.ts";
+} from "./host";
+export { executeGraph, type ExecuteGraphOptions } from "./execute";

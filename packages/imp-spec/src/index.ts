@@ -13,8 +13,8 @@ export type {
   Node,
   Edge,
   Graph,
-} from "./graph.ts"
+} from "./graph"
 
-export type { NodeType, NodeLibrary } from "./library.ts"
+export type { NodeType, NodeLibrary } from "./library"
 
-export { coreNodeLibrary } from "./core-library.ts"
+export { coreNodeLibrary } from "./core-library"

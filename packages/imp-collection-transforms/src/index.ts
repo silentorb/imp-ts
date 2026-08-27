@@ -1,1 +1,1 @@
-export { collectionTransformsLibrary } from "./library.ts"
+export { collectionTransformsLibrary } from "./library"

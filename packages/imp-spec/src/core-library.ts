@@ -1,6 +1,6 @@
 /** Core boundary node types. Authoritative spec: docs/features/graph-model.md */
 
-import type { NodeLibrary } from "./library.ts"
+import type { NodeLibrary } from "./library"
 
 const anySignal = { id: "any" } as const
 const stringSignal = { id: "string" } as const

@@ -4,7 +4,7 @@ import { coreNodeLibrary } from "imp-spec"
 import { collectionTransformsLibrary } from "imp-collection-transforms"
 import { pathingLibrary } from "imp-pathing"
 import { createRegistry, loadLibrary } from "imp-registry"
-import { compileSql, graphToKysely } from "./compile.ts"
+import { compileSql, graphToKysely } from "./compile"
 
 function testRegistry() {
   return loadLibrary(

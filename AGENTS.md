@@ -57,6 +57,7 @@ See [`docs/features/README.md`](./docs/features/README.md) for the feature-doc t
 - Focused changes only; avoid unrelated refactors.
 - **Prototypal stage — no backwards compatibility.** Delete old shapes; migrate consumers in the same change.
 - Package and import names use `imp-*` (never `imp-ts-*`).
+- TypeScript-to-TypeScript imports are extensionless (no `.ts` suffix).
 - Prefer Bun for tooling and tests.
 
 ## Workbench integration

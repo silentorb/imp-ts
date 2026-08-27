@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test"
 import type { Graph } from "imp-spec"
 import { coreNodeLibrary } from "imp-spec"
 import { createRegistry, getNodeType, loadLibrary } from "imp-registry"
-import { impToReactFlow, reactFlowToImp } from "./convert.ts"
+import { impToReactFlow, reactFlowToImp } from "./convert"
 
 describe("imp ↔ React Flow converters", () => {
   test("round-trips an empty graph", () => {

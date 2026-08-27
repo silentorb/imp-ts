@@ -7,9 +7,9 @@ import {
   type ExecutionCapabilities,
   type ExecutionHost,
   type ExecutionResult,
-} from "./host.ts";
-import { defaultSink, defaultSource, indexEdgesByTarget } from "./resolve.ts";
-import { evalCollectionPort, resultFromRows } from "./eval/collection.ts";
+} from "./host";
+import { defaultSink, defaultSource, indexEdgesByTarget } from "./resolve";
+import { evalCollectionPort, resultFromRows } from "./eval/collection";
 
 export interface ExecuteGraphOptions {
   registry: Registry;

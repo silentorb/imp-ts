@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test"
 import { createRegistry, getNodeType, loadLibrary } from "imp-registry"
-import { collectionTransformsLibrary } from "./library.ts"
+import { collectionTransformsLibrary } from "./library"
 
 describe("collectionTransformsLibrary", () => {
   test("has expected identity and transform types", () => {

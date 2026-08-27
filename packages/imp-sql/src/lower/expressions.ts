@@ -9,13 +9,13 @@ import {
   requireNodeType,
   resolveInput,
   type EdgeTargetKey,
-} from "../resolve.ts"
-import { columnExpression, type RelationalSchema } from "../schema.ts"
+} from "../resolve"
+import { columnExpression, type RelationalSchema } from "../schema"
 import {
   columnNameFromComparisonPort,
   encodeStoredPropertyLiteral,
   literalValueFromComparisonPort,
-} from "./encode-property-literal.ts"
+} from "./encode-property-literal"
 
 type Eb = ExpressionBuilder<Record<string, Record<string, unknown>>, string>
 

@@ -1,6 +1,6 @@
 import type { Edge as ImpEdge, Graph, Node as ImpNode, PortId } from "imp-spec"
 import type { Edge as RfEdge, Node as RfNode } from "@xyflow/react"
-import type { ImpReactFlowNodeData } from "./types.ts"
+import type { ImpReactFlowNodeData } from "./types"
 
 export type ImpReactFlowNode = RfNode<ImpReactFlowNodeData>
 export type ImpReactFlowEdge = RfEdge

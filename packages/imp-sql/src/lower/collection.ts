@@ -9,15 +9,15 @@ import {
   requireNodeType,
   resolveInput,
   type EdgeTargetKey,
-} from "../resolve.ts"
+} from "../resolve"
 import {
   columnExpression,
   projectedColumnExpression,
   resolveEdgeType,
   type RelationalSchema,
-} from "../schema.ts"
-import { lowerExprNode, type LowerContext } from "./expressions.ts"
-import { encodeStoredPropertyLiteral } from "./encode-property-literal.ts"
+} from "../schema"
+import { lowerExprNode, type LowerContext } from "./expressions"
+import { encodeStoredPropertyLiteral } from "./encode-property-literal"
 
 type AnyDb = Record<string, Record<string, unknown>>
 export type AnySelect = SelectQueryBuilder<AnyDb, string, object>

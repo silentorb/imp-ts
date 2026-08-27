@@ -2,13 +2,13 @@
 
 import type { Graph, NodeId, PortId } from "imp-spec";
 import type { Registry } from "imp-registry";
-import type { ExecutionHost, ExecutionRow } from "../host.ts";
+import type { ExecutionHost, ExecutionRow } from "../host";
 import {
   indexEdgesByTarget,
   requireNode,
   resolveInput,
   type EdgeTargetKey,
-} from "../resolve.ts";
+} from "../resolve";
 
 export interface EvalContext {
   graph: Graph;

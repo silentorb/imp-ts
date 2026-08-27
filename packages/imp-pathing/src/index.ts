@@ -1,1 +1,1 @@
-export { pathingLibrary } from "./library.ts"
+export { pathingLibrary } from "./library"

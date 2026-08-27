@@ -6,7 +6,7 @@ import {
   listLibraries,
   listNodeTypes,
   loadLibrary,
-} from "./registry.ts"
+} from "./registry"
 
 const sourceLibrary: NodeLibrary = {
   id: "example.source",

@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test"
 import { createRegistry, getNodeType, loadLibrary } from "imp-registry"
-import { coreNodeLibrary } from "./core-library.ts"
+import { coreNodeLibrary } from "./core-library"
 
 describe("coreNodeLibrary", () => {
   test("has expected boundary types and port templates", () => {

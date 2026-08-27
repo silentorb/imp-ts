@@ -6,8 +6,8 @@ import {
   requireNode,
   resolveInput,
   type EdgeTargetKey,
-} from "../resolve.ts"
-import type { RelationalSchema } from "../schema.ts"
+} from "../resolve"
+import type { RelationalSchema } from "../schema"
 
 /** Map an author literal to stored JSON property form before SQL bind. Default: identity. */
 export function encodeStoredPropertyLiteral(

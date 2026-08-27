@@ -5,4 +5,4 @@ export {
   listNodeTypes,
   listLibraries,
   type Registry,
-} from "./registry.ts"
+} from "./registry"

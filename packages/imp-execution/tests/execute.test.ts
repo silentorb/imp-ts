@@ -3,8 +3,8 @@ import { coreNodeLibrary } from "imp-spec";
 import { createRegistry, loadLibrary } from "imp-registry";
 import { collectionTransformsLibrary } from "imp-collection-transforms";
 import type { Graph } from "imp-spec";
-import { executeGraph } from "../src/execute.ts";
-import type { ExecutionHost, ExecutionRow } from "../src/host.ts";
+import { executeGraph } from "../src/execute";
+import type { ExecutionHost, ExecutionRow } from "../src/host";
 
 const registry = loadLibrary(
   loadLibrary(createRegistry(), coreNodeLibrary),

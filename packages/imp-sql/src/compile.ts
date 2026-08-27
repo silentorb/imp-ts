@@ -13,14 +13,14 @@ import type { Registry } from "imp-registry"
 import {
   createCollectionLowerContext,
   lowerCollectionPort,
-} from "./lower/collection.ts"
+} from "./lower/collection"
 import {
   defaultSink,
   defaultSource,
   indexEdgesByTarget,
   resolveInput,
-} from "./resolve.ts"
-import type { RelationalSchema } from "./schema.ts"
+} from "./resolve"
+import type { RelationalSchema } from "./schema"
 
 type AnyDb = Record<string, Record<string, unknown>>
 

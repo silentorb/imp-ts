@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test"
 import { createRegistry, getNodeType, loadLibrary } from "imp-registry"
-import { pathingLibrary } from "./library.ts"
+import { pathingLibrary } from "./library"
 
 describe("pathingLibrary", () => {
   test("has expected identity and traverse type", () => {
