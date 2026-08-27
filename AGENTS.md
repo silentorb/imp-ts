@@ -33,7 +33,7 @@ When docs and code disagree, update the doc or the code explicitly — do not le
 
 ## Project context
 
-- Run from repo root: `bun install`, `bun run typecheck`.
+- Run from repo root: `bun install`, `bun run typecheck`, `bun test` (test runs typecheck first; treat typecheck failures as blocking).
 - Feature specs: [`docs/features/`](./docs/features/) — **read only the doc matching your task**.
 - Package notes: each package's `README.md` and `AGENTS.md`.
 
