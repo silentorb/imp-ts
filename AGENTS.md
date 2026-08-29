@@ -62,4 +62,4 @@ See [`docs/features/README.md`](./docs/features/README.md) for the feature-doc t
 
 ## Workbench integration
 
-In **silentorb-workbench**, this repo mounts at `/workspaces/imp` (host default `~/dev/imp`, or `IMP_REPO`).
+In **silentorb-workbench**, this repo mounts at `.mnt/imp-ts/` (container path: `/workspaces/silentorb-workbench/.mnt/imp-ts`; host default `../imp-ts`, or `IMP_REPO`).
