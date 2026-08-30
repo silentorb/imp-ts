@@ -18,7 +18,7 @@ A **`NodeLibrary`** of common functional collection combinators (`filter`, `sort
 | --- | --- |
 | Package | `imp-collection-transforms` |
 | Library `id` | `imp.collection.transforms` |
-| Depends on | `imp-spec` only (not `imp-registry`) |
+| Depends on | `imp-core-types` only (not `imp-registry`) |
 
 ### Naming
 
@@ -36,7 +36,7 @@ Use **full words** for `NodeTypeId`s unless the abbreviation is a widely underst
 
 ### No table source node
 
-There is **no** `from` / table-source node. The incoming collection arrives via a core boundary **`input`** node (`imp.core` from `imp-spec`). The host wires the upstream collection; the subgraph is a collection → collection function.
+There is **no** `from` / table-source node. The incoming collection arrives via a core boundary **`input`** node (`imp.core` from `imp-core-types`). The host wires the upstream collection; the subgraph is a collection → collection function.
 
 ### Node types
 
@@ -78,7 +78,7 @@ There is **no** `from` / table-source node. The incoming collection arrives via 
 ### TypeScript binding (illustrative)
 
 ```ts
-import type { NodeLibrary } from "imp-spec"
+import type { NodeLibrary } from "imp-core-types"
 
 export const collectionTransformsLibrary: NodeLibrary
 ```
@@ -110,7 +110,7 @@ Typical pipeline:
 
 ```ts
 import { collectionTransformsLibrary } from "imp-collection-transforms"
-import { coreNodeLibrary } from "imp-spec"
+import { coreNodeLibrary } from "imp-core-types"
 import { createRegistry, loadLibrary } from "imp-registry"
 
 const registry = loadLibrary(

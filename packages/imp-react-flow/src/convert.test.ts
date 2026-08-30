@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test"
-import type { Graph } from "imp-spec"
-import { coreNodeLibrary } from "imp-spec"
+import type { Graph } from "imp-core-types"
+import { coreNodeLibrary } from "imp-core-types"
 import { createRegistry, getNodeType, loadLibrary } from "imp-registry"
 import { impToReactFlow, reactFlowToImp } from "./convert"
 

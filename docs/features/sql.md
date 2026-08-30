@@ -133,7 +133,7 @@ Compiled SQL + bindings can feed `TomeQueryCache.queryAll`. No Tome code in this
 ## Quick start
 
 ```ts
-import { coreNodeLibrary } from "imp-spec"
+import { coreNodeLibrary } from "imp-core-types"
 import { collectionTransformsLibrary } from "imp-collection-transforms"
 import { pathingLibrary } from "imp-pathing"
 import { createRegistry, loadLibrary } from "imp-registry"

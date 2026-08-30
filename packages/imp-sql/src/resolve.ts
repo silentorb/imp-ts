@@ -9,7 +9,7 @@ import type {
   PortId,
   PortReference,
   PrimitiveValue,
-} from "imp-spec"
+} from "imp-core-types"
 import type { Registry } from "imp-registry"
 import { getNodeType } from "imp-registry"
 

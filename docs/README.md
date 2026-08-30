@@ -6,7 +6,7 @@ Everything under `./docs` is **primarily for AI agents** — stable, high-level 
 
 Feature docs describe the **data model and behavior** in language-agnostic terms. They are authored and maintained.
 
-**Code type interfaces** (e.g. in `packages/imp-spec`) must be regenerable from those specs. An agent should be able to emit unambiguous TypeScript interfaces from a feature doc alone — and, in principle, equivalent interfaces for other languages (Python, Rust, etc.). Do **not** treat docs as disposable output of the code.
+**Code type interfaces** (e.g. in `packages/imp-core-types`) must be regenerable from those specs. An agent should be able to emit unambiguous TypeScript interfaces from a feature doc alone — and, in principle, equivalent interfaces for other languages (Python, Rust, etc.). Do **not** treat docs as disposable output of the code.
 
 ## Layout
 

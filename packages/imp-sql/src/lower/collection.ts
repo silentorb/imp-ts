@@ -1,6 +1,6 @@
 /** Collection pipeline lowering. Spec: docs/features/sql.md */
 
-import type { Edge, Graph, NodeId, PortId, PrimitiveValue } from "imp-spec"
+import type { Edge, Graph, NodeId, PortId, PrimitiveValue } from "imp-core-types"
 import type { Kysely, SelectQueryBuilder } from "kysely"
 import { sql } from "kysely"
 import type { Registry } from "imp-registry"

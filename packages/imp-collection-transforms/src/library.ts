@@ -1,6 +1,6 @@
 /** Collection transform NodeLibrary. Spec: docs/features/collection-transforms.md */
 
-import type { NodeLibrary, Port, SignalType } from "imp-spec"
+import type { NodeLibrary, Port, SignalType } from "imp-core-types"
 
 const collection: SignalType = { id: "collection" }
 const boolean: SignalType = { id: "boolean" }

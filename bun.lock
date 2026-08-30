@@ -7,23 +7,31 @@
     },
     "packages/imp-collection-transforms": {
       "name": "imp-collection-transforms",
-      "version": "0.1.0",
+      "version": "0.2.0",
       "dependencies": {
-        "imp-spec": "workspace:*",
+        "imp-core-types": "workspace:^0.2.0",
       },
       "devDependencies": {
-        "imp-registry": "workspace:*",
+        "imp-registry": "workspace:^0.2.0",
+        "typescript": "5.8.2",
+      },
+    },
+    "packages/imp-core-types": {
+      "name": "imp-core-types",
+      "version": "0.2.0",
+      "devDependencies": {
+        "imp-registry": "workspace:^0.2.0",
         "typescript": "5.8.2",
       },
     },
     "packages/imp-execution": {
       "name": "imp-execution",
-      "version": "0.1.0",
+      "version": "0.2.0",
       "dependencies": {
-        "imp-collection-transforms": "workspace:*",
-        "imp-pathing": "workspace:*",
-        "imp-registry": "workspace:*",
-        "imp-spec": "workspace:*",
+        "imp-collection-transforms": "workspace:^0.2.0",
+        "imp-core-types": "workspace:^0.2.0",
+        "imp-pathing": "workspace:^0.2.0",
+        "imp-registry": "workspace:^0.2.0",
       },
       "devDependencies": {
         "typescript": "5.8.2",
@@ -31,24 +39,24 @@
     },
     "packages/imp-pathing": {
       "name": "imp-pathing",
-      "version": "0.1.0",
+      "version": "0.2.0",
       "dependencies": {
-        "imp-spec": "workspace:*",
+        "imp-core-types": "workspace:^0.2.0",
       },
       "devDependencies": {
-        "imp-registry": "workspace:*",
+        "imp-registry": "workspace:^0.2.0",
         "typescript": "5.8.2",
       },
     },
     "packages/imp-react-flow": {
       "name": "imp-react-flow",
-      "version": "0.1.0",
+      "version": "0.2.0",
       "dependencies": {
-        "imp-spec": "workspace:*",
+        "imp-core-types": "workspace:^0.2.0",
       },
       "devDependencies": {
         "@xyflow/react": "^12.8.2",
-        "imp-registry": "workspace:*",
+        "imp-registry": "workspace:^0.2.0",
         "typescript": "5.8.2",
       },
       "peerDependencies": {
@@ -57,30 +65,22 @@
     },
     "packages/imp-registry": {
       "name": "imp-registry",
-      "version": "0.1.0",
+      "version": "0.2.0",
       "dependencies": {
-        "imp-spec": "workspace:*",
+        "imp-core-types": "workspace:^0.2.0",
       },
       "devDependencies": {
-        "typescript": "5.8.2",
-      },
-    },
-    "packages/imp-spec": {
-      "name": "imp-spec",
-      "version": "0.1.0",
-      "devDependencies": {
-        "imp-registry": "workspace:*",
         "typescript": "5.8.2",
       },
     },
     "packages/imp-sql": {
       "name": "imp-sql",
-      "version": "0.1.0",
+      "version": "0.2.0",
       "dependencies": {
-        "imp-collection-transforms": "workspace:*",
-        "imp-pathing": "workspace:*",
-        "imp-registry": "workspace:*",
-        "imp-spec": "workspace:*",
+        "imp-collection-transforms": "workspace:^0.2.0",
+        "imp-core-types": "workspace:^0.2.0",
+        "imp-pathing": "workspace:^0.2.0",
+        "imp-registry": "workspace:^0.2.0",
         "kysely": "^0.28.2",
       },
       "devDependencies": {
@@ -127,6 +127,8 @@
 
     "imp-collection-transforms": ["imp-collection-transforms@workspace:packages/imp-collection-transforms"],
 
+    "imp-core-types": ["imp-core-types@workspace:packages/imp-core-types"],
+
     "imp-execution": ["imp-execution@workspace:packages/imp-execution"],
 
     "imp-pathing": ["imp-pathing@workspace:packages/imp-pathing"],
@@ -134,8 +136,6 @@
     "imp-react-flow": ["imp-react-flow@workspace:packages/imp-react-flow"],
 
     "imp-registry": ["imp-registry@workspace:packages/imp-registry"],
-
-    "imp-spec": ["imp-spec@workspace:packages/imp-spec"],
 
     "imp-sql": ["imp-sql@workspace:packages/imp-sql"],
 

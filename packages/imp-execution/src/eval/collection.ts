@@ -1,6 +1,6 @@
 /** In-memory collection evaluation. Spec: docs/features/execution.md */
 
-import type { Graph, NodeId, PortId } from "imp-spec";
+import type { Graph, NodeId, PortId } from "imp-core-types";
 import type { Registry } from "imp-registry";
 import type { ExecutionHost, ExecutionRow } from "../host";
 import {
@@ -14,7 +14,7 @@ export interface EvalContext {
   graph: Graph;
   registry: Registry;
   host: ExecutionHost;
-  edgesByTarget: Map<EdgeTargetKey, import("imp-spec").Edge>;
+  edgesByTarget: Map<EdgeTargetKey, import("imp-core-types").Edge>;
   visiting: Set<NodeId>;
   sourceNodeId: NodeId;
   edgeType?: (association: string, direction: number) => string;

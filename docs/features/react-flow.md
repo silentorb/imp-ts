@@ -81,7 +81,7 @@ Exact TypeScript types for RF nodes/edges use `@xyflow/react` `Node` / `Edge` (t
 ## Quick start
 
 ```ts
-import type { Graph } from "imp-spec"
+import type { Graph } from "imp-core-types"
 import { impToReactFlow, reactFlowToImp } from "imp-react-flow"
 
 const graph: Graph = { nodes: {}, edges: {} }
@@ -100,7 +100,7 @@ None.
 
 ## Implementation pointers
 
-- Core model: [graph-model.md](./graph-model.md), `packages/imp-spec`
+- Core model: [graph-model.md](./graph-model.md), `packages/imp-core-types`
 - Package: [`packages/imp-react-flow`](../../packages/imp-react-flow/)
 - React Flow edge/handle docs: [Edges](https://reactflow.dev/api-reference/types/edge), [Handles](https://reactflow.dev/learn/customization/handles)
 

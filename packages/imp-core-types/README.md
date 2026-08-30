@@ -1,4 +1,4 @@
-# imp-spec
+# imp-core-types
 
 Core Imp graph and library **TypeScript type interfaces**, plus the core boundary `NodeLibrary`.
 
@@ -20,6 +20,6 @@ import type {
   SignalType,
   NodeType,
   NodeLibrary,
-} from "imp-spec"
-import { coreNodeLibrary } from "imp-spec"
+} from "imp-core-types"
+import { coreNodeLibrary } from "imp-core-types"
 ```

@@ -2,12 +2,12 @@
 
 ## Summary
 
-Imp's core data model is a portable **directed graph** of nodes and port-to-port edges, intended as a universal transmission format for DAGs. This document is the language-agnostic source of truth for regenerating code type interfaces (TypeScript binding: `packages/imp-spec`).
+Imp's core data model is a portable **directed graph** of nodes and port-to-port edges, intended as a universal transmission format for DAGs. This document is the language-agnostic source of truth for regenerating code type interfaces (TypeScript binding: `packages/imp-core-types`).
 
 ## When to read this
 
 - Defining or changing `Graph`, `Node`, `Edge`, port, or id types
-- Regenerating `imp-spec` TypeScript interfaces from the model
+- Regenerating `imp-core-types` TypeScript interfaces from the model
 - Designing converters that map another graph format onto Imp
 
 ## Requirements
@@ -128,7 +128,7 @@ When an edge is removed in an editor, the node reverts to its stored local liter
 
 ### Core boundary nodes
 
-Graphs act as **subgraphs** with an external interface. Core Imp ships boundary `NodeType`s in `coreNodeLibrary` (`id: "imp.core"`) from `imp-spec`:
+Graphs act as **subgraphs** with an external interface. Core Imp ships boundary `NodeType`s in `coreNodeLibrary` (`id: "imp.core"`) from `imp-core-types`:
 
 | NodeType | Ports | Role |
 | --- | --- | --- |
@@ -142,7 +142,7 @@ A host wires external values into `input` nodes and reads results from `output` 
 
 ### Invariants (well-formed graphs)
 
-These are design requirements for validators and converters (not yet enforced by runtime code in `imp-spec`):
+These are design requirements for validators and converters (not yet enforced by runtime code in `imp-core-types`):
 
 1. Every `Node.id` must equal its key in `Graph.nodes`.
 2. Every `Port.id` must equal its key in the parent `Ports` map on a `NodeType`.
@@ -225,14 +225,14 @@ This feature is a **data shape** only. Serialization format (JSON, etc.), valida
 | Artifact | Role |
 | --- | --- |
 | This doc | Authoritative model spec |
-| `packages/imp-spec/src/graph.ts` | TypeScript interfaces regenerated from this doc |
-| `packages/imp-spec/src/core-library.ts` | Core boundary `NodeLibrary` (`input`, `output`, `parameter`) |
+| `packages/imp-core-types/src/graph.ts` | TypeScript interfaces regenerated from this doc |
+| `packages/imp-core-types/src/core-library.ts` | Core boundary `NodeLibrary` (`input`, `output`, `parameter`) |
 
 ## Quick start
 
 ```ts
-import type { Graph } from "imp-spec"
-import { coreNodeLibrary } from "imp-spec"
+import type { Graph } from "imp-core-types"
+import { coreNodeLibrary } from "imp-core-types"
 
 const graph: Graph = {
   nodes: {
@@ -256,13 +256,13 @@ None.
 
 ## Verification
 
-- `bun run typecheck` from the repo root (or `packages/imp-spec`) must succeed.
-- Types in `imp-spec` must match the field tables above.
+- `bun run typecheck` from the repo root (or `packages/imp-core-types`) must succeed.
+- Types in `imp-core-types` must match the field tables above.
 
 ## Implementation pointers
 
-- Package: [`packages/imp-spec`](../../packages/imp-spec/)
-- Agent notes: [`packages/imp-spec/AGENTS.md`](../../packages/imp-spec/AGENTS.md)
+- Package: [`packages/imp-core-types`](../../packages/imp-core-types/)
+- Agent notes: [`packages/imp-core-types/AGENTS.md`](../../packages/imp-core-types/AGENTS.md)
 
 ## See also
 

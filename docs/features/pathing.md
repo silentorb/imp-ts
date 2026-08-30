@@ -18,7 +18,7 @@ A **`NodeLibrary`** of GQL-like graph path operators (`traverse`, …) over a ho
 | --- | --- |
 | Package | `imp-pathing` |
 | Library `id` | `imp.pathing` |
-| Depends on | `imp-spec` only (not `imp-registry`) |
+| Depends on | `imp-core-types` only (not `imp-registry`) |
 
 ### Naming
 
@@ -55,7 +55,7 @@ There is **no** `from` / table-source node. The incoming node collection arrives
 ### TypeScript binding (illustrative)
 
 ```ts
-import type { NodeLibrary } from "imp-spec"
+import type { NodeLibrary } from "imp-core-types"
 
 export const pathingLibrary: NodeLibrary
 ```
@@ -87,7 +87,7 @@ Typical pipeline:
 ```ts
 import { pathingLibrary } from "imp-pathing"
 import { collectionTransformsLibrary } from "imp-collection-transforms"
-import { coreNodeLibrary } from "imp-spec"
+import { coreNodeLibrary } from "imp-core-types"
 import { createRegistry, loadLibrary } from "imp-registry"
 
 const registry = loadLibrary(

@@ -2,13 +2,13 @@
 
 ## Summary
 
-Declarative **catalogs of node types** that library packages can ship without depending on a registry. Types live in `imp-spec`; loading/lookup lives in `imp-registry`.
+Declarative **catalogs of node types** that library packages can ship without depending on a registry. Types live in `imp-core-types`; loading/lookup lives in `imp-registry`.
 
 ## When to read this
 
 - Defining or changing `NodeType` or `NodeLibrary`
 - Authoring a package that exports a library of Imp node types
-- Regenerating library interfaces in `imp-spec`
+- Regenerating library interfaces in `imp-core-types`
 
 ## Requirements
 
@@ -35,7 +35,7 @@ A type’s `id` must equal its key in the parent `NodeLibrary.types` map when th
 | `id` | `string` | must |
 | `types` | map `NodeTypeId` → `NodeType` | must (may be empty) |
 
-A named, declarative collection of `NodeType`s. Libraries **must not** require `imp-registry`; they implement this interface from `imp-spec` alone.
+A named, declarative collection of `NodeType`s. Libraries **must not** require `imp-registry`; they implement this interface from `imp-core-types` alone.
 
 A library does not execute nodes. Executable bindings to types, if added later, may stay separate.
 
@@ -61,7 +61,7 @@ interface NodeLibrary {
 ## Design rationale
 
 - **`Node` stays the graph instance**; **`NodeType` is the catalog** so instance vs type naming stays clear (`Node.type` ↔ `NodeType.id`).
-- Library packages depend only on **`imp-spec`**, so they can be published and composed without pulling registry machinery.
+- Library packages depend only on **`imp-core-types`**, so they can be published and composed without pulling registry machinery.
 - Catalogs are **data shapes** (plain objects), not classes with behavior.
 - Port templates on the catalog carry signal types and defaults; instance literals live on `Node.inputs`.
 
@@ -74,13 +74,13 @@ This feature is a **data shape** only. Loading and conflict policy are documente
 | Artifact | Role |
 | --- | --- |
 | This doc | Authoritative library model spec |
-| `packages/imp-spec/src/library.ts` | TypeScript interfaces regenerated from this doc |
-| `packages/imp-spec/src/core-library.ts` | Core boundary library (`imp.core`) |
+| `packages/imp-core-types/src/library.ts` | TypeScript interfaces regenerated from this doc |
+| `packages/imp-core-types/src/core-library.ts` | Core boundary library (`imp.core`) |
 
 ## Quick start
 
 ```ts
-import type { NodeLibrary } from "imp-spec"
+import type { NodeLibrary } from "imp-core-types"
 
 const math: NodeLibrary = {
   id: "example.math",
@@ -105,13 +105,13 @@ None.
 
 ## Verification
 
-- `bun run typecheck` from the repo root (or `packages/imp-spec`) must succeed.
-- Types in `imp-spec` must match the field tables above.
+- `bun run typecheck` from the repo root (or `packages/imp-core-types`) must succeed.
+- Types in `imp-core-types` must match the field tables above.
 
 ## Implementation pointers
 
-- Package: [`packages/imp-spec`](../../packages/imp-spec/)
-- Agent notes: [`packages/imp-spec/AGENTS.md`](../../packages/imp-spec/AGENTS.md)
+- Package: [`packages/imp-core-types`](../../packages/imp-core-types/)
+- Agent notes: [`packages/imp-core-types/AGENTS.md`](../../packages/imp-core-types/AGENTS.md)
 - Registry: [registry.md](./registry.md)
 
 ## See also

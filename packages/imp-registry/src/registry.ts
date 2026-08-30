@@ -1,6 +1,6 @@
 /** Registry for loading NodeLibrary catalogs. Spec: docs/features/registry.md */
 
-import type { NodeLibrary, NodeType, NodeTypeId } from "imp-spec"
+import type { NodeLibrary, NodeType, NodeTypeId } from "imp-core-types"
 
 export interface Registry {
   readonly libraries: readonly NodeLibrary[]

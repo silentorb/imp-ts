@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test"
-import type { Graph } from "imp-spec"
-import { coreNodeLibrary } from "imp-spec"
+import type { Graph } from "imp-core-types"
+import { coreNodeLibrary } from "imp-core-types"
 import { collectionTransformsLibrary } from "imp-collection-transforms"
 import { pathingLibrary } from "imp-pathing"
 import { createRegistry, loadLibrary } from "imp-registry"

@@ -1,8 +1,8 @@
-# imp-spec — agent notes
+# imp-core-types — agent notes
 
 ## What it is
 
-**Code interfaces** for the Imp graph model (`Graph`, `Node`, `Edge`, ports, signal types, `InputValues`) and node type libraries (`NodeType`, `NodeLibrary`), plus the core boundary library (`coreNodeLibrary`).
+**Core type interfaces** for the Imp graph model (`Graph`, `Node`, `Edge`, ports, signal types, `InputValues`) and node type libraries (`NodeType`, `NodeLibrary`), plus the core boundary library (`coreNodeLibrary`). This package is the TypeScript binding — not the language-neutral spec docs.
 
 ## Specs vs code
 

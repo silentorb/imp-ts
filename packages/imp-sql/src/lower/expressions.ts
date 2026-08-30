@@ -1,6 +1,6 @@
 /** Expression (predicate / scalar) lowering. Spec: docs/features/sql.md */
 
-import type { Edge, Graph, NodeId, PortId, PrimitiveValue } from "imp-spec"
+import type { Edge, Graph, NodeId, PortId, PrimitiveValue } from "imp-core-types"
 import type { Expression, ExpressionBuilder } from "kysely"
 import { sql } from "kysely"
 import type { Registry } from "imp-registry"

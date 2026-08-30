@@ -8,7 +8,7 @@ Imp succeeds [imp-kotlin](https://github.com/silentorb/imp-kotlin) but keeps onl
 
 | Package | Role |
 | --- | --- |
-| `packages/imp-spec/` | Core graph + library TypeScript interfaces; core boundary `NodeLibrary` |
+| `packages/imp-core-types/` | Core graph + library TypeScript interfaces; core boundary `NodeLibrary` |
 | `packages/imp-registry/` | Load `NodeLibrary` values and look up `NodeType`s |
 | `packages/imp-react-flow/` | Imp ↔ React Flow converters |
 | `packages/imp-collection-transforms/` | Collection combinator `NodeLibrary` |
@@ -59,6 +59,16 @@ See [`docs/features/README.md`](./docs/features/README.md) for the feature-doc t
 - Package and import names use `imp-*` (never `imp-ts-*`).
 - TypeScript-to-TypeScript imports are extensionless (no `.ts` suffix).
 - Prefer Bun for tooling and tests.
+
+## Versioning
+
+Packages use **0.x semver** (`0.MINOR.PATCH`). While `MAJOR` is 0, treat **`MINOR` as the API epoch** — bump it (reset `PATCH`) for breaking changes or new functionality; bump `PATCH` for backwards-compatible fixes only.
+
+Internal workspace dependencies use caret-locked ranges: `"imp-core-types": "workspace:^0.2.0"`. When a dependency's `MINOR` epoch changes, direct dependents must bump their `MINOR` too and update the range.
+
+**Agent flow:** review the settled diff, classify each touched package (`minor` or `patch`), then run `bun scripts/bump-version.ts <package> <level>`. The script applies bumps, cascades on `minor` within this repo, and updates ranges. Refresh lockfiles after version changes: `bun install` here; also `.mnt/tome` when imp packages change (tome lockfile resolves imp workspaces). Bump levels and lockfile refresh are reconciled at commit time — see workbench [`plan-commit-workflow.mdc`](../../.cursor/rules/plan-commit-workflow.mdc).
+
+Cross-repo cascade (tome dependents of imp packages): run `bun scripts/bump-version.ts` from the tome repo after imp epoch bumps.
 
 ## Workbench integration
 

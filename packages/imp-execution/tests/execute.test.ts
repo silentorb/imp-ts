@@ -1,8 +1,8 @@
 import { describe, expect, test } from "bun:test";
-import { coreNodeLibrary } from "imp-spec";
+import { coreNodeLibrary } from "imp-core-types";
 import { createRegistry, loadLibrary } from "imp-registry";
 import { collectionTransformsLibrary } from "imp-collection-transforms";
-import type { Graph } from "imp-spec";
+import type { Graph } from "imp-core-types";
 import { executeGraph } from "../src/execute";
 import type { ExecutionHost, ExecutionRow } from "../src/host";
 

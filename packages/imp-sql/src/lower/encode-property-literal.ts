@@ -1,6 +1,6 @@
 /** Helpers for encoding author enum labels before SQL property comparisons. */
 
-import type { Graph, NodeId, PortId, PrimitiveValue } from "imp-spec"
+import type { Graph, NodeId, PortId, PrimitiveValue } from "imp-core-types"
 import type { Registry } from "imp-registry"
 import {
   requireNode,
@@ -21,7 +21,7 @@ export function encodeStoredPropertyLiteral(
 function columnNameFromNode(
   graph: Graph,
   registry: Registry,
-  edgesByTarget: Map<EdgeTargetKey, import("imp-spec").Edge>,
+  edgesByTarget: Map<EdgeTargetKey, import("imp-core-types").Edge>,
   nodeId: NodeId,
   outputPort: PortId,
 ): string | null {
@@ -51,7 +51,7 @@ function columnNameFromNode(
 function literalValueFromNode(
   graph: Graph,
   registry: Registry,
-  edgesByTarget: Map<EdgeTargetKey, import("imp-spec").Edge>,
+  edgesByTarget: Map<EdgeTargetKey, import("imp-core-types").Edge>,
   nodeId: NodeId,
   outputPort: PortId,
 ): PrimitiveValue | null {
@@ -77,7 +77,7 @@ function literalValueFromNode(
 export function columnNameFromComparisonPort(
   graph: Graph,
   registry: Registry,
-  edgesByTarget: Map<EdgeTargetKey, import("imp-spec").Edge>,
+  edgesByTarget: Map<EdgeTargetKey, import("imp-core-types").Edge>,
   nodeId: NodeId,
   portId: PortId,
 ): string | null {
@@ -97,7 +97,7 @@ export function columnNameFromComparisonPort(
 export function literalValueFromComparisonPort(
   graph: Graph,
   registry: Registry,
-  edgesByTarget: Map<EdgeTargetKey, import("imp-spec").Edge>,
+  edgesByTarget: Map<EdgeTargetKey, import("imp-core-types").Edge>,
   nodeId: NodeId,
   portId: PortId,
 ): PrimitiveValue | null {

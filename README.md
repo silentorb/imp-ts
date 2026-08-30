@@ -14,7 +14,7 @@ Imp is the successor to [imp-kotlin](https://github.com/silentorb/imp-kotlin), n
 
 | Package | Role |
 | --- | --- |
-| [`imp-spec`](./packages/imp-spec/) | Core graph + library type interfaces; core boundary `NodeLibrary` |
+| [`imp-core-types`](./packages/imp-core-types/) | Core graph + library type interfaces; core boundary `NodeLibrary` |
 | [`imp-registry`](./packages/imp-registry/) | Load type libraries and look up `NodeType`s |
 | [`imp-react-flow`](./packages/imp-react-flow/) | Imp ↔ React Flow converters |
 | [`imp-collection-transforms`](./packages/imp-collection-transforms/) | Collection combinator `NodeLibrary` |
@@ -22,7 +22,7 @@ Imp is the successor to [imp-kotlin](https://github.com/silentorb/imp-kotlin), n
 
 ```mermaid
 flowchart TB
-  SPEC[imp-spec]
+  SPEC[imp-core-types]
 
   subgraph libraries [Libraries]
     REG[imp-registry]

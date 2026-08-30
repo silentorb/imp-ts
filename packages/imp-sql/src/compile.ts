@@ -8,7 +8,7 @@ import {
   SqliteIntrospector,
   SqliteQueryCompiler,
 } from "kysely"
-import type { Graph, PortReference } from "imp-spec"
+import type { Graph, PortReference } from "imp-core-types"
 import type { Registry } from "imp-registry"
 import {
   createCollectionLowerContext,

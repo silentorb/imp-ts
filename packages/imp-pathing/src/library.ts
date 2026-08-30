@@ -1,6 +1,6 @@
 /** Pathing NodeLibrary. Spec: docs/features/pathing.md */
 
-import type { NodeLibrary, Port, SignalType } from "imp-spec"
+import type { NodeLibrary, Port, SignalType } from "imp-core-types"
 
 const collection: SignalType = { id: "collection" }
 const string: SignalType = { id: "string" }

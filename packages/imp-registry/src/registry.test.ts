@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import type { NodeLibrary } from "imp-spec"
+import type { NodeLibrary } from "imp-core-types"
 import {
   createRegistry,
   getNodeType,

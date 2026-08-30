@@ -2,7 +2,7 @@
 
 ## What it is
 
-Runtime helpers to **load** `NodeLibrary` values and **look up** `NodeType`s. Depends on `imp-spec` library interfaces; library packages must not depend on this package.
+Runtime helpers to **load** `NodeLibrary` values and **look up** `NodeType`s. Depends on `imp-core-types` library interfaces; library packages must not depend on this package.
 
 ## Specs vs code
 
@@ -11,7 +11,7 @@ Runtime helpers to **load** `NodeLibrary` values and **look up** `NodeType`s. De
 | Human/agent specs | [`docs/features/registry.md`](../../docs/features/registry.md) | No — authored source of truth |
 | Implementation | `src/*.ts` | Implement to match the registry feature doc |
 
-`NodeType` / `NodeLibrary` shapes come from [`imp-spec`](../imp-spec/) / [node-libraries.md](../../docs/features/node-libraries.md).
+`NodeType` / `NodeLibrary` shapes come from [`imp-core-types`](../imp-core-types/) / [node-libraries.md](../../docs/features/node-libraries.md).
 
 ## Layout
 

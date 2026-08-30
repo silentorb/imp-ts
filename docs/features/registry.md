@@ -42,11 +42,11 @@ listNodeTypes(registry: Registry): NodeType[]
 listLibraries(registry: Registry): readonly NodeLibrary[]
 ```
 
-`Registry` is a plain/opaque value operated on by functions (not a class hierarchy). Library shapes come from `imp-spec` ([node-libraries.md](./node-libraries.md)).
+`Registry` is a plain/opaque value operated on by functions (not a class hierarchy). Library shapes come from `imp-core-types` ([node-libraries.md](./node-libraries.md)).
 
 ## Design rationale
 
-- Registry depends on **`imp-spec` library interfaces**; library packages do **not** depend on the registry.
+- Registry depends on **`imp-core-types` library interfaces**; library packages do **not** depend on the registry.
 - Immutable `loadLibrary` keeps composition and tests simple.
 - Explicit conflicts avoid accidental type-id collisions across libraries.
 
@@ -67,7 +67,7 @@ listLibraries(registry: Registry): readonly NodeLibrary[]
 ## Quick start
 
 ```ts
-import type { NodeLibrary } from "imp-spec"
+import type { NodeLibrary } from "imp-core-types"
 import {
   createRegistry,
   loadLibrary,
