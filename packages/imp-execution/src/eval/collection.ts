@@ -145,9 +145,9 @@ function evalPredicateValue(ctx: EvalContext, nodeId: NodeId): unknown {
       return evalPredicate(ctx, left.from.node) || evalPredicate(ctx, right.from.node);
     }
     case "not": {
-      const inner = resolveInput(ctx.graph, ctx.registry, ctx.edgesByTarget, nodeId, "operand");
+      const inner = resolveInput(ctx.graph, ctx.registry, ctx.edgesByTarget, nodeId, "value");
       if (inner.kind !== "wire") {
-        throw new Error(`not on "${nodeId}" requires wired operand`);
+        throw new Error(`not on "${nodeId}" requires wired value input`);
       }
       return !evalPredicate(ctx, inner.from.node);
     }

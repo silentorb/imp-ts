@@ -55,4 +55,49 @@ describe("imp-execution", () => {
       }),
     ).rejects.toThrow(/write capabilities/);
   });
+
+  test("filter with not predicate excludes matching rows", async () => {
+    const graph: Graph = {
+      nodes: {
+        in: { id: "in", type: "input", inputs: {} },
+        col: { id: "col", type: "column", inputs: { name: "active" } },
+        lit: { id: "lit", type: "literal", inputs: { value: true } },
+        eq: { id: "eq", type: "equals", inputs: {} },
+        not: { id: "not", type: "not", inputs: {} },
+        filter: { id: "filter", type: "filter", inputs: {} },
+        out: { id: "out", type: "output", inputs: {} },
+      },
+      edges: {
+        e_col: { from: { node: "col", port: "value" }, to: { node: "eq", port: "left" } },
+        e_lit: { from: { node: "lit", port: "value" }, to: { node: "eq", port: "right" } },
+        e_eq: { from: { node: "eq", port: "value" }, to: { node: "not", port: "value" } },
+        e_pred: {
+          from: { node: "not", port: "value" },
+          to: { node: "filter", port: "predicate" },
+        },
+        e_in: {
+          from: { node: "in", port: "value" },
+          to: { node: "filter", port: "collection" },
+        },
+        e_out: {
+          from: { node: "filter", port: "collection" },
+          to: { node: "out", port: "value" },
+        },
+      },
+    };
+
+    const host: ExecutionHost = {
+      listInputRows(): ExecutionRow[] {
+        return [
+          { id: "A", properties: { active: true } },
+          { id: "B", properties: { active: false } },
+        ];
+      },
+      traverse: () => [],
+    };
+
+    const result = await executeGraph(graph, { registry, host });
+    expect(result.rows).toHaveLength(1);
+    expect(result.rows[0]?.id).toBe("B");
+  });
 });
