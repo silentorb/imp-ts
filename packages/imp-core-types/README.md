@@ -4,8 +4,8 @@ Core Imp graph and library **TypeScript type interfaces**, plus the core boundar
 
 | Spec | Types / values |
 | --- | --- |
-| [`docs/features/graph-model.md`](../../docs/features/graph-model.md) | `Graph`, `Node`, `Edge`, ports, `InputValues`, `coreNodeLibrary` |
-| [`docs/features/node-libraries.md`](../../docs/features/node-libraries.md) | `NodeType`, `NodeLibrary` |
+| [`imp-spec` graph-model](../../imp-spec/docs/packages/imp-core-types/graph-model.md) | `Graph`, `Node`, `Edge`, ports, `InputValues`, `coreNodeLibrary` |
+| [`imp-spec` node-libraries](../../imp-spec/docs/packages/imp-core-types/node-libraries.md) | `NodeType`, `NodeLibrary` |
 
 Types in `src/` must match those specs and are regenerable from them.
 

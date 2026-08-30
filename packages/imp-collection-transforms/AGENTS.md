@@ -8,8 +8,8 @@ A catalog package that exports `collectionTransformsLibrary` (`NodeLibrary`). No
 
 | Layer | Location | Regenerated? |
 | --- | --- | --- |
-| Human/agent specs | [`docs/features/collection-transforms.md`](../../docs/features/collection-transforms.md) | No — authored source of truth |
-| Library data | `src/library.ts` | Implement to match the feature doc |
+| Language-neutral spec | [`imp-spec` collection-transforms](../../imp-spec/docs/packages/imp-collection-transforms/collection-transforms.md) | No |
+| Library data | `src/library.ts` | Implement to match spec |
 
 ## Layout
 
@@ -19,6 +19,19 @@ A catalog package that exports `collectionTransformsLibrary` (`NodeLibrary`). No
 | `src/index.ts` | Public re-exports |
 | `src/*.test.ts` | Shape + registry load |
 
+## Quick start
+
+```ts
+import { collectionTransformsLibrary } from "imp-collection-transforms"
+import { coreNodeLibrary } from "imp-core-types"
+import { createRegistry, loadLibrary } from "imp-registry"
+
+const registry = loadLibrary(
+  loadLibrary(createRegistry(), coreNodeLibrary),
+  collectionTransformsLibrary,
+)
+```
+
 ## Run
 
 ```bash
@@ -26,8 +39,10 @@ bun run typecheck
 bun test
 ```
 
+Tests cover library shape and successful `imp-registry` load.
+
 ## See also
 
-- [collection-transforms.md](../../docs/features/collection-transforms.md)
-- [sql.md](../../docs/features/sql.md)
+- [collection-transforms.md](../../imp-spec/docs/packages/imp-collection-transforms/collection-transforms.md)
+- [sql.md](../../imp-spec/docs/packages/imp-sql/sql.md)
 - Root [AGENTS.md](../../AGENTS.md)

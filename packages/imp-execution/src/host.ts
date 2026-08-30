@@ -1,4 +1,4 @@
-/** Read-only execution host and sandbox capabilities. Spec: docs/features/execution.md */
+/** Read-only execution host and sandbox capabilities. Spec: imp-spec/docs/packages/imp-execution/execution.md */
 
 export interface ExecutionRow {
   id: string;

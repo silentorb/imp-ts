@@ -1,10 +1,10 @@
-# AGENTS Guide — Imp
+# AGENTS Guide — Imp (TypeScript binding)
 
 ## Repository purpose
 
-**Imp** is a universal transmission format for directed acyclic graphs (DAGs). This repo is the TypeScript home of Imp (GitHub surface name **imp-ts** / [`silentorb/imp-ts`](https://github.com/silentorb/imp-ts)). In packages, docs, and imports, use the name **Imp** — not `imp-ts`.
+**Imp** is a universal transmission format for directed acyclic graphs (DAGs). This repo is the **TypeScript binding** (GitHub: [`silentorb/imp-ts`](https://github.com/silentorb/imp-ts)). In packages, docs, and imports, use the name **Imp** — not `imp-ts`.
 
-Imp succeeds [imp-kotlin](https://github.com/silentorb/imp-kotlin) but keeps only the **graph data layer** (no text/code language layer). Packages are mostly specs and converters/translators between Imp and other graph representations.
+Language-neutral specs live in sibling repo **[imp-spec](../imp-spec/)** — read those for data model and behavior; this repo implements them.
 
 | Package | Role |
 | --- | --- |
@@ -16,41 +16,36 @@ Imp succeeds [imp-kotlin](https://github.com/silentorb/imp-kotlin) but keeps onl
 | `packages/imp-sql/` | Imp collection graphs → SQL via Kysely |
 | `packages/imp-execution/` | Dynamic runtime for collection/path graphs (read-only host) |
 
-Each package has a brief **`README.md`** (context) and **`AGENTS.md`** (how to work in the package). See [`packages/README.md`](./packages/README.md).
+Each package has **`README.md`** (context) and **`AGENTS.md`** (how to work in the package). See [`packages/README.md`](./packages/README.md).
 
-## Specs vs code (regen rule)
+## Specs vs code
 
-Imp is **agent-spec driven**. Treat feature docs as the source of truth for the data model.
-
-| Layer | What | Regenerated? |
+| Layer | Location | Regenerated? |
 | --- | --- | --- |
-| Specs | `docs/features/` (and package narrative) | **No** — authored and maintained |
-| Code interfaces | `packages/*/src` TypeScript types | **Yes** — regenerable from the matching feature doc |
+| Language-neutral specs | [`../imp-spec/docs/packages/`](../imp-spec/docs/packages/) | **No** — authored in imp-spec |
+| TypeScript interfaces / implementation | `packages/*/src` | **Yes** — implement or regenerate from imp-spec |
 
-Specs must be language-neutral enough that an agent could emit equivalent interfaces in other languages (e.g. Python, Rust) without redesigning the model. This repo ships the TypeScript binding only.
-
-When docs and code disagree, update the doc or the code explicitly — do not leave them divergent.
+When specs and code disagree, update imp-spec or the code explicitly.
 
 ## Project context
 
 - Run from repo root: `bun install`, `bun run typecheck`, `bun test` (test runs typecheck first; treat typecheck failures as blocking).
-- Feature specs: [`docs/features/`](./docs/features/) — **read only the doc matching your task**.
 - Package notes: each package's `README.md` and `AGENTS.md`.
 
-## Feature documentation
+## Feature documentation (imp-spec)
 
 | If your task involves… | Read |
 | --- | --- |
-| Core graph model (`Graph`, `Node`, `Edge`, ports, `InputValues`) | [`docs/features/graph-model.md`](./docs/features/graph-model.md) |
-| Node type libraries (`NodeType`, `NodeLibrary`) | [`docs/features/node-libraries.md`](./docs/features/node-libraries.md) |
-| Registry load / lookup | [`docs/features/registry.md`](./docs/features/registry.md) |
-| React Flow integration / converters | [`docs/features/react-flow.md`](./docs/features/react-flow.md) |
-| Collection transform combinators | [`docs/features/collection-transforms.md`](./docs/features/collection-transforms.md) |
-| Path / hop operators | [`docs/features/pathing.md`](./docs/features/pathing.md) |
-| Imp → SQL (Kysely) | [`docs/features/sql.md`](./docs/features/sql.md) |
-| Dynamic execution (`imp-execution`) | [`docs/features/execution.md`](./docs/features/execution.md) |
+| Core graph model | [`imp-spec` graph-model](../imp-spec/docs/packages/imp-core-types/graph-model.md) |
+| Node type libraries | [`imp-spec` node-libraries](../imp-spec/docs/packages/imp-core-types/node-libraries.md) |
+| Registry | [`imp-spec` registry](../imp-spec/docs/packages/imp-registry/registry.md) |
+| React Flow | [`imp-spec` react-flow](../imp-spec/docs/packages/imp-react-flow/react-flow.md) |
+| Collection transforms | [`imp-spec` collection-transforms](../imp-spec/docs/packages/imp-collection-transforms/collection-transforms.md) |
+| Pathing | [`imp-spec` pathing](../imp-spec/docs/packages/imp-pathing/pathing.md) |
+| SQL lowering | [`imp-spec` sql](../imp-spec/docs/packages/imp-sql/sql.md) |
+| Dynamic execution | [`imp-spec` execution](../imp-spec/docs/packages/imp-execution/execution.md) |
 
-See [`docs/features/README.md`](./docs/features/README.md) for the feature-doc template.
+Cross-package overview: [`../imp-spec/docs/overview/`](../imp-spec/docs/overview/).
 
 ## Working conventions
 
@@ -66,10 +61,10 @@ Packages use **0.x semver** (`0.MINOR.PATCH`). While `MAJOR` is 0, treat **`MINO
 
 Internal workspace dependencies use caret-locked ranges: `"imp-core-types": "workspace:^0.2.0"`. When a dependency's `MINOR` epoch changes, direct dependents must bump their `MINOR` too and update the range.
 
-**Agent flow:** review the settled diff, classify each touched package (`minor` or `patch`), then run `bun scripts/bump-version.ts <package> <level>`. The script applies bumps, cascades on `minor` within this repo, and updates ranges. Refresh lockfiles after version changes: `bun install` here; also `.mnt/tome` when imp packages change (tome lockfile resolves imp workspaces). Bump levels and lockfile refresh are reconciled at commit time — see workbench [`plan-commit-workflow.mdc`](../../.cursor/rules/plan-commit-workflow.mdc).
+**Agent flow:** review the settled diff, classify each touched package (`minor` or `patch`), then run `bun scripts/bump-version.ts <package> <level>`. The script applies bumps, cascades on `minor` within this repo, and updates ranges. Refresh lockfiles after version changes: `bun install` here.
 
-Cross-repo cascade (tome dependents of imp packages): run `bun scripts/bump-version.ts` from the tome repo after imp epoch bumps.
+Bump levels and lockfile refresh are reconciled at commit time — see workbench [`plan-commit-workflow.mdc`](../../.cursor/rules/plan-commit-workflow.mdc).
 
 ## Workbench integration
 
-In **silentorb-workbench**, this repo mounts at `.mnt/imp-ts/` (container path: `/workspaces/silentorb-workbench/.mnt/imp-ts`; host default `../imp-ts`, or `IMP_REPO`).
+In **silentorb-workbench**, this repo mounts at `.mnt/imp-ts/` (container path: `/workspaces/silentorb-workbench/.mnt/imp-ts`; host default `../imp-ts`, or `IMP_REPO`). Specs: `.mnt/imp-spec/`.

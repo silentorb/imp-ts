@@ -1,4 +1,4 @@
-/** Core boundary node types. Authoritative spec: docs/features/graph-model.md */
+/** Core boundary node types. Authoritative spec: imp-spec/docs/packages/imp-core-types/graph-model.md */
 
 import type { NodeLibrary } from "./library"
 

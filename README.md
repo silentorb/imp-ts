@@ -12,38 +12,7 @@ Imp is the successor to [imp-kotlin](https://github.com/silentorb/imp-kotlin), n
 
 ## Packages
 
-| Package | Role |
-| --- | --- |
-| [`imp-core-types`](./packages/imp-core-types/) | Core graph + library type interfaces; core boundary `NodeLibrary` |
-| [`imp-registry`](./packages/imp-registry/) | Load type libraries and look up `NodeType`s |
-| [`imp-react-flow`](./packages/imp-react-flow/) | Imp ↔ React Flow converters |
-| [`imp-collection-transforms`](./packages/imp-collection-transforms/) | Collection combinator `NodeLibrary` |
-| [`imp-sql`](./packages/imp-sql/) | Imp collection graphs → SQL via Kysely |
-
-```mermaid
-flowchart TB
-  SPEC[imp-core-types]
-
-  subgraph libraries [Libraries]
-    REG[imp-registry]
-    CT[imp-collection-transforms]
-  end
-
-  REG --> SPEC
-  CT --> SPEC
-
-  subgraph converters [Converters]
-    RF[imp-react-flow]
-    SQL[imp-sql]
-  end
-
-  RF --> SPEC
-  SQL --> SPEC
-  SQL --> REG
-  SQL --> CT
-```
-
-See [`packages/README.md`](./packages/README.md) for package docs.
+See [`packages/README.md`](./packages/README.md) for the package list and dependency diagram.
 
 ## Development
 
@@ -59,7 +28,7 @@ In **silentorb-workbench**, this repo mounts at `.mnt/imp-ts/` (container path: 
 
 ## Agent docs
 
-Authoritative design specs live under [`docs/`](./docs/). Start with [`AGENTS.md`](./AGENTS.md).
+Authoritative **language-neutral specs** live in sibling repo [`imp-spec`](../imp-spec/) (`.mnt/imp-spec/` in workbench). This repo's [`AGENTS.md`](./AGENTS.md) covers the TypeScript binding; package `AGENTS.md` files cover implementation details.
 
 ## License
 

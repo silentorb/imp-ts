@@ -1,4 +1,4 @@
-/** Node type libraries. Authoritative spec: docs/features/node-libraries.md */
+/** Node type libraries. Authoritative spec: imp-spec/docs/packages/imp-core-types/node-libraries.md */
 
 import type { NodeTypeId, Ports } from "./graph"
 

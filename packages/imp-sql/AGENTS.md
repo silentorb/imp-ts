@@ -8,8 +8,10 @@ Runtime lowering of Imp collection-transform and pathing graphs to Kysely select
 
 | Layer | Location | Regenerated? |
 | --- | --- | --- |
-| Human/agent specs | [`docs/features/sql.md`](../../docs/features/sql.md) | No — authored source of truth |
-| Implementation | `src/*.ts` | Implement to match the sql feature doc |
+| Language-neutral spec | [`imp-spec` sql](../../imp-spec/docs/packages/imp-sql/sql.md) | No |
+| Implementation | `src/*.ts` | Implement to match spec |
+
+TypeScript API: `graphToKysely` (spec name: `graphToSql`), `compileSql`. Uses [Kysely](https://kysely.dev/); default dialect SQLite.
 
 ## Layout
 
@@ -21,6 +23,30 @@ Runtime lowering of Imp collection-transform and pathing graphs to Kysely select
 | `src/lower/` | Collection + expression lowering |
 | `src/*.test.ts` | Pipeline + error tests |
 
+## Quick start
+
+```ts
+import { coreNodeLibrary } from "imp-core-types"
+import { collectionTransformsLibrary } from "imp-collection-transforms"
+import { pathingLibrary } from "imp-pathing"
+import { createRegistry, loadLibrary } from "imp-registry"
+import { graphToKysely, compileSql } from "imp-sql"
+
+const registry = loadLibrary(
+  loadLibrary(
+    loadLibrary(createRegistry(), coreNodeLibrary),
+    collectionTransformsLibrary,
+  ),
+  pathingLibrary,
+)
+
+const compiled = graphToKysely(graph, {
+  registry,
+  schema: { table: "items" },
+})
+const { sql, parameters } = compileSql(compiled)
+```
+
 ## Run
 
 ```bash
@@ -28,9 +54,11 @@ bun run typecheck
 bun test
 ```
 
+Tests cover `input` → `filter` → `sort` → `limit` → `output` producing SQLite SQL with bound parameters.
+
 ## See also
 
-- [sql.md](../../docs/features/sql.md)
-- [collection-transforms.md](../../docs/features/collection-transforms.md)
-- [pathing.md](../../docs/features/pathing.md)
+- [sql.md](../../imp-spec/docs/packages/imp-sql/sql.md)
+- [collection-transforms.md](../../imp-spec/docs/packages/imp-collection-transforms/collection-transforms.md)
+- [pathing.md](../../imp-spec/docs/packages/imp-pathing/pathing.md)
 - Root [AGENTS.md](../../AGENTS.md)

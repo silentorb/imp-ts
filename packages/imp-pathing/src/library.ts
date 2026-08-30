@@ -1,4 +1,4 @@
-/** Pathing NodeLibrary. Spec: docs/features/pathing.md */
+/** Pathing NodeLibrary. Spec: imp-spec/docs/packages/imp-pathing/pathing.md */
 
 import type { NodeLibrary, Port, SignalType } from "imp-core-types"
 

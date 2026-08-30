@@ -1,4 +1,4 @@
-/** In-memory collection evaluation. Spec: docs/features/execution.md */
+/** In-memory collection evaluation. Spec: imp-spec/docs/packages/imp-execution/execution.md */
 
 import type { Graph, NodeId, PortId } from "imp-core-types";
 import type { Registry } from "imp-registry";

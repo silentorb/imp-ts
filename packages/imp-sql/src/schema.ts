@@ -1,4 +1,4 @@
-/** Relational schema hook for Imp → SQL lowering. Spec: docs/features/sql.md */
+/** Relational schema hook for Imp → SQL lowering. Spec: imp-spec/docs/packages/imp-sql/sql.md */
 
 import type { PrimitiveValue } from "imp-core-types"
 import type { Expression } from "kysely"

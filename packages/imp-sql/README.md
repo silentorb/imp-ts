@@ -9,4 +9,4 @@ const query = graphToKysely(graph, { registry, schema: { table: "items" } })
 const { sql, parameters } = compileSql(query)
 ```
 
-See [`docs/features/sql.md`](../../docs/features/sql.md).
+See [`imp-spec` sql](../../imp-spec/docs/packages/imp-sql/sql.md).

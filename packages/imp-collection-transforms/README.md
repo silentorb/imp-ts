@@ -8,4 +8,4 @@ Depends only on `imp-core-types`. Load via `imp-registry`; lower to SQL with `im
 import { collectionTransformsLibrary } from "imp-collection-transforms"
 ```
 
-See [`docs/features/collection-transforms.md`](../../docs/features/collection-transforms.md).
+See [`imp-spec` collection-transforms](../../imp-spec/docs/packages/imp-collection-transforms/collection-transforms.md).

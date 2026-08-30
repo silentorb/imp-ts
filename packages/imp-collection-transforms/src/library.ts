@@ -1,4 +1,4 @@
-/** Collection transform NodeLibrary. Spec: docs/features/collection-transforms.md */
+/** Collection transform NodeLibrary. Spec: imp-spec/docs/packages/imp-collection-transforms/collection-transforms.md */
 
 import type { NodeLibrary, Port, SignalType } from "imp-core-types"
 

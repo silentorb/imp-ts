@@ -1,4 +1,4 @@
-/** Expression (predicate / scalar) lowering. Spec: docs/features/sql.md */
+/** Expression (predicate / scalar) lowering. Spec: imp-spec/docs/packages/imp-sql/sql.md */
 
 import type { Edge, Graph, NodeId, PortId, PrimitiveValue } from "imp-core-types"
 import type { Expression, ExpressionBuilder } from "kysely"

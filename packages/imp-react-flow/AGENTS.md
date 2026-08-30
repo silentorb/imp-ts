@@ -8,10 +8,10 @@ Runtime converters between Imp `Graph` and React Flow `{ nodes, edges }`. Uses `
 
 | Layer | Location | Regenerated? |
 | --- | --- | --- |
-| Human/agent specs | [`docs/features/react-flow.md`](../../docs/features/react-flow.md) | No — authored source of truth |
-| Converter implementation | `src/*.ts` | Implement to match the react-flow feature doc |
+| Language-neutral spec | [`imp-spec` react-flow](../../imp-spec/docs/packages/imp-react-flow/react-flow.md) | No |
+| Converter implementation | `src/*.ts` | Implement to match spec |
 
-Core Imp shapes (`Graph`, `InputValues`, `Port`, `Ports`, `SignalType`) come from [`imp-core-types`](../imp-core-types/) / [graph-model.md](../../docs/features/graph-model.md).
+Core Imp shapes come from [`imp-core-types`](../imp-core-types/) / [graph-model.md](../../imp-spec/docs/packages/imp-core-types/graph-model.md).
 
 ## Layout
 
@@ -22,6 +22,17 @@ Core Imp shapes (`Graph`, `InputValues`, `Port`, `Ports`, `SignalType`) come fro
 | `src/index.ts` | Public re-exports |
 | `src/*.test.ts` | Round-trip tests |
 
+## Quick start
+
+```ts
+import type { Graph } from "imp-core-types"
+import { impToReactFlow, reactFlowToImp } from "imp-react-flow"
+
+const graph: Graph = { nodes: {}, edges: {} }
+const { nodes, edges } = impToReactFlow(graph)
+const roundTrip = reactFlowToImp(nodes, edges)
+```
+
 ## Run
 
 ```bash
@@ -29,10 +40,11 @@ bun run typecheck
 bun test
 ```
 
-From repo root: `bun run typecheck`, `bun test`.
+Round-trip tests: empty graph and multi-node graphs preserve node ids, edge ids, and `InputValues`.
 
 ## See also
 
-- [react-flow.md](../../docs/features/react-flow.md)
-- [graph-model.md](../../docs/features/graph-model.md)
+- [react-flow.md](../../imp-spec/docs/packages/imp-react-flow/react-flow.md)
+- [graph-model.md](../../imp-spec/docs/packages/imp-core-types/graph-model.md)
+- React Flow: [Edges](https://reactflow.dev/api-reference/types/edge), [Handles](https://reactflow.dev/learn/customization/handles)
 - Root [AGENTS.md](../../AGENTS.md)

@@ -1,4 +1,4 @@
-/** Registry for loading NodeLibrary catalogs. Spec: docs/features/registry.md */
+/** Registry for loading NodeLibrary catalogs. Spec: imp-spec/docs/packages/imp-registry/registry.md */
 
 import type { NodeLibrary, NodeType, NodeTypeId } from "imp-core-types"
 

@@ -1,13 +1,16 @@
 # Packages
 
+Language-neutral specs: [`../imp-spec/docs/packages/`](../imp-spec/docs/packages/).
+
 | Package | Role |
 | --- | --- |
-| [`imp-core-types`](./imp-core-types/) | Core graph + library type interfaces (regenerable from `docs/features/graph-model.md` and `docs/features/node-libraries.md`); `coreNodeLibrary` |
-| [`imp-registry`](./imp-registry/) | Load `NodeLibrary` values and look up `NodeType`s (see `docs/features/registry.md`) |
-| [`imp-react-flow`](./imp-react-flow/) | Imp ↔ React Flow converters (see `docs/features/react-flow.md`) |
-| [`imp-collection-transforms`](./imp-collection-transforms/) | Collection combinator `NodeLibrary` (see `docs/features/collection-transforms.md`) |
-| [`imp-pathing`](./imp-pathing/) | GQL-like path operator `NodeLibrary` (see `docs/features/pathing.md`) |
-| [`imp-sql`](./imp-sql/) | Imp → SQL via Kysely (see `docs/features/sql.md`) |
+| [`imp-core-types`](./imp-core-types/) | Core graph + library type interfaces; `coreNodeLibrary` |
+| [`imp-registry`](./imp-registry/) | Load `NodeLibrary` values and look up `NodeType`s |
+| [`imp-react-flow`](./imp-react-flow/) | Imp ↔ React Flow converters |
+| [`imp-collection-transforms`](./imp-collection-transforms/) | Collection combinator `NodeLibrary` |
+| [`imp-pathing`](./imp-pathing/) | GQL-like path operator `NodeLibrary` |
+| [`imp-sql`](./imp-sql/) | Imp → SQL via Kysely |
+| [`imp-execution`](./imp-execution/) | Dynamic runtime for collection/path graphs (read-only host) |
 
 ```mermaid
 flowchart TB
@@ -23,9 +26,10 @@ flowchart TB
   CT --> SPEC
   PATH --> SPEC
 
-  subgraph converters [Converters]
+  subgraph converters [Converters and runtimes]
     RF[imp-react-flow]
     SQL[imp-sql]
+    EXEC[imp-execution]
   end
 
   RF --> SPEC
@@ -33,6 +37,10 @@ flowchart TB
   SQL --> REG
   SQL --> CT
   SQL --> PATH
+  EXEC --> SPEC
+  EXEC --> REG
+  EXEC --> CT
+  EXEC --> PATH
 ```
 
 Each package should have a `README.md` (human context) and `AGENTS.md` (how to work in the package).

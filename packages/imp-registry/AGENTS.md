@@ -8,10 +8,10 @@ Runtime helpers to **load** `NodeLibrary` values and **look up** `NodeType`s. De
 
 | Layer | Location | Regenerated? |
 | --- | --- | --- |
-| Human/agent specs | [`docs/features/registry.md`](../../docs/features/registry.md) | No — authored source of truth |
-| Implementation | `src/*.ts` | Implement to match the registry feature doc |
+| Language-neutral spec | [`imp-spec` registry](../../imp-spec/docs/packages/imp-registry/registry.md) | No |
+| Implementation | `src/*.ts` | Implement to match spec |
 
-`NodeType` / `NodeLibrary` shapes come from [`imp-core-types`](../imp-core-types/) / [node-libraries.md](../../docs/features/node-libraries.md).
+`NodeType` / `NodeLibrary` shapes come from [`imp-core-types`](../imp-core-types/) / [node-libraries.md](../../imp-spec/docs/packages/imp-core-types/node-libraries.md).
 
 ## Layout
 
@@ -21,6 +21,31 @@ Runtime helpers to **load** `NodeLibrary` values and **look up** `NodeType`s. De
 | `src/index.ts` | Public re-exports |
 | `src/*.test.ts` | Load, lookup, conflict, immutability |
 
+## Quick start
+
+```ts
+import type { NodeLibrary } from "imp-core-types"
+import {
+  createRegistry,
+  loadLibrary,
+  getNodeType,
+} from "imp-registry"
+
+const library: NodeLibrary = {
+  id: "example",
+  types: {
+    source: {
+      id: "source",
+      inputs: {},
+      outputs: { out: { id: "out", type: { id: "signal" } } },
+    },
+  },
+}
+
+const registry = loadLibrary(createRegistry(), library)
+getNodeType(registry, "source")
+```
+
 ## Run
 
 ```bash
@@ -28,11 +53,11 @@ bun run typecheck
 bun test
 ```
 
-From repo root: `bun run typecheck`, `bun test`.
+Tests cover empty registry, successful load/lookup, and conflict on duplicate `NodeTypeId`.
 
 ## See also
 
-- [registry.md](../../docs/features/registry.md)
-- [node-libraries.md](../../docs/features/node-libraries.md)
-- [graph-model.md](../../docs/features/graph-model.md)
+- [registry.md](../../imp-spec/docs/packages/imp-registry/registry.md)
+- [node-libraries.md](../../imp-spec/docs/packages/imp-core-types/node-libraries.md)
+- [graph-model.md](../../imp-spec/docs/packages/imp-core-types/graph-model.md)
 - Root [AGENTS.md](../../AGENTS.md)

@@ -1,4 +1,4 @@
-/** Core Imp graph model. Authoritative spec: docs/features/graph-model.md */
+/** Core Imp graph model. Authoritative spec: imp-spec/docs/packages/imp-core-types/graph-model.md */
 
 export type NodeId = string
 export type EdgeId = string
