@@ -1,6 +1,6 @@
 {
   "name": "imp-core-types",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "private": true,
   "type": "module",
   "exports": {
@@ -11,7 +11,7 @@
     "test": "bun test"
   },
   "devDependencies": {
-    "imp-registry": "workspace:^0.3.0",
+    "imp-registry": "workspace:^0.4.0",
     "typescript": "5.8.2"
   }
 }

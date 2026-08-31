@@ -17,6 +17,7 @@ export {
   checkGraph,
   checkGraphImplements,
 } from "./check"
+export { checkTypeParamBounds } from "./check-type-param-bounds"
 export { resolveTypeArgs } from "./resolve-type-args"
 export {
   effectiveNodeImplementation,

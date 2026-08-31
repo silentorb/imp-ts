@@ -6,6 +6,7 @@ export type {
   SignalTypeId,
   TypeParamId,
   GraphTypeId,
+  TypeConstraintId,
   PrimitiveValue,
   TypeParam,
   Port,
@@ -50,5 +51,10 @@ export {
 } from "./implementation"
 
 export type { GraphType, GraphTypeLibrary } from "./graph-type"
+
+export type {
+  TypeConstraint,
+  TypeConstraintLibrary,
+} from "./type-constraint"
 
 export { coreNodeLibrary } from "./core-library"

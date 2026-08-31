@@ -1,6 +1,6 @@
 {
   "name": "imp-react-flow",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "private": true,
   "type": "module",
   "exports": {
@@ -11,14 +11,14 @@
     "test": "bun test"
   },
   "dependencies": {
-    "imp-core-types": "workspace:^0.3.0"
+    "imp-core-types": "workspace:^0.4.0"
   },
   "peerDependencies": {
     "@xyflow/react": "^12.0.0"
   },
   "devDependencies": {
     "@xyflow/react": "^12.8.2",
-    "imp-registry": "workspace:^0.3.0",
+    "imp-registry": "workspace:^0.4.0",
     "typescript": "5.8.2"
   }
 }

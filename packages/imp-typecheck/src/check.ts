@@ -16,6 +16,7 @@ import {
   scopeSignalType,
 } from "./substitution"
 import { formatType, unify } from "./unify"
+import { checkTypeParamBounds } from "./check-type-param-bounds"
 
 export { resolvePortType, collectGraphSubstitution, effectiveNodeType, catalogPortType }
 
@@ -130,6 +131,8 @@ export function checkGraph(
       }
     }
   }
+
+  errors.push(...checkTypeParamBounds(graph, registry))
 
   return errors
 }

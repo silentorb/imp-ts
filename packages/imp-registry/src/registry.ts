@@ -7,21 +7,28 @@ import type {
   NodeLibrary,
   NodeType,
   NodeTypeId,
+  TypeConstraint,
+  TypeConstraintId,
+  TypeConstraintLibrary,
 } from "imp-core-types"
 
 export interface Registry {
   readonly libraries: readonly NodeLibrary[]
   readonly graphTypeLibraries: readonly GraphTypeLibrary[]
+  readonly typeConstraintLibraries: readonly TypeConstraintLibrary[]
   readonly types: Readonly<Record<NodeTypeId, NodeType>>
   readonly graphTypes: Readonly<Record<GraphTypeId, GraphType>>
+  readonly typeConstraints: Readonly<Record<TypeConstraintId, TypeConstraint>>
 }
 
 export function createRegistry(): Registry {
   return {
     libraries: [],
     graphTypeLibraries: [],
+    typeConstraintLibraries: [],
     types: {},
     graphTypes: {},
+    typeConstraints: {},
   }
 }
 
@@ -66,6 +73,30 @@ export function loadGraphTypeLibrary(
   }
 }
 
+export function loadTypeConstraintLibrary(
+  registry: Registry,
+  library: TypeConstraintLibrary,
+): Registry {
+  const typeConstraints: Record<TypeConstraintId, TypeConstraint> = {
+    ...registry.typeConstraints,
+  }
+
+  for (const [key, constraint] of Object.entries(library.constraints)) {
+    if (key in typeConstraints) {
+      throw new Error(
+        `TypeConstraintId "${key}" is already registered (loading library "${library.id}")`,
+      )
+    }
+    typeConstraints[key] = constraint
+  }
+
+  return {
+    ...registry,
+    typeConstraintLibraries: [...registry.typeConstraintLibraries, library],
+    typeConstraints,
+  }
+}
+
 export function getNodeType(
   registry: Registry,
   typeId: NodeTypeId,
@@ -80,12 +111,23 @@ export function getGraphType(
   return registry.graphTypes[graphTypeId]
 }
 
+export function getTypeConstraint(
+  registry: Registry,
+  constraintId: TypeConstraintId,
+): TypeConstraint | undefined {
+  return registry.typeConstraints[constraintId]
+}
+
 export function listNodeTypes(registry: Registry): NodeType[] {
   return Object.values(registry.types)
 }
 
 export function listGraphTypes(registry: Registry): GraphType[] {
   return Object.values(registry.graphTypes)
+}
+
+export function listTypeConstraints(registry: Registry): TypeConstraint[] {
+  return Object.values(registry.typeConstraints)
 }
 
 export function listLibraries(registry: Registry): readonly NodeLibrary[] {
@@ -96,4 +138,10 @@ export function listGraphTypeLibraries(
   registry: Registry,
 ): readonly GraphTypeLibrary[] {
   return registry.graphTypeLibraries
+}
+
+export function listTypeConstraintLibraries(
+  registry: Registry,
+): readonly TypeConstraintLibrary[] {
+  return registry.typeConstraintLibraries
 }

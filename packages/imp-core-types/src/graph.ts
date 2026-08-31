@@ -9,6 +9,7 @@ export type PortId = string
 export type SignalTypeId = string
 export type TypeParamId = string
 export type GraphTypeId = string
+export type TypeConstraintId = string
 
 /** Literal value for instance inputs or port defaults. */
 export type PrimitiveValue = string | number | boolean | null
@@ -16,6 +17,7 @@ export type PrimitiveValue = string | number | boolean | null
 /** Opaque type parameter on a polymorphic catalog entry. */
 export interface TypeParam {
   id: TypeParamId
+  bounds?: TypeConstraintId[]
 }
 
 /**
