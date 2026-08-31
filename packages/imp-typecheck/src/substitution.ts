@@ -13,6 +13,7 @@ export type Substitution = Map<TypeParamId, SignalType>
 export interface TypeCheckError {
   nodeId?: string
   portId?: string
+  definitionId?: string
   message: string
 }
 

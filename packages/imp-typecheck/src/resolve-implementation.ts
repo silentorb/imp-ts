@@ -4,18 +4,19 @@ import type {
   ConcreteSignalType,
   Graph,
   ImplementationId,
+  NodeDefinition,
   NodeImplementation,
-  NodeType,
   SignalType,
 } from "imp-core-types"
 import {
   defaultNodeImplementation,
   isConcreteSignalType,
   isDispatchImplementation,
+  isGraphBackedDefinition,
   isUniversalImplementation,
 } from "imp-core-types"
 import type { Registry } from "imp-registry"
-import { getNodeType } from "imp-registry"
+import { getNodeDefinition } from "imp-registry"
 import { resolveTypeArgs } from "./resolve-type-args"
 
 export interface ImplementationResolveError {
@@ -23,8 +24,10 @@ export interface ImplementationResolveError {
   message: string
 }
 
-export function effectiveNodeImplementation(nodeType: NodeType): NodeImplementation {
-  return nodeType.implementation ?? defaultNodeImplementation(nodeType.id)
+export function effectiveNodeImplementation(
+  definition: NodeDefinition,
+): NodeImplementation {
+  return definition.implementation ?? defaultNodeImplementation(definition.id)
 }
 
 export function signalTypeMatches(pattern: ConcreteSignalType, type: SignalType): boolean {
@@ -56,19 +59,23 @@ export function resolveImplementation(
     return { message: `unknown node "${nodeId}"` }
   }
 
-  const nodeType = getNodeType(registry, node.type)
-  if (!nodeType) {
-    return { nodeId, message: `unknown NodeType "${node.type}"` }
+  const definition = getNodeDefinition(registry, node.type)
+  if (!definition) {
+    return { nodeId, message: `unknown NodeDefinition "${node.type}"` }
   }
 
-  const implementation = effectiveNodeImplementation(nodeType)
+  if (isGraphBackedDefinition(definition)) {
+    return { nodeId, message: `graph-backed definition "${node.type}" has no implementation id` }
+  }
+
+  const implementation = effectiveNodeImplementation(definition)
 
   if (isUniversalImplementation(implementation)) {
     return implementation.id
   }
 
   if (!isDispatchImplementation(implementation)) {
-    return { nodeId, message: "invalid NodeType implementation shape" }
+    return { nodeId, message: "invalid NodeDefinition implementation shape" }
   }
 
   const typeArgs = resolveTypeArgs(graph, nodeId, registry)

@@ -3,27 +3,30 @@ import {
   concreteType,
   coreNodeLibrary,
   type Graph,
-  type GraphTypeLibrary,
+  type NodeLibrary,
 } from "imp-core-types"
 import { collectionTransformsLibrary } from "imp-collection-transforms"
 import {
   createRegistry,
-  getGraphType,
-  loadGraphTypeLibrary,
-  loadLibrary,
+  loadGraphLibrary,
+  loadNodeLibrary,
   loadTypeConstraintLibrary,
+  getNodeDefinition,
 } from "imp-registry"
 import {
   checkGraph,
-  checkGraphImplements,
-  instantiateNodeType,
+  checkDefinition,
+  instantiateNodeDefinition,
   resolveImplementation,
   resolveTypeArgs,
   signalTypeMatches,
   unify,
 } from "./index"
-import type { NodeLibrary } from "imp-core-types"
 import { dispatchImplementation } from "imp-core-types"
+
+function coreDef(id: string) {
+  return coreNodeLibrary.definitions.find((entry) => entry.id === id)!
+}
 
 describe("unify", () => {
   test("unifies matching concrete types", () => {
@@ -42,10 +45,10 @@ describe("unify", () => {
   })
 })
 
-describe("instantiateNodeType", () => {
+describe("instantiateNodeDefinition", () => {
   test("substitutes type parameters", () => {
-    const nodeType = coreNodeLibrary.types.input
-    const instantiated = instantiateNodeType(nodeType, [concreteType("string")])
+    const definition = coreDef("input")
+    const instantiated = instantiateNodeDefinition(definition, [concreteType("string")])
     expect(instantiated.outputs.value?.type).toEqual(concreteType("string"))
     expect(instantiated.typeParams).toBeUndefined()
   })
@@ -53,8 +56,8 @@ describe("instantiateNodeType", () => {
 
 describe("checkGraph", () => {
   test("accepts filter wired to input boundary", () => {
-    const registry = loadLibrary(
-      loadLibrary(createRegistry(), coreNodeLibrary),
+    const registry = loadNodeLibrary(
+      loadNodeLibrary(createRegistry(), coreNodeLibrary),
       collectionTransformsLibrary,
     )
 
@@ -85,8 +88,8 @@ describe("checkGraph", () => {
   })
 
   test("reports edge type mismatch", () => {
-    const registry = loadLibrary(
-      loadLibrary(createRegistry(), coreNodeLibrary),
+    const registry = loadNodeLibrary(
+      loadNodeLibrary(createRegistry(), coreNodeLibrary),
       collectionTransformsLibrary,
     )
 
@@ -111,8 +114,8 @@ describe("checkGraph", () => {
 describe("implementation dispatch", () => {
   const castLibrary: NodeLibrary = {
     id: "example.cast",
-    types: {
-      cast: {
+    definitions: [
+      {
         id: "cast",
         typeParams: [{ id: "T" }],
         implementation: dispatchImplementation(
@@ -129,7 +132,7 @@ describe("implementation dispatch", () => {
           value: { id: "value", type: concreteType("string") },
         },
       },
-    },
+    ],
   }
 
   test("signalTypeMatches treats any as wildcard", () => {
@@ -138,8 +141,8 @@ describe("implementation dispatch", () => {
   })
 
   test("resolveImplementation uses universal default", () => {
-    const registry = loadLibrary(
-      loadLibrary(createRegistry(), coreNodeLibrary),
+    const registry = loadNodeLibrary(
+      loadNodeLibrary(createRegistry(), coreNodeLibrary),
       collectionTransformsLibrary,
     )
     const graph: Graph = {
@@ -158,8 +161,8 @@ describe("implementation dispatch", () => {
   })
 
   test("resolveImplementation dispatches on inferred type arg", () => {
-    const registry = loadLibrary(
-      loadLibrary(loadLibrary(createRegistry(), coreNodeLibrary), castLibrary),
+    const registry = loadNodeLibrary(
+      loadNodeLibrary(loadNodeLibrary(createRegistry(), coreNodeLibrary), castLibrary),
       collectionTransformsLibrary,
     )
     const graph: Graph = {
@@ -179,8 +182,8 @@ describe("implementation dispatch", () => {
   })
 
   test("resolveImplementation uses dispatch default", () => {
-    const registry = loadLibrary(
-      loadLibrary(loadLibrary(createRegistry(), coreNodeLibrary), castLibrary),
+    const registry = loadNodeLibrary(
+      loadNodeLibrary(loadNodeLibrary(createRegistry(), coreNodeLibrary), castLibrary),
       collectionTransformsLibrary,
     )
     const graph: Graph = {
@@ -212,8 +215,8 @@ describe("type param bounds", () => {
 
   const identityLibrary: NodeLibrary = {
     id: "example.identity",
-    types: {
-      identity: {
+    definitions: [
+      {
         id: "identity",
         typeParams: [{ id: "T", bounds: ["Scalar"] }],
         inputs: {
@@ -223,12 +226,12 @@ describe("type param bounds", () => {
           value: { id: "value", type: { param: "T" } },
         },
       },
-    },
+    ],
   }
 
   function registryWithBounds() {
     return loadTypeConstraintLibrary(
-      loadLibrary(loadLibrary(createRegistry(), coreNodeLibrary), identityLibrary),
+      loadNodeLibrary(loadNodeLibrary(createRegistry(), coreNodeLibrary), identityLibrary),
       scalarConstraintLibrary,
     )
   }
@@ -288,17 +291,17 @@ describe("type param bounds", () => {
   test("reports unknown bound id", () => {
     const badLibrary: NodeLibrary = {
       id: "example.bad",
-      types: {
-        bad: {
+      definitions: [
+        {
           id: "bad",
           typeParams: [{ id: "T", bounds: ["Missing"] }],
           inputs: { value: { id: "value", type: { param: "T" } } },
           outputs: { value: { id: "value", type: { param: "T" } } },
         },
-      },
+      ],
     }
-    const registry = loadLibrary(
-      loadLibrary(createRegistry(), coreNodeLibrary),
+    const registry = loadNodeLibrary(
+      loadNodeLibrary(createRegistry(), coreNodeLibrary),
       badLibrary,
     )
     const graph: Graph = {
@@ -331,8 +334,8 @@ describe("type param bounds", () => {
     }
     const passthroughLibrary: NodeLibrary = {
       id: "example.passthrough",
-      types: {
-        passthrough: {
+      definitions: [
+        {
           id: "passthrough",
           typeParams: [{ id: "T", bounds: ["StringCollection"] }],
           inputs: {
@@ -342,11 +345,11 @@ describe("type param bounds", () => {
             collection: { id: "collection", type: { param: "T" } },
           },
         },
-      },
+      ],
     }
     const registry = loadTypeConstraintLibrary(
-      loadLibrary(
-        loadLibrary(createRegistry(), coreNodeLibrary),
+      loadNodeLibrary(
+        loadNodeLibrary(createRegistry(), coreNodeLibrary),
         passthroughLibrary,
       ),
       collectionConstraintLibrary,
@@ -372,31 +375,49 @@ describe("type param bounds", () => {
   })
 })
 
-describe("checkGraphImplements", () => {
-  const graphTypeLibrary: GraphTypeLibrary = {
-    id: "example.graph-types",
-    types: {
-      passthrough: {
-        id: "passthrough",
-        typeParams: [{ id: "T" }],
-        inputs: {
-          rows: {
-            id: "rows",
-            type: { id: "collection", args: [{ param: "T" }] },
+describe("checkDefinition", () => {
+  test("validates graph-backed library entry", () => {
+    const graphLibrary = {
+      id: "example.graph-types",
+      definitions: [
+        {
+          id: "passthrough",
+          inputs: {
+            rows: { id: "rows", type: { id: "collection" } },
+          },
+          outputs: {
+            rows: { id: "rows", type: { id: "collection" } },
+          },
+          bindings: {
+            inputs: { rows: "in_rows" },
+            outputs: { rows: "out_rows" },
+          },
+          body: {
+            nodes: {
+              in_rows: {
+                id: "in_rows",
+                type: "input",
+                typeArgs: [{ id: "collection" }],
+                inputs: {},
+              },
+              out_rows: { id: "out_rows", type: "output", inputs: {} },
+            },
+            edges: {
+              e1: {
+                from: { node: "in_rows", port: "value" },
+                to: { node: "out_rows", port: "value" },
+              },
+            },
           },
         },
-        outputs: {
-          rows: {
-            id: "rows",
-            type: { id: "collection", args: [{ param: "T" }] },
-          },
-        },
-      },
-    },
-  }
+      ],
+    }
 
-  test("loads graph types into registry", () => {
-    const registry = loadGraphTypeLibrary(createRegistry(), graphTypeLibrary)
-    expect(getGraphType(registry, "passthrough")?.id).toBe("passthrough")
+    const registry = loadGraphLibrary(
+      loadNodeLibrary(createRegistry(), coreNodeLibrary),
+      graphLibrary,
+    )
+    expect(getNodeDefinition(registry, "passthrough")?.id).toBe("passthrough")
+    expect(checkDefinition(graphLibrary.definitions[0]!, registry)).toEqual([])
   })
 })

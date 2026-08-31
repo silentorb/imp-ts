@@ -1,7 +1,9 @@
 /** In-memory collection evaluation. Spec: imp-spec/docs/packages/imp-execution/execution.md */
 
-import type { Graph, NodeId, PortId } from "imp-core-types";
-import type { Registry } from "imp-registry";
+import type { BoundaryBindings, Graph, NodeId, PortId } from "imp-core-types";
+import { getNodeDefinition } from "imp-registry";
+import type { ExecutionProgram } from "imp-graph-resolve";
+import { isGraphBackedNodeType, subgraphKey } from "imp-graph-resolve";
 import type { ExecutionHost, ExecutionRow } from "../host";
 import {
   indexEdgesByTarget,
@@ -9,6 +11,11 @@ import {
   resolveInput,
   type EdgeTargetKey,
 } from "../resolve";
+
+export interface CompositeEvalFrame {
+  instanceId: NodeId;
+  bindings: BoundaryBindings;
+}
 
 export interface EvalContext {
   graph: Graph;
@@ -19,6 +26,9 @@ export interface EvalContext {
   sourceNodeId: NodeId;
   edgeType?: (association: string, direction: number) => string;
   currentRow?: ExecutionRow;
+  executionProgram?: ExecutionProgram;
+  compositeFrame?: CompositeEvalFrame;
+  parentContext?: EvalContext;
 }
 
 function requireNumber(value: unknown, label: string): number {
@@ -160,6 +170,54 @@ function evalPredicate(ctx: EvalContext, nodeId: NodeId): boolean {
   return Boolean(evalPredicateValue(ctx, nodeId));
 }
 
+function inputPortForBoundNode(bindings: BoundaryBindings, nodeId: NodeId): PortId | undefined {
+  for (const [portId, boundId] of Object.entries(bindings.inputs)) {
+    if (boundId === nodeId) return portId;
+  }
+  return undefined;
+}
+
+async function evalCompositeCollectionPort(
+  ctx: EvalContext,
+  instanceId: NodeId,
+  outputPort: PortId,
+): Promise<ExecutionRow[]> {
+  if (!ctx.executionProgram) {
+    throw new Error(`Composite node "${instanceId}" requires an execution program`);
+  }
+
+  const instance = requireNode(ctx.graph, instanceId);
+  const definition = getNodeDefinition(ctx.registry, instance.type);
+  if (!definition?.bindings || !definition.body) {
+    throw new Error(`Node "${instanceId}" is not a graph-backed definition`);
+  }
+
+  const key = subgraphKey(definition.id, instance.typeArgs);
+  const body = ctx.executionProgram.subgraphs.get(key);
+  if (!body) {
+    throw new Error(`Missing shared subgraph for definition "${definition.id}"`);
+  }
+
+  const boundaryOut = definition.bindings.outputs[outputPort];
+  if (!boundaryOut) {
+    throw new Error(`Composite "${instanceId}" has no output binding for port "${outputPort}"`);
+  }
+
+  const innerCtx: EvalContext = {
+    ...ctx,
+    graph: body,
+    parentContext: ctx,
+    compositeFrame: {
+      instanceId,
+      bindings: definition.bindings,
+    },
+    visiting: new Set<string>(),
+    edgesByTarget: indexEdgesByTarget(body),
+  };
+
+  return evalCollectionPort(innerCtx, boundaryOut, "value");
+}
+
 async function followCollectionPort(
   ctx: EvalContext,
   nodeId: NodeId,
@@ -212,6 +270,18 @@ export async function evalCollectionPort(
 
     switch (node.type) {
       case "input": {
+        if (ctx.compositeFrame && ctx.parentContext) {
+          const inputPort = inputPortForBoundNode(ctx.compositeFrame.bindings, nodeId);
+          if (inputPort) {
+            const parent = ctx.parentContext;
+            return followCollectionPort(
+              parent,
+              ctx.compositeFrame.instanceId,
+              inputPort,
+              `composite.${inputPort}`,
+            );
+          }
+        }
         if (nodeId !== ctx.sourceNodeId) {
           throw new Error(`Unexpected input node "${nodeId}"`);
         }
@@ -367,8 +437,12 @@ export async function evalCollectionPort(
         }
         return out;
       }
-      default:
+      default: {
+        if (isGraphBackedNodeType(node.type, ctx.registry)) {
+          return evalCompositeCollectionPort(ctx, nodeId, outputPort);
+        }
         throw new Error(`Unsupported collection node type "${node.type}"`);
+      }
     }
   } finally {
     ctx.visiting.delete(nodeId);

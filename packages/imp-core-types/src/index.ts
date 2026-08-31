@@ -5,7 +5,6 @@ export type {
   PortId,
   SignalTypeId,
   TypeParamId,
-  GraphTypeId,
   TypeConstraintId,
   PrimitiveValue,
   TypeParam,
@@ -32,7 +31,17 @@ export {
   collectionOf,
 } from "./signal-type"
 
-export type { NodeType, NodeLibrary } from "./library"
+export type {
+  NodeDefinition,
+  NodeLibrary,
+  GraphLibrary,
+  BoundaryBindings,
+} from "./library"
+
+export {
+  isGraphBackedDefinition,
+  isPrimitiveDefinition,
+} from "./library"
 
 export type {
   ImplementationId,
@@ -49,8 +58,6 @@ export {
   isUniversalImplementation,
   isDispatchImplementation,
 } from "./implementation"
-
-export type { GraphType, GraphTypeLibrary } from "./graph-type"
 
 export type {
   TypeConstraint,

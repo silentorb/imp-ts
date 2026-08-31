@@ -4,14 +4,14 @@ import type {
   Edge,
   Graph,
   Node,
+  NodeDefinition,
   NodeId,
-  NodeType,
   PortId,
   PortReference,
   PrimitiveValue,
 } from "imp-core-types"
 import type { Registry } from "imp-registry"
-import { getNodeType } from "imp-registry"
+import { getNodeDefinition } from "imp-registry"
 
 export type EdgeTargetKey = `${NodeId}\0${PortId}`
 
@@ -41,13 +41,16 @@ export function requireNode(graph: Graph, nodeId: NodeId): Node {
   return node
 }
 
-export function requireNodeType(registry: Registry, typeId: string): NodeType {
-  const nodeType = getNodeType(registry, typeId)
-  if (nodeType == null) {
+export function requireNodeDefinition(registry: Registry, typeId: string): NodeDefinition {
+  const definition = getNodeDefinition(registry, typeId)
+  if (definition == null) {
     throw new Error(`Unknown node type "${typeId}"`)
   }
-  return nodeType
+  return definition
 }
+
+/** @deprecated Use requireNodeDefinition */
+export const requireNodeType = requireNodeDefinition
 
 export function findSoleBoundaryNode(
   graph: Graph,
@@ -99,8 +102,8 @@ export function resolveInput(
     return { kind: "literal", value: node.inputs[portId]! }
   }
 
-  const nodeType = requireNodeType(registry, node.type)
-  const port = nodeType.inputs[portId]
+  const definition = requireNodeDefinition(registry, node.type)
+  const port = definition.inputs[portId]
   if (port == null) {
     throw new Error(`Node "${nodeId}" (type "${node.type}") has no input port "${portId}"`)
   }

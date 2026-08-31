@@ -8,7 +8,6 @@ export type NodeTypeId = string
 export type PortId = string
 export type SignalTypeId = string
 export type TypeParamId = string
-export type GraphTypeId = string
 export type TypeConstraintId = string
 
 /** Literal value for instance inputs or port defaults. */

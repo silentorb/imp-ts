@@ -23,8 +23,8 @@ function port(id: string, type: Port["type"], defaultValue?: Port["defaultValue"
 
 export const pathingLibrary: NodeLibrary = {
   id: "imp.pathing",
-  types: {
-    traverse: {
+  definitions: [
+    {
       id: "traverse",
       typeParams: [{ id: "T" }],
       implementation: universalImplementation("traverse"),
@@ -39,5 +39,5 @@ export const pathingLibrary: NodeLibrary = {
         collection: port("collection", collectionT),
       },
     },
-  },
+  ],
 }

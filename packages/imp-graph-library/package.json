@@ -1,6 +1,6 @@
 {
-  "name": "imp-pathing",
-  "version": "0.5.0",
+  "name": "imp-graph-library",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
   "exports": {
@@ -14,7 +14,6 @@
     "imp-core-types": "workspace:^0.5.0"
   },
   "devDependencies": {
-    "imp-registry": "workspace:^0.5.0",
     "typescript": "5.8.2"
   }
 }

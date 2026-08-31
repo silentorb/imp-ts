@@ -10,6 +10,8 @@ import {
 } from "kysely"
 import type { Graph, PortReference } from "imp-core-types"
 import type { Registry } from "imp-registry"
+import { hasGraphBackedDefinitions } from "imp-registry"
+import { flattenGraph } from "imp-graph-resolve"
 import {
   createCollectionLowerContext,
   lowerCollectionPort,
@@ -63,13 +65,18 @@ export function graphToKysely(
     throw new Error(`Unsupported dialect "${dialect}"`)
   }
 
-  const source = options.source ?? defaultSource(graph)
-  const sink = options.sink ?? defaultSink(graph)
-  const edgesByTarget = indexEdgesByTarget(graph)
+  const flattened =
+    hasGraphBackedDefinitions(options.registry)
+      ? flattenGraph(graph, options.registry)
+      : graph
+
+  const source = options.source ?? defaultSource(flattened)
+  const sink = options.sink ?? defaultSink(flattened)
+  const edgesByTarget = indexEdgesByTarget(flattened)
   const db = createSqliteCompileDb()
 
   const ctx = createCollectionLowerContext({
-    graph,
+    graph: flattened,
     registry: options.registry,
     schema: options.schema,
     edgesByTarget,
@@ -79,7 +86,7 @@ export function graphToKysely(
 
   // Sink is typically an `output` node's `value` *input* — resolve that input
   // to the upstream collection output, or lower an `output` node directly.
-  const sinkNode = graph.nodes[sink.node]
+  const sinkNode = flattened.nodes[sink.node]
   if (sinkNode == null) {
     throw new Error(`Unknown sink node "${sink.node}"`)
   }
@@ -89,7 +96,7 @@ export function graphToKysely(
     query = lowerCollectionPort(ctx, sink.node, "value")
   } else {
     const resolved = resolveInput(
-      graph,
+      flattened,
       options.registry,
       edgesByTarget,
       sink.node,

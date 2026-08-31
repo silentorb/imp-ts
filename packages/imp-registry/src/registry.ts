@@ -1,77 +1,80 @@
-/** Registry for loading NodeLibrary and GraphTypeLibrary catalogs. Spec: imp-spec/docs/packages/imp-registry/registry.md */
+/** Registry for loading NodeLibrary and GraphLibrary catalogs. Spec: imp-spec/docs/packages/imp-registry/registry.md */
 
 import type {
-  GraphType,
-  GraphTypeId,
-  GraphTypeLibrary,
+  GraphLibrary,
+  NodeDefinition,
   NodeLibrary,
-  NodeType,
   NodeTypeId,
   TypeConstraint,
   TypeConstraintId,
   TypeConstraintLibrary,
 } from "imp-core-types"
+import { isGraphBackedDefinition } from "imp-core-types"
 
 export interface Registry {
   readonly libraries: readonly NodeLibrary[]
-  readonly graphTypeLibraries: readonly GraphTypeLibrary[]
+  readonly graphLibraries: readonly GraphLibrary[]
   readonly typeConstraintLibraries: readonly TypeConstraintLibrary[]
-  readonly types: Readonly<Record<NodeTypeId, NodeType>>
-  readonly graphTypes: Readonly<Record<GraphTypeId, GraphType>>
+  readonly definitions: Readonly<Record<NodeTypeId, NodeDefinition>>
   readonly typeConstraints: Readonly<Record<TypeConstraintId, TypeConstraint>>
 }
 
 export function createRegistry(): Registry {
   return {
     libraries: [],
-    graphTypeLibraries: [],
+    graphLibraries: [],
     typeConstraintLibraries: [],
-    types: {},
-    graphTypes: {},
+    definitions: {},
     typeConstraints: {},
   }
 }
 
-export function loadLibrary(registry: Registry, library: NodeLibrary): Registry {
-  const types: Record<NodeTypeId, NodeType> = { ...registry.types }
-
-  for (const [key, nodeType] of Object.entries(library.types)) {
-    if (key in types) {
-      throw new Error(
-        `NodeTypeId "${key}" is already registered (loading library "${library.id}")`,
-      )
-    }
-    types[key] = nodeType
-  }
-
-  return {
-    ...registry,
-    libraries: [...registry.libraries, library],
-    types,
-  }
-}
-
-export function loadGraphTypeLibrary(
+function mergeDefinitions(
   registry: Registry,
-  library: GraphTypeLibrary,
+  libraryId: string,
+  definitions: NodeDefinition[],
 ): Registry {
-  const graphTypes: Record<GraphTypeId, GraphType> = { ...registry.graphTypes }
+  const merged: Record<NodeTypeId, NodeDefinition> = { ...registry.definitions }
 
-  for (const [key, graphType] of Object.entries(library.types)) {
-    if (key in graphTypes) {
+  for (const definition of definitions) {
+    if (definition.id in merged) {
       throw new Error(
-        `GraphTypeId "${key}" is already registered (loading library "${library.id}")`,
+        `NodeTypeId "${definition.id}" is already registered (loading library "${libraryId}")`,
       )
     }
-    graphTypes[key] = graphType
+    merged[definition.id] = definition
   }
 
   return {
     ...registry,
-    graphTypeLibraries: [...registry.graphTypeLibraries, library],
-    graphTypes,
+    definitions: merged,
   }
 }
+
+export function loadNodeLibrary(registry: Registry, library: NodeLibrary): Registry {
+  return {
+    ...mergeDefinitions(registry, library.id, library.definitions),
+    libraries: [...registry.libraries, library],
+  }
+}
+
+export function loadGraphLibrary(registry: Registry, library: GraphLibrary): Registry {
+  for (const definition of library.definitions) {
+    if (!isGraphBackedDefinition(definition)) {
+      throw new Error(
+        `GraphLibrary "${library.id}" entry "${definition.id}" must include body and bindings`,
+      )
+    }
+  }
+
+  return {
+    ...mergeDefinitions(registry, library.id, library.definitions),
+    graphLibraries: [...registry.graphLibraries, library],
+  }
+}
+
+/** @deprecated Use loadNodeLibrary */
+export const loadLibrary = loadNodeLibrary
 
 export function loadTypeConstraintLibrary(
   registry: Registry,
@@ -97,19 +100,15 @@ export function loadTypeConstraintLibrary(
   }
 }
 
-export function getNodeType(
+export function getNodeDefinition(
   registry: Registry,
   typeId: NodeTypeId,
-): NodeType | undefined {
-  return registry.types[typeId]
+): NodeDefinition | undefined {
+  return registry.definitions[typeId]
 }
 
-export function getGraphType(
-  registry: Registry,
-  graphTypeId: GraphTypeId,
-): GraphType | undefined {
-  return registry.graphTypes[graphTypeId]
-}
+/** @deprecated Use getNodeDefinition */
+export const getNodeType = getNodeDefinition
 
 export function getTypeConstraint(
   registry: Registry,
@@ -118,13 +117,12 @@ export function getTypeConstraint(
   return registry.typeConstraints[constraintId]
 }
 
-export function listNodeTypes(registry: Registry): NodeType[] {
-  return Object.values(registry.types)
+export function listNodeDefinitions(registry: Registry): NodeDefinition[] {
+  return Object.values(registry.definitions)
 }
 
-export function listGraphTypes(registry: Registry): GraphType[] {
-  return Object.values(registry.graphTypes)
-}
+/** @deprecated Use listNodeDefinitions */
+export const listNodeTypes = listNodeDefinitions
 
 export function listTypeConstraints(registry: Registry): TypeConstraint[] {
   return Object.values(registry.typeConstraints)
@@ -134,14 +132,16 @@ export function listLibraries(registry: Registry): readonly NodeLibrary[] {
   return registry.libraries
 }
 
-export function listGraphTypeLibraries(
-  registry: Registry,
-): readonly GraphTypeLibrary[] {
-  return registry.graphTypeLibraries
+export function listGraphLibraries(registry: Registry): readonly GraphLibrary[] {
+  return registry.graphLibraries
 }
 
 export function listTypeConstraintLibraries(
   registry: Registry,
 ): readonly TypeConstraintLibrary[] {
   return registry.typeConstraintLibraries
+}
+
+export function hasGraphBackedDefinitions(registry: Registry): boolean {
+  return Object.values(registry.definitions).some(isGraphBackedDefinition)
 }

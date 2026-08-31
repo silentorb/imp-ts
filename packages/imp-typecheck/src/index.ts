@@ -8,14 +8,19 @@ export {
 } from "./substitution"
 export { unify, formatType } from "./unify"
 export type { UnifyResult } from "./unify"
-export { instantiateNodeType } from "./instantiate"
+export {
+  instantiateNodeDefinition,
+  instantiateNodeDefinition as instantiateNodeType,
+} from "./instantiate"
 export {
   resolvePortType,
   collectGraphSubstitution,
-  effectiveNodeType,
+  effectiveNodeDefinition,
+  effectiveNodeDefinition as effectiveNodeType,
   catalogPortType,
   checkGraph,
-  checkGraphImplements,
+  checkDefinition,
+  checkGraphDefinitions,
 } from "./check"
 export { checkTypeParamBounds } from "./check-type-param-bounds"
 export { resolveTypeArgs } from "./resolve-type-args"

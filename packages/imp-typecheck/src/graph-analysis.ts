@@ -2,17 +2,20 @@
 
 import type { Graph, Node, NodeId, PortId, SignalType } from "imp-core-types"
 import type { Registry } from "imp-registry"
-import { getNodeType } from "imp-registry"
-import { instantiateNodeType } from "./instantiate"
+import { getNodeDefinition } from "imp-registry"
+import { instantiateNodeDefinition } from "./instantiate"
 import { type Substitution, applySubstitution, scopeSignalType } from "./substitution"
 import { unify } from "./unify"
 
-export function effectiveNodeType(node: Node, registry: Registry) {
-  const catalog = getNodeType(registry, node.type)
+export function effectiveNodeDefinition(node: Node, registry: Registry) {
+  const catalog = getNodeDefinition(registry, node.type)
   if (!catalog) return undefined
   if (!node.typeArgs?.length) return catalog
-  return instantiateNodeType(catalog, node.typeArgs)
+  return instantiateNodeDefinition(catalog, node.typeArgs)
 }
+
+/** @deprecated Use effectiveNodeDefinition */
+export const effectiveNodeType = effectiveNodeDefinition
 
 export function catalogPortType(
   node: Node,
@@ -20,9 +23,9 @@ export function catalogPortType(
   portId: PortId,
   direction: "input" | "output",
 ): SignalType | undefined {
-  const nodeType = effectiveNodeType(node, registry)
-  if (!nodeType) return undefined
-  const ports = direction === "input" ? nodeType.inputs : nodeType.outputs
+  const definition = effectiveNodeDefinition(node, registry)
+  if (!definition) return undefined
+  const ports = direction === "input" ? definition.inputs : definition.outputs
   const port = ports[portId]
   if (!port) return undefined
   return scopeSignalType(port.type, node.id)
@@ -59,15 +62,15 @@ export function resolvePortType(
   const node = graph.nodes[nodeId]
   if (!node) return undefined
 
-  const nodeType = effectiveNodeType(node, registry)
-  if (!nodeType) return undefined
+  const definition = effectiveNodeDefinition(node, registry)
+  if (!definition) return undefined
 
   const outputType = catalogPortType(node, registry, portId, "output")
   if (outputType) {
     return applySubstitution(outputType, subst)
   }
 
-  const inputTemplate = nodeType.inputs[portId]
+  const inputTemplate = definition.inputs[portId]
   if (!inputTemplate) return undefined
 
   let inputType = scopeSignalType(inputTemplate.type, node.id)

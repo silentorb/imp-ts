@@ -1,16 +1,19 @@
 export {
   createRegistry,
+  loadNodeLibrary,
+  loadGraphLibrary,
   loadLibrary,
-  loadGraphTypeLibrary,
   loadTypeConstraintLibrary,
+  getNodeDefinition,
   getNodeType,
-  getGraphType,
   getTypeConstraint,
+  listNodeDefinitions,
   listNodeTypes,
-  listGraphTypes,
   listTypeConstraints,
   listLibraries,
-  listGraphTypeLibraries,
+  listGraphLibraries,
   listTypeConstraintLibraries,
-  type Registry,
+  hasGraphBackedDefinitions,
 } from "./registry"
+
+export type { Registry } from "./registry"

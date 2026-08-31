@@ -1,6 +1,7 @@
 /** Collection transform NodeLibrary. Spec: imp-spec/docs/packages/imp-collection-transforms/collection-transforms.md */
 
 import {
+  type NodeDefinition,
   type NodeLibrary,
   type Port,
   type SignalType,
@@ -36,7 +37,7 @@ function collectionOut(): Port {
 function collectionPreserving(
   id: string,
   extraInputs: Record<string, Port>,
-): NodeLibrary["types"][string] {
+): NodeDefinition {
   return {
     id,
     typeParams: collectionTypeParam,
@@ -48,34 +49,34 @@ function collectionPreserving(
 
 export const collectionTransformsLibrary: NodeLibrary = {
   id: "imp.collection.transforms",
-  types: {
-    filter: collectionPreserving("filter", {
+  definitions: [
+    collectionPreserving("filter", {
       predicate: port("predicate", boolean),
     }),
-    except: collectionPreserving("except", {
+    collectionPreserving("except", {
       exclude: port("exclude", collectionT),
     }),
-    sort: collectionPreserving("sort", {
+    collectionPreserving("sort", {
       column: port("column", string),
       direction: port("direction", string, "asc"),
     }),
-    limit: collectionPreserving("limit", {
+    collectionPreserving("limit", {
       count: port("count", number),
     }),
-    offset: collectionPreserving("offset", {
+    collectionPreserving("offset", {
       count: port("count", number),
     }),
-    project: collectionPreserving("project", {
+    collectionPreserving("project", {
       columns: port("columns", string),
     }),
-    group: collectionPreserving("group", {
+    collectionPreserving("group", {
       column: port("column", string),
       direction: port("direction", string, "asc"),
     }),
-    search: collectionPreserving("search", {
+    collectionPreserving("search", {
       query: port("query", string),
     }),
-    contains: {
+    {
       id: "contains",
       inputs: {
         haystack: port("haystack", any),
@@ -85,7 +86,7 @@ export const collectionTransformsLibrary: NodeLibrary = {
         value: port("value", boolean),
       },
     },
-    equals: {
+    {
       id: "equals",
       inputs: {
         left: port("left", any),
@@ -95,7 +96,7 @@ export const collectionTransformsLibrary: NodeLibrary = {
         value: port("value", boolean),
       },
     },
-    not_equals: {
+    {
       id: "not_equals",
       inputs: {
         left: port("left", any),
@@ -105,7 +106,7 @@ export const collectionTransformsLibrary: NodeLibrary = {
         value: port("value", boolean),
       },
     },
-    less_than: {
+    {
       id: "less_than",
       inputs: {
         left: port("left", any),
@@ -115,7 +116,7 @@ export const collectionTransformsLibrary: NodeLibrary = {
         value: port("value", boolean),
       },
     },
-    greater_than: {
+    {
       id: "greater_than",
       inputs: {
         left: port("left", any),
@@ -125,7 +126,7 @@ export const collectionTransformsLibrary: NodeLibrary = {
         value: port("value", boolean),
       },
     },
-    and: {
+    {
       id: "and",
       inputs: {
         left: port("left", boolean),
@@ -135,7 +136,7 @@ export const collectionTransformsLibrary: NodeLibrary = {
         value: port("value", boolean),
       },
     },
-    or: {
+    {
       id: "or",
       inputs: {
         left: port("left", boolean),
@@ -145,7 +146,7 @@ export const collectionTransformsLibrary: NodeLibrary = {
         value: port("value", boolean),
       },
     },
-    not: {
+    {
       id: "not",
       inputs: {
         value: port("value", boolean),
@@ -154,7 +155,7 @@ export const collectionTransformsLibrary: NodeLibrary = {
         value: port("value", boolean),
       },
     },
-    column: {
+    {
       id: "column",
       inputs: {
         name: port("name", string),
@@ -163,7 +164,7 @@ export const collectionTransformsLibrary: NodeLibrary = {
         value: port("value", any),
       },
     },
-    literal: {
+    {
       id: "literal",
       inputs: {
         value: port("value", any),
@@ -172,5 +173,5 @@ export const collectionTransformsLibrary: NodeLibrary = {
         value: port("value", any),
       },
     },
-  },
+  ],
 }

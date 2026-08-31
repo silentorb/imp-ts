@@ -1,0 +1,31 @@
+{
+  "id": "example.query-patterns",
+  "definitions": [
+    {
+      "id": "passthrough",
+      "name": "Passthrough rows",
+      "inputs": {
+        "rows": { "id": "rows", "type": { "id": "collection" } }
+      },
+      "outputs": {
+        "rows": { "id": "rows", "type": { "id": "collection" } }
+      },
+      "bindings": {
+        "inputs": { "rows": "in_rows" },
+        "outputs": { "rows": "out_rows" }
+      },
+      "body": {
+        "nodes": {
+          "in_rows": { "id": "in_rows", "type": "input", "inputs": {} },
+          "out_rows": { "id": "out_rows", "type": "output", "inputs": {} }
+        },
+        "edges": {
+          "e1": {
+            "from": { "node": "in_rows", "port": "value" },
+            "to": { "node": "out_rows", "port": "value" }
+          }
+        }
+      }
+    }
+  ]
+}

@@ -3,7 +3,7 @@
 import type { Graph, Node, NodeId, SignalType } from "imp-core-types"
 import { isConcreteSignalType, isTypeVar } from "imp-core-types"
 import type { Registry } from "imp-registry"
-import { getNodeType } from "imp-registry"
+import { getNodeDefinition } from "imp-registry"
 import { catalogPortType, collectGraphSubstitution } from "./graph-analysis"
 import { applySubstitution, scopedParam } from "./substitution"
 
@@ -15,10 +15,10 @@ export function resolveTypeArgs(
   const node = graph.nodes[nodeId]
   if (!node) return undefined
 
-  const nodeType = getNodeType(registry, node.type)
-  if (!nodeType) return undefined
+  const definition = getNodeDefinition(registry, node.type)
+  if (!definition) return undefined
 
-  const params = nodeType.typeParams ?? []
+  const params = definition.typeParams ?? []
   if (params.length === 0) return []
 
   if (node.typeArgs?.length) {

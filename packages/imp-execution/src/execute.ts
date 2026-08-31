@@ -2,6 +2,11 @@
 
 import type { Graph, PortReference } from "imp-core-types";
 import type { Registry } from "imp-registry";
+import { hasGraphBackedDefinitions } from "imp-registry";
+import {
+  buildExecutionProgram,
+  type ExecutionProgram,
+} from "imp-graph-resolve";
 import {
   DEFAULT_EXECUTION_CAPABILITIES,
   type ExecutionCapabilities,
@@ -17,6 +22,8 @@ export interface ExecuteGraphOptions {
   capabilities?: ExecutionCapabilities;
   source?: PortReference;
   sink?: PortReference;
+  /** Pre-built program; built automatically when graph-backed definitions are registered. */
+  program?: ExecutionProgram;
 }
 
 export async function executeGraph(
@@ -31,20 +38,29 @@ export async function executeGraph(
     throw new Error("imp-execution v1 does not support write capabilities");
   }
 
-  const source = options.source ?? defaultSource(graph);
-  const sink = options.sink ?? defaultSink(graph);
-  const edgesByTarget = indexEdgesByTarget(graph);
+  const program =
+    options.program ??
+    (hasGraphBackedDefinitions(options.registry)
+      ? buildExecutionProgram(graph, options.registry)
+      : { root: graph, subgraphs: new Map() });
+
+  const root = program.root;
+  const source = options.source ?? defaultSource(root);
+  const sink = options.sink ?? defaultSink(root);
+  const edgesByTarget = indexEdgesByTarget(root);
 
   const ctx = {
-    graph,
+    graph: root,
     registry: options.registry,
     host: options.host,
     edgesByTarget,
     visiting: new Set<string>(),
     sourceNodeId: source.node,
+    executionProgram: program,
+    compositeFrame: undefined,
   };
 
-  const sinkNode = graph.nodes[sink.node];
+  const sinkNode = root.nodes[sink.node];
   if (sinkNode == null) {
     throw new Error(`Unknown sink node "${sink.node}"`);
   }
@@ -62,3 +78,5 @@ export async function executeGraph(
 
   return resultFromRows(rows);
 }
+
+export type { ExecutionProgram };

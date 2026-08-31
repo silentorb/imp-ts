@@ -1,6 +1,6 @@
-/** NodeType instantiation. Spec: imp-spec/docs/packages/imp-typecheck/type-system.md */
+/** NodeDefinition instantiation. Spec: imp-spec/docs/packages/imp-typecheck/type-system.md */
 
-import type { NodeType, Port, Ports, SignalType } from "imp-core-types"
+import type { Graph, NodeDefinition, Port, Ports, SignalType } from "imp-core-types"
 import { isTypeVar } from "imp-core-types"
 import { assertConcreteArgs } from "./substitution"
 
@@ -40,14 +40,25 @@ function substitutePort(port: Port, params: string[], args: SignalType[]): Port 
   }
 }
 
-export function instantiateNodeType(
-  nodeType: NodeType,
+function substituteInGraph(graph: Graph, params: string[], args: SignalType[]): Graph {
+  const nodes: Graph["nodes"] = {}
+  for (const [id, node] of Object.entries(graph.nodes)) {
+    nodes[id] = {
+      ...node,
+      typeArgs: node.typeArgs?.map((typeArg) => substituteInType(typeArg, params, args)),
+    }
+  }
+  return { nodes, edges: { ...graph.edges } }
+}
+
+export function instantiateNodeDefinition(
+  definition: NodeDefinition,
   typeArgs: SignalType[],
-): NodeType {
-  const params = nodeType.typeParams?.map((p) => p.id) ?? []
+): NodeDefinition {
+  const params = definition.typeParams?.map((p) => p.id) ?? []
   if (params.length !== typeArgs.length) {
     throw new Error(
-      `expected ${params.length} typeArgs for NodeType "${nodeType.id}", got ${typeArgs.length}`,
+      `expected ${params.length} typeArgs for NodeDefinition "${definition.id}", got ${typeArgs.length}`,
     )
   }
   const concreteCheck = assertConcreteArgs(typeArgs)
@@ -56,9 +67,15 @@ export function instantiateNodeType(
   }
 
   return {
-    ...nodeType,
+    ...definition,
     typeParams: undefined,
-    inputs: substitutePorts(nodeType.inputs, params, typeArgs),
-    outputs: substitutePorts(nodeType.outputs, params, typeArgs),
+    inputs: substitutePorts(definition.inputs, params, typeArgs),
+    outputs: substitutePorts(definition.outputs, params, typeArgs),
+    body: definition.body
+      ? substituteInGraph(definition.body, params, typeArgs)
+      : undefined,
   }
 }
+
+/** @deprecated Use instantiateNodeDefinition */
+export const instantiateNodeType = instantiateNodeDefinition

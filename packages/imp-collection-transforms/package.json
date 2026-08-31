@@ -1,6 +1,6 @@
 {
   "name": "imp-collection-transforms",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "private": true,
   "type": "module",
   "exports": {
@@ -11,10 +11,10 @@
     "test": "bun test"
   },
   "dependencies": {
-    "imp-core-types": "workspace:^0.4.0"
+    "imp-core-types": "workspace:^0.5.0"
   },
   "devDependencies": {
-    "imp-registry": "workspace:^0.4.0",
+    "imp-registry": "workspace:^0.5.0",
     "typescript": "5.8.2"
   }
 }

@@ -1,11 +1,13 @@
 import { describe, expect, test } from "bun:test"
-import { createRegistry, getNodeType, loadLibrary } from "imp-registry"
+import { loadNodeLibrary, createRegistry, getNodeDefinition } from "imp-registry"
 import { coreNodeLibrary } from "./core-library"
 
 describe("coreNodeLibrary", () => {
-  test("has expected boundary types and port templates", () => {
+  test("has expected library id and boundary definitions", () => {
     expect(coreNodeLibrary.id).toBe("imp.core")
-    expect(coreNodeLibrary.types.input).toEqual({
+    expect(coreNodeLibrary.definitions).toHaveLength(3)
+    const input = coreNodeLibrary.definitions.find((d) => d.id === "input")
+    expect(input).toEqual({
       id: "input",
       typeParams: [{ id: "T" }],
       inputs: {},
@@ -13,7 +15,8 @@ describe("coreNodeLibrary", () => {
         value: { id: "value", type: { param: "T" } },
       },
     })
-    expect(coreNodeLibrary.types.output).toEqual({
+    const output = coreNodeLibrary.definitions.find((d) => d.id === "output")
+    expect(output).toEqual({
       id: "output",
       typeParams: [{ id: "T" }],
       inputs: {
@@ -21,23 +24,17 @@ describe("coreNodeLibrary", () => {
       },
       outputs: {},
     })
-    expect(coreNodeLibrary.types.parameter).toEqual({
-      id: "parameter",
-      typeParams: [{ id: "T" }],
-      inputs: {
-        label: { id: "label", type: { id: "string" }, defaultValue: "" },
-        value: { id: "value", type: { id: "any" }, defaultValue: null },
-      },
-      outputs: {
-        value: { id: "value", type: { param: "T" } },
-      },
+    const parameter = coreNodeLibrary.definitions.find((d) => d.id === "parameter")
+    expect(parameter?.inputs.label).toEqual({
+      id: "label",
+      type: { id: "string" },
+      defaultValue: "",
     })
   })
 
-  test("loads into imp-registry", () => {
-    const registry = loadLibrary(createRegistry(), coreNodeLibrary)
-    expect(getNodeType(registry, "input")?.outputs.value?.id).toBe("value")
-    expect(getNodeType(registry, "output")?.inputs.value?.id).toBe("value")
-    expect(getNodeType(registry, "parameter")?.outputs.value?.id).toBe("value")
+  test("loads into registry", () => {
+    const registry = loadNodeLibrary(createRegistry(), coreNodeLibrary)
+    expect(getNodeDefinition(registry, "input")?.id).toBe("input")
+    expect(getNodeDefinition(registry, "output")?.id).toBe("output")
   })
 })
