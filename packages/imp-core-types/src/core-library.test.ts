@@ -7,26 +7,29 @@ describe("coreNodeLibrary", () => {
     expect(coreNodeLibrary.id).toBe("imp.core")
     expect(coreNodeLibrary.types.input).toEqual({
       id: "input",
+      typeParams: [{ id: "T" }],
       inputs: {},
       outputs: {
-        value: { id: "value", type: { id: "any" } },
+        value: { id: "value", type: { param: "T" } },
       },
     })
     expect(coreNodeLibrary.types.output).toEqual({
       id: "output",
+      typeParams: [{ id: "T" }],
       inputs: {
-        value: { id: "value", type: { id: "any" } },
+        value: { id: "value", type: { param: "T" } },
       },
       outputs: {},
     })
     expect(coreNodeLibrary.types.parameter).toEqual({
       id: "parameter",
+      typeParams: [{ id: "T" }],
       inputs: {
         label: { id: "label", type: { id: "string" }, defaultValue: "" },
         value: { id: "value", type: { id: "any" }, defaultValue: null },
       },
       outputs: {
-        value: { id: "value", type: { id: "any" } },
+        value: { id: "value", type: { param: "T" } },
       },
     })
   })

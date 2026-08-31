@@ -1,17 +1,21 @@
 /** Core Imp graph model. Authoritative spec: imp-spec/docs/packages/imp-core-types/graph-model.md */
 
+import type { SignalType } from "./signal-type"
+
 export type NodeId = string
 export type EdgeId = string
 export type NodeTypeId = string
 export type PortId = string
 export type SignalTypeId = string
+export type TypeParamId = string
+export type GraphTypeId = string
 
 /** Literal value for instance inputs or port defaults. */
 export type PrimitiveValue = string | number | boolean | null
 
-/** Imp signal type. Minimal — identity only; fields may grow later. */
-export interface SignalType {
-  id: SignalTypeId
+/** Opaque type parameter on a polymorphic catalog entry. */
+export interface TypeParam {
+  id: TypeParamId
 }
 
 /**
@@ -40,6 +44,7 @@ export interface PortReference {
 export interface Node {
   id: NodeId
   type: NodeTypeId
+  typeArgs?: SignalType[]
   inputs: InputValues
 }
 

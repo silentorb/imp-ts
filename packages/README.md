@@ -5,7 +5,8 @@ Language-neutral specs: [`../imp-spec/docs/packages/`](../imp-spec/docs/packages
 | Package | Role |
 | --- | --- |
 | [`imp-core-types`](./imp-core-types/) | Core graph + library type interfaces; `coreNodeLibrary` |
-| [`imp-registry`](./imp-registry/) | Load `NodeLibrary` values and look up `NodeType`s |
+| [`imp-registry`](./imp-registry/) | Load `NodeLibrary` / `GraphTypeLibrary` values and look up types |
+| [`imp-typecheck`](./imp-typecheck/) | Static signal-type checking for graphs |
 | [`imp-react-flow`](./imp-react-flow/) | Imp ↔ React Flow converters |
 | [`imp-collection-transforms`](./imp-collection-transforms/) | Collection combinator `NodeLibrary` |
 | [`imp-pathing`](./imp-pathing/) | GQL-like path operator `NodeLibrary` |

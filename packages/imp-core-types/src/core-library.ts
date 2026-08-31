@@ -1,9 +1,13 @@
 /** Core boundary node types. Authoritative spec: imp-spec/docs/packages/imp-core-types/graph-model.md */
 
 import type { NodeLibrary } from "./library"
+import { concreteType, typeVar } from "./signal-type"
 
-const anySignal = { id: "any" } as const
-const stringSignal = { id: "string" } as const
+const T = typeVar("T")
+const stringSignal = concreteType("string")
+const anySignal = concreteType("any")
+
+const typeParamT = [{ id: "T" as const }]
 
 /**
  * Core Imp boundary nodes — one instance per external port.
@@ -15,26 +19,29 @@ export const coreNodeLibrary: NodeLibrary = {
   types: {
     input: {
       id: "input",
+      typeParams: typeParamT,
       inputs: {},
       outputs: {
-        value: { id: "value", type: anySignal },
+        value: { id: "value", type: T },
       },
     },
     output: {
       id: "output",
+      typeParams: typeParamT,
       inputs: {
-        value: { id: "value", type: anySignal },
+        value: { id: "value", type: T },
       },
       outputs: {},
     },
     parameter: {
       id: "parameter",
+      typeParams: typeParamT,
       inputs: {
         label: { id: "label", type: stringSignal, defaultValue: "" },
         value: { id: "value", type: anySignal, defaultValue: null },
       },
       outputs: {
-        value: { id: "value", type: anySignal },
+        value: { id: "value", type: T },
       },
     },
   },

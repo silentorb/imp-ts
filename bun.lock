@@ -87,6 +87,19 @@
         "typescript": "5.8.2",
       },
     },
+    "packages/imp-typecheck": {
+      "name": "imp-typecheck",
+      "version": "0.2.0",
+      "dependencies": {
+        "imp-core-types": "workspace:^0.2.0",
+        "imp-registry": "workspace:^0.2.0",
+      },
+      "devDependencies": {
+        "imp-collection-transforms": "workspace:^0.2.0",
+        "imp-pathing": "workspace:^0.2.0",
+        "typescript": "5.8.2",
+      },
+    },
   },
   "packages": {
     "@types/d3-color": ["@types/d3-color@3.1.3", "", {}, "sha512-iO90scth9WAbmgv7ogoq57O9YpKmFBbmoEoCHDB2xMBY0+/KVrqAaCDyCE16dUspeOvIxFFRI+0sEtqDqy2b4A=="],
@@ -138,6 +151,8 @@
     "imp-registry": ["imp-registry@workspace:packages/imp-registry"],
 
     "imp-sql": ["imp-sql@workspace:packages/imp-sql"],
+
+    "imp-typecheck": ["imp-typecheck@workspace:packages/imp-typecheck"],
 
     "kysely": ["kysely@0.28.17", "", {}, "sha512-nbD8lB9EB3wNdMhOCdx5Li8DxnLbvKByylRLcJ1h+4SkrowVeECAyZlyiKMThF7xFdRz0jSQ2MoJr+wXux2y0Q=="],
 

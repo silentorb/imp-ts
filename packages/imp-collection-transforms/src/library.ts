@@ -1,12 +1,23 @@
 /** Collection transform NodeLibrary. Spec: imp-spec/docs/packages/imp-collection-transforms/collection-transforms.md */
 
-import type { NodeLibrary, Port, SignalType } from "imp-core-types"
+import {
+  type NodeLibrary,
+  type Port,
+  type SignalType,
+  collectionOf,
+  concreteType,
+  typeVar,
+  universalImplementation,
+} from "imp-core-types"
 
-const collection: SignalType = { id: "collection" }
-const boolean: SignalType = { id: "boolean" }
-const string: SignalType = { id: "string" }
-const number: SignalType = { id: "number" }
-const any: SignalType = { id: "any" }
+const T = typeVar("T")
+const collectionT = collectionOf(T)
+const boolean = concreteType("boolean")
+const string = concreteType("string")
+const number = concreteType("number")
+const any = concreteType("any")
+
+const collectionTypeParam = [{ id: "T" }]
 
 function port(id: string, type: SignalType, defaultValue?: Port["defaultValue"]): Port {
   return defaultValue === undefined
@@ -15,98 +26,55 @@ function port(id: string, type: SignalType, defaultValue?: Port["defaultValue"])
 }
 
 function collectionIn(): Port {
-  return port("collection", collection)
+  return port("collection", collectionT)
 }
 
 function collectionOut(): Port {
-  return port("collection", collection)
+  return port("collection", collectionT)
+}
+
+function collectionPreserving(
+  id: string,
+  extraInputs: Record<string, Port>,
+): NodeLibrary["types"][string] {
+  return {
+    id,
+    typeParams: collectionTypeParam,
+    implementation: universalImplementation(id),
+    inputs: { collection: collectionIn(), ...extraInputs },
+    outputs: { collection: collectionOut() },
+  }
 }
 
 export const collectionTransformsLibrary: NodeLibrary = {
   id: "imp.collection.transforms",
   types: {
-    filter: {
-      id: "filter",
-      inputs: {
-        collection: collectionIn(),
-        predicate: port("predicate", boolean),
-      },
-      outputs: {
-        collection: collectionOut(),
-      },
-    },
-    except: {
-      id: "except",
-      inputs: {
-        collection: collectionIn(),
-        exclude: port("exclude", collection),
-      },
-      outputs: {
-        collection: collectionOut(),
-      },
-    },
-    sort: {
-      id: "sort",
-      inputs: {
-        collection: collectionIn(),
-        column: port("column", string),
-        direction: port("direction", string, "asc"),
-      },
-      outputs: {
-        collection: collectionOut(),
-      },
-    },
-    limit: {
-      id: "limit",
-      inputs: {
-        collection: collectionIn(),
-        count: port("count", number),
-      },
-      outputs: {
-        collection: collectionOut(),
-      },
-    },
-    offset: {
-      id: "offset",
-      inputs: {
-        collection: collectionIn(),
-        count: port("count", number),
-      },
-      outputs: {
-        collection: collectionOut(),
-      },
-    },
-    project: {
-      id: "project",
-      inputs: {
-        collection: collectionIn(),
-        columns: port("columns", string),
-      },
-      outputs: {
-        collection: collectionOut(),
-      },
-    },
-    group: {
-      id: "group",
-      inputs: {
-        collection: collectionIn(),
-        column: port("column", string),
-        direction: port("direction", string, "asc"),
-      },
-      outputs: {
-        collection: collectionOut(),
-      },
-    },
-    search: {
-      id: "search",
-      inputs: {
-        collection: collectionIn(),
-        query: port("query", string),
-      },
-      outputs: {
-        collection: collectionOut(),
-      },
-    },
+    filter: collectionPreserving("filter", {
+      predicate: port("predicate", boolean),
+    }),
+    except: collectionPreserving("except", {
+      exclude: port("exclude", collectionT),
+    }),
+    sort: collectionPreserving("sort", {
+      column: port("column", string),
+      direction: port("direction", string, "asc"),
+    }),
+    limit: collectionPreserving("limit", {
+      count: port("count", number),
+    }),
+    offset: collectionPreserving("offset", {
+      count: port("count", number),
+    }),
+    project: collectionPreserving("project", {
+      columns: port("columns", string),
+    }),
+    group: collectionPreserving("group", {
+      column: port("column", string),
+      direction: port("direction", string, "asc"),
+    }),
+    search: collectionPreserving("search", {
+      query: port("query", string),
+    }),
     contains: {
       id: "contains",
       inputs: {

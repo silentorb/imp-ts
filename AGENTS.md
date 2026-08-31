@@ -9,7 +9,8 @@ Language-neutral specs live in sibling repo **[imp-spec](../imp-spec/)** — rea
 | Package | Role |
 | --- | --- |
 | `packages/imp-core-types/` | Core graph + library TypeScript interfaces; core boundary `NodeLibrary` |
-| `packages/imp-registry/` | Load `NodeLibrary` values and look up `NodeType`s |
+| `packages/imp-registry/` | Load `NodeLibrary` / `GraphTypeLibrary` values and look up types |
+| `packages/imp-typecheck/` | Static signal-type checking for graphs |
 | `packages/imp-react-flow/` | Imp ↔ React Flow converters |
 | `packages/imp-collection-transforms/` | Collection combinator `NodeLibrary` |
 | `packages/imp-pathing/` | GQL-like path operator `NodeLibrary` |
@@ -38,6 +39,8 @@ When specs and code disagree, update imp-spec or the code explicitly.
 | --- | --- |
 | Core graph model | [`imp-spec` graph-model](../imp-spec/docs/packages/imp-core-types/graph-model.md) |
 | Node type libraries | [`imp-spec` node-libraries](../imp-spec/docs/packages/imp-core-types/node-libraries.md) |
+| Graph type libraries | [`imp-spec` graph-types](../imp-spec/docs/packages/imp-core-types/graph-types.md) |
+| Static type checking | [`imp-spec` type-system](../imp-spec/docs/packages/imp-typecheck/type-system.md) |
 | Registry | [`imp-spec` registry](../imp-spec/docs/packages/imp-registry/registry.md) |
 | React Flow | [`imp-spec` react-flow](../imp-spec/docs/packages/imp-react-flow/react-flow.md) |
 | Collection transforms | [`imp-spec` collection-transforms](../imp-spec/docs/packages/imp-collection-transforms/collection-transforms.md) |
@@ -61,7 +64,7 @@ Packages use **0.x semver** (`0.MINOR.PATCH`). While `MAJOR` is 0, treat **`MINO
 
 Internal workspace dependencies use caret-locked ranges: `"imp-core-types": "workspace:^0.2.0"`. When a dependency's `MINOR` epoch changes, direct dependents must bump their `MINOR` too and update the range.
 
-**Agent flow:** review the settled diff, classify each touched package (`minor` or `patch`), then run `bun scripts/bump-version.ts <package> <level>`. The script applies bumps, cascades on `minor` within this repo, and updates ranges. Refresh lockfiles after version changes: `bun install` here.
+**Agent flow:** review the settled diff, classify each touched package (`minor` or `patch`), then run `bash scripts/bump-version.sh <package> <level>` from **silentorb-workbench** (or the thin delegator in this repo: `bun scripts/bump-version.ts`). The script scans imp-ts and tome packages, cascades on `minor`, and can refresh both lockfiles with `--install`. Reconcile bump levels at commit time — see workbench [`plan-commit-workflow.mdc`](../../.cursor/rules/plan-commit-workflow.mdc).
 
 Bump levels and lockfile refresh are reconciled at commit time — see workbench [`plan-commit-workflow.mdc`](../../.cursor/rules/plan-commit-workflow.mdc).
 

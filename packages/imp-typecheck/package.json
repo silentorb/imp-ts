@@ -1,5 +1,5 @@
 {
-  "name": "imp-registry",
+  "name": "imp-typecheck",
   "version": "0.3.0",
   "private": true,
   "type": "module",
@@ -11,9 +11,12 @@
     "test": "bun test"
   },
   "dependencies": {
-    "imp-core-types": "workspace:^0.3.0"
+    "imp-core-types": "workspace:^0.3.0",
+    "imp-registry": "workspace:^0.3.0"
   },
   "devDependencies": {
+    "imp-collection-transforms": "workspace:^0.3.0",
+    "imp-pathing": "workspace:^0.3.0",
     "typescript": "5.8.2"
   }
 }
