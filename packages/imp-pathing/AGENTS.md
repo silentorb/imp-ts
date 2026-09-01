@@ -48,5 +48,5 @@ Tests cover library shape and successful `imp-registry` load.
 ## See also
 
 - [pathing.md](../../imp-spec/docs/packages/imp-pathing/pathing.md)
-- [sql.md](../../imp-spec/docs/packages/imp-sql/sql.md)
+- [sql.md](../../docs/features/sql.md)
 - Root [AGENTS.md](../../AGENTS.md)

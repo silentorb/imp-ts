@@ -44,5 +44,5 @@ Tests cover library shape and successful `imp-registry` load.
 ## See also
 
 - [collection-transforms.md](../../imp-spec/docs/packages/imp-collection-transforms/collection-transforms.md)
-- [sql.md](../../imp-spec/docs/packages/imp-sql/sql.md)
+- [sql.md](../../docs/features/sql.md)
 - Root [AGENTS.md](../../AGENTS.md)

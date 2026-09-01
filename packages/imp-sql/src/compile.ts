@@ -1,4 +1,4 @@
-/** Imp graph → Kysely SQL lowering. Spec: imp-spec/docs/packages/imp-sql/sql.md */
+/** Imp graph → Kysely SQL lowering. Spec: imp-ts/docs/features/sql.md */
 
 import type { CompiledQuery } from "kysely"
 import {

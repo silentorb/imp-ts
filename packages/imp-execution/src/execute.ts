@@ -1,4 +1,4 @@
-/** Dynamic Imp graph execution. Spec: imp-spec/docs/packages/imp-execution/execution.md */
+/** Dynamic Imp graph execution. Spec: imp-ts/docs/features/execution.md */
 
 import type { Graph, PortReference } from "imp-core-types";
 import type { Registry } from "imp-registry";

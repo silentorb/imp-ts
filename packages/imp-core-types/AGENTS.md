@@ -58,5 +58,5 @@ Types in `imp-core-types` must match the field tables in imp-spec graph-model an
 - [graph-model.md](../../imp-spec/docs/packages/imp-core-types/graph-model.md)
 - [node-libraries.md](../../imp-spec/docs/packages/imp-core-types/node-libraries.md)
 - [registry.md](../../imp-spec/docs/packages/imp-registry/registry.md)
-- [react-flow.md](../../imp-spec/docs/packages/imp-react-flow/react-flow.md)
+- [react-flow.md](../../docs/features/react-flow.md)
 - Root [AGENTS.md](../../AGENTS.md)

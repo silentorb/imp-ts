@@ -2,13 +2,13 @@
 
 ## What it is
 
-Runtime lowering of Imp collection-transform and pathing graphs to Kysely select queries, plus `compileSql` for SQL string + bindings.
+**Imp Translator** — translates Imp collection-transform and pathing graphs to Kysely select queries, plus `compileSql` for SQL string + bindings.
 
 ## Specs vs code
 
 | Layer | Location | Regenerated? |
 | --- | --- | --- |
-| Language-neutral spec | [`imp-spec` sql](../../imp-spec/docs/packages/imp-sql/sql.md) | No |
+| Spec | [sql.md](../../docs/features/sql.md) | No |
 | Implementation | `src/*.ts` | Implement to match spec |
 
 TypeScript API: `graphToKysely` (spec name: `graphToSql`), `compileSql`. Uses [Kysely](https://kysely.dev/); default dialect SQLite.
@@ -20,7 +20,7 @@ TypeScript API: `graphToKysely` (spec name: `graphToSql`), `compileSql`. Uses [K
 | `src/compile.ts` | `graphToKysely`, `compileSql` |
 | `src/resolve.ts` | Edge index, boundary defaults, input resolution |
 | `src/schema.ts` | `RelationalSchema` |
-| `src/lower/` | Collection + expression lowering |
+| `src/lower/` | Collection + expression translation |
 | `src/*.test.ts` | Pipeline + error tests |
 
 ## Quick start
@@ -58,7 +58,7 @@ Tests cover `input` → `filter` → `sort` → `limit` → `output` producing S
 
 ## See also
 
-- [sql.md](../../imp-spec/docs/packages/imp-sql/sql.md)
+- [sql.md](../../docs/features/sql.md)
 - [collection-transforms.md](../../imp-spec/docs/packages/imp-collection-transforms/collection-transforms.md)
 - [pathing.md](../../imp-spec/docs/packages/imp-pathing/pathing.md)
 - Root [AGENTS.md](../../AGENTS.md)

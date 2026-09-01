@@ -1,17 +1,18 @@
 # Packages
 
-Language-neutral specs: [`../imp-spec/docs/packages/`](../imp-spec/docs/packages/).
+Language-neutral specs: [`../imp-spec/docs/packages/`](../imp-spec/docs/packages/). Imp Translator and runtime specs: [`../docs/features/`](../docs/features/).
 
 | Package | Role |
 | --- | --- |
 | [`imp-core-types`](./imp-core-types/) | Core graph + library type interfaces; `coreNodeLibrary` |
 | [`imp-registry`](./imp-registry/) | Load `NodeLibrary` / `GraphTypeLibrary` values and look up types |
 | [`imp-typecheck`](./imp-typecheck/) | Static signal-type checking for graphs |
-| [`imp-react-flow`](./imp-react-flow/) | Imp ↔ React Flow converters |
+| [`imp-graph-resolve`](./imp-graph-resolve/) | Late nested graph resolution |
+| [`imp-react-flow`](./imp-react-flow/) | **Imp Translator** — Imp ↔ React Flow |
 | [`imp-collection-transforms`](./imp-collection-transforms/) | Collection combinator `NodeLibrary` |
 | [`imp-pathing`](./imp-pathing/) | GQL-like path operator `NodeLibrary` |
-| [`imp-sql`](./imp-sql/) | Imp → SQL via Kysely |
-| [`imp-execution`](./imp-execution/) | Dynamic runtime for collection/path graphs (read-only host) |
+| [`imp-sql`](./imp-sql/) | **Imp Translator** — Imp → SQL |
+| [`imp-execution`](./imp-execution/) | Runtime consumer (in-place execution) |
 
 ```mermaid
 flowchart TB
@@ -27,7 +28,7 @@ flowchart TB
   CT --> SPEC
   PATH --> SPEC
 
-  subgraph converters [Converters and runtimes]
+  subgraph impTs [Translators and runtime]
     RF[imp-react-flow]
     SQL[imp-sql]
     EXEC[imp-execution]

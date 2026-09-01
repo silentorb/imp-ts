@@ -12,4 +12,4 @@ const { nodes, edges } = impToReactFlow(graph)
 const again = reactFlowToImp(nodes, edges)
 ```
 
-See [`imp-spec` react-flow](../../imp-spec/docs/packages/imp-react-flow/react-flow.md).
+See [react-flow.md](../../docs/features/react-flow.md).

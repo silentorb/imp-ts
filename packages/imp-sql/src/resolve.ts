@@ -1,4 +1,4 @@
-/** Input resolution and graph indexing for SQL lowering. Spec: imp-spec/docs/packages/imp-sql/sql.md */
+/** Input resolution and graph indexing for SQL lowering. Spec: imp-ts/docs/features/sql.md */
 
 import type {
   Edge,

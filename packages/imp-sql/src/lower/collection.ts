@@ -1,4 +1,4 @@
-/** Collection pipeline lowering. Spec: imp-spec/docs/packages/imp-sql/sql.md */
+/** Collection pipeline lowering. Spec: imp-ts/docs/features/sql.md */
 
 import type { Edge, Graph, NodeId, PortId, PrimitiveValue } from "imp-core-types"
 import type { Kysely, SelectQueryBuilder } from "kysely"

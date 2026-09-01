@@ -2,13 +2,13 @@
 
 ## What it is
 
-Runtime converters between Imp `Graph` and React Flow `{ nodes, edges }`. Uses `@xyflow/react` for **types** (`Node`, `Edge`); this package does not ship React components.
+**Imp Translator** — bidirectional conversion between Imp `Graph` and React Flow `{ nodes, edges }`. Uses `@xyflow/react` for **types** (`Node`, `Edge`); this package does not ship React components.
 
 ## Specs vs code
 
 | Layer | Location | Regenerated? |
 | --- | --- | --- |
-| Language-neutral spec | [`imp-spec` react-flow](../../imp-spec/docs/packages/imp-react-flow/react-flow.md) | No |
+| Spec | [react-flow.md](../../docs/features/react-flow.md) | No |
 | Converter implementation | `src/*.ts` | Implement to match spec |
 
 Core Imp shapes come from [`imp-core-types`](../imp-core-types/) / [graph-model.md](../../imp-spec/docs/packages/imp-core-types/graph-model.md).
@@ -44,7 +44,7 @@ Round-trip tests: empty graph and multi-node graphs preserve node ids, edge ids,
 
 ## See also
 
-- [react-flow.md](../../imp-spec/docs/packages/imp-react-flow/react-flow.md)
+- [react-flow.md](../../docs/features/react-flow.md)
 - [graph-model.md](../../imp-spec/docs/packages/imp-core-types/graph-model.md)
 - React Flow: [Edges](https://reactflow.dev/api-reference/types/edge), [Handles](https://reactflow.dev/learn/customization/handles)
 - Root [AGENTS.md](../../AGENTS.md)

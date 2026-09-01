@@ -1,4 +1,4 @@
-/** In-memory collection evaluation. Spec: imp-spec/docs/packages/imp-execution/execution.md */
+/** In-memory collection evaluation. Spec: imp-ts/docs/features/execution.md */
 
 import type { BoundaryBindings, Graph, NodeId, PortId } from "imp-core-types";
 import { getNodeDefinition } from "imp-registry";

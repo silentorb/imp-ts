@@ -11,11 +11,11 @@ Language-neutral specs live in sibling repo **[imp-spec](../imp-spec/)** — rea
 | `packages/imp-core-types/` | Core graph + library TypeScript interfaces; core boundary `NodeLibrary` |
 | `packages/imp-registry/` | Load `NodeLibrary` / `GraphTypeLibrary` values and look up types |
 | `packages/imp-typecheck/` | Static signal-type checking for graphs |
-| `packages/imp-react-flow/` | Imp ↔ React Flow converters |
+| `packages/imp-react-flow/` | **Imp Translator** — Imp ↔ React Flow |
 | `packages/imp-collection-transforms/` | Collection combinator `NodeLibrary` |
 | `packages/imp-pathing/` | GQL-like path operator `NodeLibrary` |
-| `packages/imp-sql/` | Imp collection graphs → SQL via Kysely |
-| `packages/imp-execution/` | Dynamic runtime for collection/path graphs (read-only host) |
+| `packages/imp-sql/` | **Imp Translator** — Imp → SQL via Kysely |
+| `packages/imp-execution/` | Runtime consumer for collection/path graphs (read-only host) |
 
 Each package has **`README.md`** (context) and **`AGENTS.md`** (how to work in the package). See [`packages/README.md`](./packages/README.md).
 
@@ -33,22 +33,30 @@ When specs and code disagree, update imp-spec or the code explicitly.
 - Run from repo root: `bun install`, `bun run typecheck`, `bun test` (test runs typecheck first; treat typecheck failures as blocking).
 - Package notes: each package's `README.md` and `AGENTS.md`.
 
-## Feature documentation (imp-spec)
+## Feature documentation
+
+### Language-neutral (imp-spec)
 
 | If your task involves… | Read |
 | --- | --- |
 | Core graph model | [`imp-spec` graph-model](../imp-spec/docs/packages/imp-core-types/graph-model.md) |
 | Node type libraries | [`imp-spec` node-libraries](../imp-spec/docs/packages/imp-core-types/node-libraries.md) |
-| Graph type libraries | [`imp-spec` graph-types](../imp-spec/docs/packages/imp-core-types/graph-types.md) |
+| Graph libraries | [`imp-spec` graph-libraries](../imp-spec/docs/packages/imp-core-types/graph-libraries.md) |
+| Graph resolution | [`imp-spec` resolve](../imp-spec/docs/packages/imp-graph-resolve/resolve.md) |
 | Static type checking | [`imp-spec` type-system](../imp-spec/docs/packages/imp-typecheck/type-system.md) |
 | Registry | [`imp-spec` registry](../imp-spec/docs/packages/imp-registry/registry.md) |
-| React Flow | [`imp-spec` react-flow](../imp-spec/docs/packages/imp-react-flow/react-flow.md) |
 | Collection transforms | [`imp-spec` collection-transforms](../imp-spec/docs/packages/imp-collection-transforms/collection-transforms.md) |
 | Pathing | [`imp-spec` pathing](../imp-spec/docs/packages/imp-pathing/pathing.md) |
-| SQL lowering | [`imp-spec` sql](../imp-spec/docs/packages/imp-sql/sql.md) |
-| Dynamic execution | [`imp-spec` execution](../imp-spec/docs/packages/imp-execution/execution.md) |
 
 Cross-package overview: [`../imp-spec/docs/overview/`](../imp-spec/docs/overview/).
+
+### Imp Translators and runtime (this repo)
+
+| If your task involves… | Read |
+| --- | --- |
+| Imp → SQL translation | [sql.md](./docs/features/sql.md) |
+| Imp ↔ React Flow | [react-flow.md](./docs/features/react-flow.md) |
+| Dynamic execution | [execution.md](./docs/features/execution.md) |
 
 ## Working conventions
 
