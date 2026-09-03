@@ -1,6 +1,7 @@
 /** In-memory collection evaluation. Spec: imp-ts/docs/features/execution.md */
 
 import type { BoundaryBindings, Graph, NodeId, PortId } from "imp-core-types";
+import type { Registry } from "imp-registry";
 import { getNodeDefinition } from "imp-registry";
 import type { ExecutionProgram } from "imp-graph-resolve";
 import { isGraphBackedNodeType, subgraphKey } from "imp-graph-resolve";

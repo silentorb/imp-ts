@@ -1,6 +1,7 @@
 /** Type constraint libraries. Authoritative spec: imp-spec/docs/packages/imp-core-types/type-constraints.md */
 
-import type { SignalType, TypeConstraintId } from "./graph"
+import type { TypeConstraintId } from "./graph"
+import type { SignalType } from "./signal-type"
 
 /** Catalog entry listing nominal type patterns that satisfy a constraint. */
 export interface TypeConstraint {

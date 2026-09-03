@@ -39,7 +39,7 @@ function validateGraph(graph: unknown, label: string): Graph {
       throw new GraphLibraryParseError(`${label}.nodes["${key}"].id must equal key`)
     }
   }
-  return graph as Graph
+  return graph as unknown as Graph
 }
 
 function validateDefinition(raw: unknown, index: number): NodeDefinition {
@@ -48,7 +48,7 @@ function validateDefinition(raw: unknown, index: number): NodeDefinition {
   }
 
   const id = requireString(raw.id, `definitions[${index}].id`)
-  const definition = raw as NodeDefinition
+  const definition = raw as unknown as NodeDefinition
 
   if (definition.implementation !== undefined) {
     throw new GraphLibraryParseError(
