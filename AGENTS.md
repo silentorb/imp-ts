@@ -72,9 +72,9 @@ Packages use **0.x semver** (`0.MINOR.PATCH`). While `MAJOR` is 0, treat **`MINO
 
 Internal workspace dependencies use caret-locked ranges: `"imp-core-types": "workspace:^0.2.0"`. When a dependency's `MINOR` epoch changes, direct dependents must bump their `MINOR` too and update the range.
 
-**Agent flow:** review the settled diff, classify each touched package (`minor` or `patch`), then run `bash scripts/bump-version.sh <package> <level>` from **silentorb-workbench** (or the thin delegator in this repo: `bun scripts/bump-version.ts`). The script scans imp-ts and tome packages, cascades on `minor`, and can refresh both lockfiles with `--install`. Reconcile bump levels at commit time — see workbench [`plan-commit-workflow.mdc`](../../.cursor/rules/plan-commit-workflow.mdc).
+**Agent flow:** on **bump** / **commit and bump**, review commits since the last tome `v*` tag, classify each touched package (`minor` or `patch`), then run `bash scripts/bump-version.sh <package> <level>` from **silentorb-workbench** (or the thin delegator in this repo: `bun scripts/bump-version.ts`). The script scans imp-ts and tome packages, cascades on `minor`, and can refresh both lockfiles with `--install`. Reconcile bump levels at **bump** time — not on plain **commit** — see workbench [`plan-commit-workflow.mdc`](../../.cursor/rules/plan-commit-workflow.mdc).
 
-Bump levels and lockfile refresh are reconciled at commit time — see workbench [`plan-commit-workflow.mdc`](../../.cursor/rules/plan-commit-workflow.mdc).
+Bump levels and lockfile refresh are reconciled at bump time — see workbench [`plan-commit-workflow.mdc`](../../.cursor/rules/plan-commit-workflow.mdc).
 
 ## Workbench integration
 
