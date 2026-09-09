@@ -1,6 +1,6 @@
 # Imp Translator and runtime specs
 
-Binding-specific specs for packages that translate Imp graphs to other formats or execute them in place. Language-neutral specs live in sibling **[imp-spec](../../imp-spec/)**.
+Implementation-specific specs for packages that translate Imp graphs to other formats or execute them in place. Language-neutral specs live in **[imp-spec](https://github.com/silentorb/imp-spec)**.
 
 ## Registered features
 
@@ -12,8 +12,8 @@ Binding-specific specs for packages that translate Imp graphs to other formats o
 
 ## Split of concerns
 
-- **imp-spec** (`../imp-spec/docs/packages/`) — graph IR, NodeLibrary catalogs, registry, typecheck, graph-resolve.
+- **imp-spec** ([`docs/packages/`](https://github.com/silentorb/imp-spec/tree/main/docs/packages/)) — graph IR, NodeLibrary catalogs, registry, typecheck, graph-resolve.
 - **imp-ts `docs/features/`** (here) — Imp Translators and runtime packages.
-- **Package `AGENTS.md`** — how to work in the TypeScript binding.
+- **Package `AGENTS.md`** — how to work in the TypeScript implementation.
 
 See [../README.md](../README.md) and root [AGENTS.md](../../AGENTS.md).

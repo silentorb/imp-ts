@@ -57,7 +57,7 @@ Imp does **not** require a `position` field; React Flow nodes typically do. Conv
 
 ## Design rationale
 
-React Flow is a common web graph editor. Aligning Imp ports with RF handles keeps Imp usable as the shared model behind interactive UIs without baking UI concerns into [graph-model.md](../../imp-spec/docs/packages/imp-core-types/graph-model.md). Stashing `InputValues` on `node.data` preserves instance literals across round-trips; catalog port shapes stay in libraries.
+React Flow is a common web graph editor. Aligning Imp ports with RF handles keeps Imp usable as the shared model behind interactive UIs without baking UI concerns into [graph-model.md](https://github.com/silentorb/imp-spec/blob/main/docs/packages/imp-core-types/graph-model.md). Stashing `InputValues` on `node.data` preserves instance literals across round-trips; catalog port shapes stay in libraries.
 
 ## Behavior / pipeline
 
@@ -74,5 +74,5 @@ None.
 
 ## See also
 
-- [graph-model.md](../../imp-spec/docs/packages/imp-core-types/graph-model.md)
+- [graph-model.md](https://github.com/silentorb/imp-spec/blob/main/docs/packages/imp-core-types/graph-model.md)
 - Root [AGENTS.md](../../AGENTS.md)

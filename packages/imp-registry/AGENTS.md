@@ -8,10 +8,10 @@ Runtime helpers to **load** `NodeLibrary` values and **look up** `NodeType`s. De
 
 | Layer | Location | Regenerated? |
 | --- | --- | --- |
-| Language-neutral spec | [`imp-spec` registry](../../imp-spec/docs/packages/imp-registry/registry.md) | No |
+| Language-neutral spec | [`imp-spec` registry](https://github.com/silentorb/imp-spec/blob/main/docs/packages/imp-registry/registry.md) | No |
 | Implementation | `src/*.ts` | Implement to match spec |
 
-`NodeType` / `NodeLibrary` shapes come from [`imp-core-types`](../imp-core-types/) / [node-libraries.md](../../imp-spec/docs/packages/imp-core-types/node-libraries.md).
+`NodeType` / `NodeLibrary` shapes come from [`imp-core-types`](../imp-core-types/) / [node-libraries.md](https://github.com/silentorb/imp-spec/blob/main/docs/packages/imp-core-types/node-libraries.md).
 
 ## Layout
 
@@ -57,7 +57,7 @@ Tests cover empty registry, successful load/lookup, and conflict on duplicate `N
 
 ## See also
 
-- [registry.md](../../imp-spec/docs/packages/imp-registry/registry.md)
-- [node-libraries.md](../../imp-spec/docs/packages/imp-core-types/node-libraries.md)
-- [graph-model.md](../../imp-spec/docs/packages/imp-core-types/graph-model.md)
+- [registry.md](https://github.com/silentorb/imp-spec/blob/main/docs/packages/imp-registry/registry.md)
+- [node-libraries.md](https://github.com/silentorb/imp-spec/blob/main/docs/packages/imp-core-types/node-libraries.md)
+- [graph-model.md](https://github.com/silentorb/imp-spec/blob/main/docs/packages/imp-core-types/graph-model.md)
 - Root [AGENTS.md](../../AGENTS.md)

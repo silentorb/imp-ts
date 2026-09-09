@@ -8,4 +8,4 @@ Depends only on `imp-core-types`. Load via `imp-registry`; lower to SQL with `im
 import { pathingLibrary } from "imp-pathing"
 ```
 
-See [`imp-spec` pathing](../../imp-spec/docs/packages/imp-pathing/pathing.md).
+See [`imp-spec` pathing](https://github.com/silentorb/imp-spec/blob/main/docs/packages/imp-pathing/pathing.md).

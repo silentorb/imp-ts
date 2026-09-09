@@ -24,11 +24,9 @@ bun run typecheck
 bun test
 ```
 
-In **silentorb-workbench**, this repo mounts at `.mnt/imp-ts/` (container path: `/workspaces/silentorb-workbench/.mnt/imp-ts`; host default `../imp-ts`, or `IMP_REPO`).
-
 ## Agent docs
 
-Authoritative **language-neutral specs** live in sibling repo [`imp-spec`](../imp-spec/) (`.mnt/imp-spec/` in workbench). This repo's [`AGENTS.md`](./AGENTS.md) covers the TypeScript binding; package `AGENTS.md` files cover implementation details.
+Authoritative **language-neutral specs** live in [`imp-spec`](https://github.com/silentorb/imp-spec). This repo's [`AGENTS.md`](./AGENTS.md) covers the TypeScript implementation; package `AGENTS.md` files cover implementation details.
 
 ## License
 

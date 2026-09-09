@@ -11,7 +11,7 @@
 | Spec | [react-flow.md](../../docs/features/react-flow.md) | No |
 | Converter implementation | `src/*.ts` | Implement to match spec |
 
-Core Imp shapes come from [`imp-core-types`](../imp-core-types/) / [graph-model.md](../../imp-spec/docs/packages/imp-core-types/graph-model.md).
+Core Imp shapes come from [`imp-core-types`](../imp-core-types/) / [graph-model.md](https://github.com/silentorb/imp-spec/blob/main/docs/packages/imp-core-types/graph-model.md).
 
 ## Layout
 
@@ -45,6 +45,6 @@ Round-trip tests: empty graph and multi-node graphs preserve node ids, edge ids,
 ## See also
 
 - [react-flow.md](../../docs/features/react-flow.md)
-- [graph-model.md](../../imp-spec/docs/packages/imp-core-types/graph-model.md)
+- [graph-model.md](https://github.com/silentorb/imp-spec/blob/main/docs/packages/imp-core-types/graph-model.md)
 - React Flow: [Edges](https://reactflow.dev/api-reference/types/edge), [Handles](https://reactflow.dev/learn/customization/handles)
 - Root [AGENTS.md](../../AGENTS.md)

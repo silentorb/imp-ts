@@ -8,7 +8,7 @@ A catalog package that exports `collectionTransformsLibrary` (`NodeLibrary`). No
 
 | Layer | Location | Regenerated? |
 | --- | --- | --- |
-| Language-neutral spec | [`imp-spec` collection-transforms](../../imp-spec/docs/packages/imp-collection-transforms/collection-transforms.md) | No |
+| Language-neutral spec | [`imp-spec` collection-transforms](https://github.com/silentorb/imp-spec/blob/main/docs/packages/imp-collection-transforms/collection-transforms.md) | No |
 | Library data | `src/library.ts` | Implement to match spec |
 
 ## Layout
@@ -43,6 +43,6 @@ Tests cover library shape and successful `imp-registry` load.
 
 ## See also
 
-- [collection-transforms.md](../../imp-spec/docs/packages/imp-collection-transforms/collection-transforms.md)
+- [collection-transforms.md](https://github.com/silentorb/imp-spec/blob/main/docs/packages/imp-collection-transforms/collection-transforms.md)
 - [sql.md](../../docs/features/sql.md)
 - Root [AGENTS.md](../../AGENTS.md)

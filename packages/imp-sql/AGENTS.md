@@ -59,6 +59,6 @@ Tests cover `input` → `filter` → `sort` → `limit` → `output` producing S
 ## See also
 
 - [sql.md](../../docs/features/sql.md)
-- [collection-transforms.md](../../imp-spec/docs/packages/imp-collection-transforms/collection-transforms.md)
-- [pathing.md](../../imp-spec/docs/packages/imp-pathing/pathing.md)
+- [collection-transforms.md](https://github.com/silentorb/imp-spec/blob/main/docs/packages/imp-collection-transforms/collection-transforms.md)
+- [pathing.md](https://github.com/silentorb/imp-spec/blob/main/docs/packages/imp-pathing/pathing.md)
 - Root [AGENTS.md](../../AGENTS.md)

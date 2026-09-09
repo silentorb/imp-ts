@@ -1,6 +1,6 @@
 # Packages
 
-Language-neutral specs: [`../imp-spec/docs/packages/`](../imp-spec/docs/packages/). Imp Translator and runtime specs: [`../docs/features/`](../docs/features/).
+Language-neutral specs: [imp-spec `docs/packages/`](https://github.com/silentorb/imp-spec/tree/main/docs/packages/). Imp Translator and runtime specs: [`../docs/features/`](../docs/features/).
 
 | Package | Role |
 | --- | --- |

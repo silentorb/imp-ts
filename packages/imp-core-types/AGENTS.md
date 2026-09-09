@@ -2,13 +2,13 @@
 
 ## What it is
 
-**Core type interfaces** for the Imp graph model (`Graph`, `Node`, `Edge`, ports, signal types, `InputValues`) and node type libraries (`NodeType`, `NodeLibrary`), plus the core boundary library (`coreNodeLibrary`). This package is the TypeScript binding.
+**Core type interfaces** for the Imp graph model (`Graph`, `Node`, `Edge`, ports, signal types, `InputValues`) and node type libraries (`NodeType`, `NodeLibrary`), plus the core boundary library (`coreNodeLibrary`). This package is the TypeScript implementation of those specs.
 
 ## Specs vs code
 
 | Layer | Location | Regenerated? |
 | --- | --- | --- |
-| Language-neutral specs | [`imp-spec` graph-model](../../imp-spec/docs/packages/imp-core-types/graph-model.md), [node-libraries](../../imp-spec/docs/packages/imp-core-types/node-libraries.md) | No — authored in imp-spec |
+| Language-neutral specs | [`imp-spec` graph-model](https://github.com/silentorb/imp-spec/blob/main/docs/packages/imp-core-types/graph-model.md), [node-libraries](https://github.com/silentorb/imp-spec/blob/main/docs/packages/imp-core-types/node-libraries.md) | No — authored in imp-spec |
 | TypeScript interfaces / core library | `src/*.ts` | Yes — regenerate from spec |
 
 When the model changes, update imp-spec first, then regenerate or edit the TypeScript interfaces to match.
@@ -55,8 +55,8 @@ Types in `imp-core-types` must match the field tables in imp-spec graph-model an
 
 ## See also
 
-- [graph-model.md](../../imp-spec/docs/packages/imp-core-types/graph-model.md)
-- [node-libraries.md](../../imp-spec/docs/packages/imp-core-types/node-libraries.md)
-- [registry.md](../../imp-spec/docs/packages/imp-registry/registry.md)
+- [graph-model.md](https://github.com/silentorb/imp-spec/blob/main/docs/packages/imp-core-types/graph-model.md)
+- [node-libraries.md](https://github.com/silentorb/imp-spec/blob/main/docs/packages/imp-core-types/node-libraries.md)
+- [registry.md](https://github.com/silentorb/imp-spec/blob/main/docs/packages/imp-registry/registry.md)
 - [react-flow.md](../../docs/features/react-flow.md)
 - Root [AGENTS.md](../../AGENTS.md)

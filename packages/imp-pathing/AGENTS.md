@@ -8,7 +8,7 @@ A catalog package that exports `pathingLibrary` (`NodeLibrary`). No execution or
 
 | Layer | Location | Regenerated? |
 | --- | --- | --- |
-| Language-neutral spec | [`imp-spec` pathing](../../imp-spec/docs/packages/imp-pathing/pathing.md) | No |
+| Language-neutral spec | [`imp-spec` pathing](https://github.com/silentorb/imp-spec/blob/main/docs/packages/imp-pathing/pathing.md) | No |
 | Library data | `src/library.ts` | Implement to match spec |
 
 ## Layout
@@ -47,6 +47,6 @@ Tests cover library shape and successful `imp-registry` load.
 
 ## See also
 
-- [pathing.md](../../imp-spec/docs/packages/imp-pathing/pathing.md)
+- [pathing.md](https://github.com/silentorb/imp-spec/blob/main/docs/packages/imp-pathing/pathing.md)
 - [sql.md](../../docs/features/sql.md)
 - Root [AGENTS.md](../../AGENTS.md)

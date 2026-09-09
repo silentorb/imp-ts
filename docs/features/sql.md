@@ -19,7 +19,7 @@
 | `graphToSql(graph, options)` | Walk the DAG from boundary source → sink; translate supported node types into a select query; return compiled query handle |
 | `compileSql(query)` | Return `{ sql: string; parameters: readonly unknown[] }` from a compiled query |
 
-Language bindings may name the compile step differently (e.g. `graphToKysely` when using Kysely).
+Language implementations may name the compile step differently (e.g. `graphToKysely` when using Kysely).
 
 ### SqlCompileOptions
 
@@ -55,7 +55,7 @@ v1 has **no** Imp `from` node. The host collection is the graph boundary `input`
 
 ### Input resolution
 
-For each input port, resolve in order (see [graph-model.md](../../imp-spec/docs/packages/imp-core-types/graph-model.md)):
+For each input port, resolve in order (see [graph-model.md](https://github.com/silentorb/imp-spec/blob/main/docs/packages/imp-core-types/graph-model.md)):
 
 1. Incoming edge (wired value)
 2. Local `Node.inputs` literal
@@ -117,7 +117,7 @@ Compiled SQL + bindings are consumed by the host's SQL executor. Generic `imp-sq
 
 1. Load registry with core library + collection transforms (+ pathing when needed) + any graph libraries.
 2. Build an Imp graph: `input` → transforms / composites / `traverse` → `output`.
-3. **`flattenGraph(graph, registry)`** — expand graph-backed node references (see [resolve.md](../../imp-spec/docs/packages/imp-graph-resolve/resolve.md)).
+3. **`flattenGraph(graph, registry)`** — expand graph-backed node references (see [resolve.md](https://github.com/silentorb/imp-spec/blob/main/docs/packages/imp-graph-resolve/resolve.md)).
 4. `graphToSql(flatGraph, { registry, schema: { table: "items", edges?: … } })`.
 5. `compileSql(query)` → run against a DB.
 
@@ -127,9 +127,9 @@ None beyond `SqlCompileOptions`.
 
 ## See also
 
-- [resolve.md](../../imp-spec/docs/packages/imp-graph-resolve/resolve.md) — nested graph flattening before translation
-- [collection-transforms.md](../../imp-spec/docs/packages/imp-collection-transforms/collection-transforms.md)
-- [pathing.md](../../imp-spec/docs/packages/imp-pathing/pathing.md)
-- [graph-model.md](../../imp-spec/docs/packages/imp-core-types/graph-model.md)
+- [resolve.md](https://github.com/silentorb/imp-spec/blob/main/docs/packages/imp-graph-resolve/resolve.md) — nested graph flattening before translation
+- [collection-transforms.md](https://github.com/silentorb/imp-spec/blob/main/docs/packages/imp-collection-transforms/collection-transforms.md)
+- [pathing.md](https://github.com/silentorb/imp-spec/blob/main/docs/packages/imp-pathing/pathing.md)
+- [graph-model.md](https://github.com/silentorb/imp-spec/blob/main/docs/packages/imp-core-types/graph-model.md)
 - [execution.md](./execution.md)
 - Root [AGENTS.md](../../AGENTS.md)

@@ -69,7 +69,7 @@ Use **execute** / **execution**, not **interpret** — active DAG evaluation, no
 
 ## Design rationale
 
-- imp-kotlin had a general execution engine; early Imp bindings kept catalogs + SQL translation only.
+- imp-kotlin had a general execution engine; early Imp implementations kept catalogs + SQL translation only.
 - Flatfile integrators need the same Imp graphs without a relational backend — execution fills the gap.
 - Operator semantics live once in `imp-execution`; host adapters supply rows/edges only.
 - Sandboxing is design-first so runtime evaluation does not become an implicit mutation channel.
@@ -77,7 +77,7 @@ Use **execute** / **execution**, not **interpret** — active DAG evaluation, no
 ## Behavior / pipeline
 
 1. Host builds `Registry` (core + collection.transforms + pathing + graph libraries).
-2. **`buildExecutionProgram(graph, registry)`** — shared subgraph table (see [resolve.md](../../imp-spec/docs/packages/imp-graph-resolve/resolve.md)).
+2. **`buildExecutionProgram(graph, registry)`** — shared subgraph table (see [resolve.md](https://github.com/silentorb/imp-spec/blob/main/docs/packages/imp-graph-resolve/resolve.md)).
 3. Caller invokes `executeGraph(program, { registry, host, capabilities })`.
 4. Runtime resolves inputs (same order as imp-sql: edge → local literal → catalog default).
 5. Dispatches node types; graph-backed nodes enter shared subgraphs; `traverse` calls `host.traverse`.
@@ -89,8 +89,8 @@ None.
 
 ## See also
 
-- [resolve.md](../../imp-spec/docs/packages/imp-graph-resolve/resolve.md) — execution program with shared subgraphs
+- [resolve.md](https://github.com/silentorb/imp-spec/blob/main/docs/packages/imp-graph-resolve/resolve.md) — execution program with shared subgraphs
 - [sql.md](./sql.md) — compile-time SQL translation
-- [collection-transforms.md](../../imp-spec/docs/packages/imp-collection-transforms/collection-transforms.md)
-- [pathing.md](../../imp-spec/docs/packages/imp-pathing/pathing.md)
+- [collection-transforms.md](https://github.com/silentorb/imp-spec/blob/main/docs/packages/imp-collection-transforms/collection-transforms.md)
+- [pathing.md](https://github.com/silentorb/imp-spec/blob/main/docs/packages/imp-pathing/pathing.md)
 - Root [AGENTS.md](../../AGENTS.md)
