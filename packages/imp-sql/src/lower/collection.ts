@@ -14,6 +14,7 @@ import {
   columnExpression,
   projectedColumnExpression,
   resolveEdgeType,
+  resolveNodePropertiesJson,
   type RelationalSchema,
 } from "../schema"
 import { lowerExprNode, type LowerContext } from "./expressions"
@@ -362,7 +363,7 @@ export function lowerCollectionPort(
               .select(
                 sql
                   .raw(
-                    `json_patch(coalesce(targets.properties, '{}'), coalesce(path_edges.${propsCol}, '{}'))`,
+                    `json_patch(coalesce(${resolveNodePropertiesJson(ctx.schema, "targets")}, '{}'), coalesce(path_edges.${propsCol}, '{}'))`,
                   )
                   .as("properties"),
               )

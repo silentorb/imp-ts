@@ -24,6 +24,12 @@ export interface RelationalSchema {
    */
   encodePropertyLiteral?(propertyKey: string, authorValue: PrimitiveValue): PrimitiveValue
   /**
+   * SQL expression for a node row's JSON property bag, given the table alias used in
+   * traverse joins (default: `{alias}.properties`). Hosts that store node fields as
+   * columns can rebuild a bag (e.g. `json_object(...)`) for edge `json_patch` merges.
+   */
+  nodePropertiesJson?(alias: string): string
+  /**
    * Optional edges relation for path operators (`traverse`).
    * Source collection rows must expose an `id` column joined to `sourceColumn`.
    */
@@ -46,6 +52,14 @@ export function resolveEdgeType(
 
 export function resolveColumn(schema: RelationalSchema, name: string): string {
   return schema.column?.(name) ?? name
+}
+
+/** JSON bag expression for a node row alias (traverse `json_patch` left side). */
+export function resolveNodePropertiesJson(
+  schema: RelationalSchema,
+  alias: string,
+): string {
+  return schema.nodePropertiesJson?.(alias) ?? `${alias}.properties`
 }
 
 const IDENT_RE = /^[A-Za-z_][A-Za-z0-9_]*$/
