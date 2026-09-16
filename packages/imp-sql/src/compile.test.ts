@@ -505,7 +505,7 @@ describe("imp-sql", () => {
         registry: testRegistry(),
         schema: testEdgesSchema,
       }),
-    ).toThrow(/propertiesColumn/)
+    ).toThrow(/propertiesColumn|property/)
   })
 
   test("encodePropertyLiteral encodes enum label in equals comparison", () => {

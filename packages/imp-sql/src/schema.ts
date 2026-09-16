@@ -9,8 +9,21 @@ export interface RelationalEdgesSchema {
   sourceColumn: string
   targetColumn: string
   typeColumn: string
-  /** JSON/text column of edge properties for optional traverse edge filters. */
+  /**
+   * JSON/text column of edge properties (simple hosts). Prefer `property` /
+   * `propertiesJson` when edge fields are columns + EAV.
+   */
   propertiesColumn?: string
+  /**
+   * Map a logical edge property name to a SQL expression given the edges join
+   * alias (e.g. `path_edges`). Default: `json_extract({alias}.{propertiesColumn}, '$.{name}')`.
+   */
+  property?(alias: string, name: string): string
+  /**
+   * SQL expression for an edge property bag given the edges join alias
+   * (traverse `json_patch`). Default: `{alias}.{propertiesColumn}`.
+   */
+  propertiesJson?(alias: string): string
 }
 
 export interface RelationalSchema {
@@ -63,6 +76,56 @@ export function resolveNodePropertiesJson(
 }
 
 const IDENT_RE = /^[A-Za-z_][A-Za-z0-9_]*$/
+
+/** Edge property SQL expression for traverse filters (relative to edges join alias). */
+export function resolveEdgeProperty(
+  edges: RelationalEdgesSchema,
+  alias: string,
+  name: string,
+): string {
+  if (!IDENT_RE.test(alias)) {
+    throw new Error(`edges join alias must be a simple SQL identifier, got "${alias}"`)
+  }
+  if (!IDENT_RE.test(name)) {
+    throw new Error(`edge property name must be a simple identifier, got "${name}"`)
+  }
+  if (edges.property) {
+    return edges.property(alias, name)
+  }
+  const propsCol = edges.propertiesColumn
+  if (!propsCol) {
+    throw new Error(
+      "traverse edge property filter requires schema.edges.property or schema.edges.propertiesColumn",
+    )
+  }
+  if (!IDENT_RE.test(propsCol)) {
+    throw new Error(
+      `edges.propertiesColumn must be a simple SQL identifier, got "${propsCol}"`,
+    )
+  }
+  return `json_extract(${alias}.${propsCol}, '$.${name}')`
+}
+
+/** Edge property-bag SQL for traverse `json_patch`, or null when unavailable. */
+export function resolveEdgePropertiesJson(
+  edges: RelationalEdgesSchema,
+  alias: string,
+): string | null {
+  if (!IDENT_RE.test(alias)) {
+    throw new Error(`edges join alias must be a simple SQL identifier, got "${alias}"`)
+  }
+  if (edges.propertiesJson) {
+    return edges.propertiesJson(alias)
+  }
+  const propsCol = edges.propertiesColumn
+  if (!propsCol) return null
+  if (!IDENT_RE.test(propsCol)) {
+    throw new Error(
+      `edges.propertiesColumn must be a simple SQL identifier, got "${propsCol}"`,
+    )
+  }
+  return `${alias}.${propsCol}`
+}
 
 /** Simple identifiers use sql.id; other strings (e.g. json_extract) are embedded raw. */
 export function columnExpression(

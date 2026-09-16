@@ -39,7 +39,9 @@ Language implementations may name the compile step differently (e.g. `graphToKys
 | `sourceColumn` | string | must |
 | `targetColumn` | string | must |
 | `typeColumn` | string | must |
-| `propertiesColumn` | string | may — JSON/text column of edge properties for optional traverse edge filters |
+| `propertiesColumn` | string | may — JSON/text bag of edge properties (simple hosts); prefer `property` / `propertiesJson` when fields are columns + EAV |
+| `property` | `(alias, name) => string` | may — SQL expression for a logical edge property given the edges join alias |
+| `propertiesJson` | `(alias) => string` | may — SQL expression for an edge property bag (traverse `json_patch`) |
 
 ### RelationalSchema
 
@@ -76,7 +78,7 @@ For each input port, resolve in order (see [graph-model.md](https://github.com/s
 | `offset` | `OFFSET count` |
 | `project` | `SELECT` listed columns (comma-separated `columns` string); otherwise `SELECT *`. When `schema.column` maps a logical name to a non-identifier expression (or a different identifier), the SELECT item is aliased to the logical name so result keys match (`json_extract(…) AS title`) |
 | `group` | Passthrough of the upstream select plus `ORDER BY column ASC\|DESC` (same column mapping as `sort`). Partitioning into groups and enum-weight ordering are host concerns after execute |
-| `traverse` | Join source collection through `schema.edges` filtered by `schema.edgeType(association, direction)` (default: `association`); `direction` must be `0` or `1`; select distinct target rows from `schema.table`. When `schema.edges.propertiesColumn` is set, overlay hop-edge JSON onto each target's property bag via `json_patch(schema.nodePropertiesJson(targets) ?? targets.properties, path_edges.properties)` so later `project` / `group` / `column` can read hop properties. When both `edge_property` and `edge_equals` are non-null, also add `json_extract(path_edges.{propertiesColumn}, '$.{edge_property}') = edge_equals` to the hop join (`edge_property` must be a simple identifier) |
+| `traverse` | Join source collection through `schema.edges` filtered by `schema.edgeType(association, direction)` (default: `association`); `direction` must be `0` or `1`; select distinct target rows from `schema.table`. When `schema.edges.propertiesJson` or `propertiesColumn` is set, overlay hop-edge properties onto each target's property bag via `json_patch(schema.nodePropertiesJson(targets) ?? targets.properties, edgeBag)`. When both `edge_property` and `edge_equals` are non-null, also filter with `schema.edges.property(path_edges, edge_property)` (default: `json_extract(path_edges.{propertiesColumn}, '$.{edge_property}')`) (`edge_property` must be a simple identifier) |
 | `column` | Column reference via `schema.column` or identity |
 | `literal` | Bound parameter / literal |
 | `parameter` | Same as `literal` — bound parameter / literal from the node's `value` input (`label` is ignored by SQL) |

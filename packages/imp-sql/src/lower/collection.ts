@@ -13,6 +13,8 @@ import {
 import {
   columnExpression,
   projectedColumnExpression,
+  resolveEdgePropertiesJson,
+  resolveEdgeProperty,
   resolveEdgeType,
   resolveNodePropertiesJson,
   type RelationalSchema,
@@ -298,14 +300,9 @@ export function lowerCollectionPort(
               `traverse.edge_property on "${nodeId}" must be a simple identifier, got "${edgeProperty}"`,
             )
           }
-          if (!edges.propertiesColumn) {
+          if (!edges.property && !edges.propertiesColumn) {
             throw new Error(
-              `traverse edge property filter on "${nodeId}" requires schema.edges.propertiesColumn`,
-            )
-          }
-          if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(edges.propertiesColumn)) {
-            throw new Error(
-              `edges.propertiesColumn must be a simple SQL identifier, got "${edges.propertiesColumn}"`,
+              `traverse edge property filter on "${nodeId}" requires schema.edges.property or schema.edges.propertiesColumn`,
             )
           }
         }
@@ -318,12 +315,7 @@ export function lowerCollectionPort(
                 edgeEqualsRaw as PrimitiveValue,
               )
             : edgeEqualsRaw
-        const propsCol = edges.propertiesColumn
-        if (propsCol && !/^[A-Za-z_][A-Za-z0-9_]*$/.test(propsCol)) {
-          throw new Error(
-            `edges.propertiesColumn must be a simple SQL identifier, got "${propsCol}"`,
-          )
-        }
+        const edgeBagJson = resolveEdgePropertiesJson(edges, "path_edges")
         // sources ⋈ edges(type) ⋈ nodes AS targets → distinct target rows
         const joined = ctx.db
           .selectFrom(base.as("sources"))
@@ -339,9 +331,7 @@ export function lowerCollectionPort(
                 .on(sql.ref(`path_edges.${edges.typeColumn}`), "=", edgeType)
               if (edgeProperty !== null) {
                 j = j.on(
-                  sql.raw(
-                    `json_extract(path_edges.${edges.propertiesColumn}, '$.${edgeProperty}')`,
-                  ),
+                  sql.raw(resolveEdgeProperty(edges, "path_edges", edgeProperty)),
                   "=",
                   edgeEqualsBound as string | number | boolean,
                 )
@@ -356,14 +346,14 @@ export function lowerCollectionPort(
               sql.ref(`path_edges.${edges.targetColumn}`),
             ),
           )
-        const selected = propsCol
+        const selected = edgeBagJson
           ? joined
               .select("targets.id")
               .select("targets.is_archived")
               .select(
                 sql
                   .raw(
-                    `json_patch(coalesce(${resolveNodePropertiesJson(ctx.schema, "targets")}, '{}'), coalesce(path_edges.${propsCol}, '{}'))`,
+                    `json_patch(coalesce(${resolveNodePropertiesJson(ctx.schema, "targets")}, '{}'), coalesce(${edgeBagJson}, '{}'))`,
                   )
                   .as("properties"),
               )
