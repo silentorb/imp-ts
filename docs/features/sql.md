@@ -120,6 +120,7 @@ Compiled SQL + bindings are consumed by the host's SQL executor. Generic `imp-sq
 
 1. Load registry with core library + collection transforms (+ pathing when needed) + any graph libraries.
 2. Build an Imp graph: `input` → transforms / composites / `traverse` → `output`.
+   - **Semantic paths:** when authoring with untagged ontology tokens, run `resolveSemanticPath` / `bindSemanticPath` (see [semantic-paths.md](https://github.com/silentorb/imp-spec/blob/main/docs/packages/imp-pathing/semantic-paths.md)) **before** this step so the graph already contains technical `traverse` / `project` / `column` nodes. SQL translation does not resolve semantic tokens.
 3. **`flattenGraph(graph, registry)`** — expand graph-backed node references (see [resolve.md](https://github.com/silentorb/imp-spec/blob/main/docs/packages/imp-graph-resolve/resolve.md)).
 4. `graphToSql(flatGraph, { registry, schema: { table: "items", edges?: … } })`.
 5. `compileSql(query)` → run against a DB.
@@ -133,6 +134,7 @@ None beyond `SqlCompileOptions`.
 - [resolve.md](https://github.com/silentorb/imp-spec/blob/main/docs/packages/imp-graph-resolve/resolve.md) — nested graph flattening before translation
 - [collection-transforms.md](https://github.com/silentorb/imp-spec/blob/main/docs/packages/imp-collection-transforms/collection-transforms.md)
 - [pathing.md](https://github.com/silentorb/imp-spec/blob/main/docs/packages/imp-pathing/pathing.md)
+- [semantic-paths.md](https://github.com/silentorb/imp-spec/blob/main/docs/packages/imp-pathing/semantic-paths.md) — ontology bind before translation
 - [graph-model.md](https://github.com/silentorb/imp-spec/blob/main/docs/packages/imp-core-types/graph-model.md)
 - [execution.md](./execution.md)
 - Root [AGENTS.md](../../AGENTS.md)
