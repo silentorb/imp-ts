@@ -14,8 +14,12 @@ export type OntologyRelationshipBinding = {
   kind: "relationship"
   association: string
   direction: 0 | 1
-  /** Type context for further path tokens (related node type). */
-  nextType: string
+  /**
+   * Type context for further path tokens (related node type).
+   * Required when more path tokens follow; may be omitted for a terminal hop
+   * (e.g. relational role with an open opposite endpoint).
+   */
+  nextType?: string
   edge_property?: string | null
   edge_equals?: unknown
 }
@@ -112,7 +116,8 @@ export function resolveSemanticPath(
       endpoint = "scalar"
       currentType = null
     } else {
-      if (!binding.nextType) {
+      const hasMoreTokens = i < tokens.length - 1
+      if (hasMoreTokens && !binding.nextType) {
         throw new SemanticPathResolveError({
           tokenIndex: i,
           token,
@@ -132,7 +137,7 @@ export function resolveSemanticPath(
         edge.edge_equals = binding.edge_equals
       }
       steps.push(edge)
-      currentType = binding.nextType
+      currentType = binding.nextType ?? null
       endpoint = "nodes"
     }
   }
