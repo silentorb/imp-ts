@@ -57,6 +57,7 @@ Cross-package overview: [imp-spec `docs/overview/`](https://github.com/silentorb
 | Imp → SQL translation | [sql.md](./docs/features/sql.md) |
 | Imp ↔ React Flow | [react-flow.md](./docs/features/react-flow.md) |
 | Dynamic execution | [execution.md](./docs/features/execution.md) |
+| Imp → Cypher (sibling repo) | [imp-cypher](https://github.com/silentorb/imp-cypher) → `docs/features/cypher.md` |
 
 ## Working conventions
 
