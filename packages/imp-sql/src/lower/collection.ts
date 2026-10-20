@@ -10,6 +10,7 @@ import {
   resolveInput,
   type EdgeTargetKey,
 } from "../resolve"
+import type { DialectSqlOps } from "../dialect"
 import {
   columnExpression,
   projectedColumnExpression,
@@ -315,7 +316,11 @@ export function lowerCollectionPort(
                 edgeEqualsRaw as PrimitiveValue,
               )
             : edgeEqualsRaw
-        const edgeBagJson = resolveEdgePropertiesJson(edges, "path_edges")
+        const edgeBagJson = resolveEdgePropertiesJson(
+          edges,
+          "path_edges",
+          ctx.dialect,
+        )
         // sources ⋈ edges(type) ⋈ nodes AS targets → distinct target rows
         const joined = ctx.db
           .selectFrom(base.as("sources"))
@@ -331,7 +336,14 @@ export function lowerCollectionPort(
                 .on(sql.ref(`path_edges.${edges.typeColumn}`), "=", edgeType)
               if (edgeProperty !== null) {
                 j = j.on(
-                  sql.raw(resolveEdgeProperty(edges, "path_edges", edgeProperty)),
+                  sql.raw(
+                    resolveEdgeProperty(
+                      edges,
+                      "path_edges",
+                      edgeProperty,
+                      ctx.dialect,
+                    ),
+                  ),
                   "=",
                   edgeEqualsBound as string | number | boolean,
                 )
@@ -346,20 +358,27 @@ export function lowerCollectionPort(
               sql.ref(`path_edges.${edges.targetColumn}`),
             ),
           )
-        const selected = edgeBagJson
-          ? joined
-              .select("targets.id")
-              .select("targets.is_archived")
-              .select(
-                sql
-                  .raw(
-                    `json_patch(coalesce(${resolveNodePropertiesJson(ctx.schema, "targets")}, '{}'), coalesce(${edgeBagJson}, '{}'))`,
-                  )
-                  .as("properties"),
+        if (edgeBagJson) {
+          const nodeBag = resolveNodePropertiesJson(
+            ctx.schema,
+            "targets",
+            ctx.dialect,
+          )
+          const merged = ctx.dialect.mergePropertyBags(nodeBag, edgeBagJson)
+          let selected = joined.select("targets.id")
+          for (const col of ctx.schema.traverseKeepColumns ?? []) {
+            if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(col)) {
+              throw new Error(
+                `traverseKeepColumns entries must be simple identifiers, got "${col}"`,
               )
-              .distinct()
-          : joined.selectAll("targets").distinct()
-        return selected as unknown as AnySelect
+            }
+            selected = selected.select(`targets.${col}` as "targets.id")
+          }
+          return selected
+            .select(sql.raw(merged).as("properties"))
+            .distinct() as unknown as AnySelect
+        }
+        return joined.selectAll("targets").distinct() as unknown as AnySelect
       }
       case "output": {
         const resolved = resolveInput(
@@ -388,6 +407,7 @@ export function createCollectionLowerContext(args: {
   graph: Graph
   registry: Registry
   schema: RelationalSchema
+  dialect: DialectSqlOps
   edgesByTarget: Map<EdgeTargetKey, Edge>
   db: Kysely<AnyDb>
   sourceNodeId: NodeId
@@ -396,6 +416,7 @@ export function createCollectionLowerContext(args: {
     graph: args.graph,
     registry: args.registry,
     schema: args.schema,
+    dialect: args.dialect,
     edgesByTarget: args.edgesByTarget,
     visiting: new Set(),
     db: args.db,

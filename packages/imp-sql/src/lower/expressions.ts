@@ -10,6 +10,7 @@ import {
   resolveInput,
   type EdgeTargetKey,
 } from "../resolve"
+import type { DialectSqlOps } from "../dialect"
 import { columnExpression, type RelationalSchema } from "../schema"
 import {
   columnNameFromComparisonPort,
@@ -23,6 +24,7 @@ export interface LowerContext {
   graph: Graph
   registry: Registry
   schema: RelationalSchema
+  dialect: DialectSqlOps
   edgesByTarget: Map<EdgeTargetKey, Edge>
   visiting: Set<NodeId>
 }

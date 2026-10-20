@@ -4,7 +4,7 @@ import { coreNodeLibrary } from "imp-core-types"
 import { collectionTransformsLibrary } from "imp-collection-transforms"
 import { pathingLibrary } from "imp-pathing"
 import { createRegistry, loadLibrary } from "imp-registry"
-import { compileSql, graphToKysely } from "./compile"
+import { compilePostgres, compileSql, compileSqlite } from "./compile"
 
 function testRegistry() {
   return loadLibrary(
@@ -72,7 +72,7 @@ function pipelineGraph(): Graph {
 
 describe("imp-sql", () => {
   test("lowers input → filter → sort → limit → output to SQLite SQL", () => {
-    const compiled = graphToKysely(pipelineGraph(), {
+    const compiled = compileSqlite(pipelineGraph(), {
       registry: testRegistry(),
       schema: { table: "items" },
     })
@@ -106,7 +106,7 @@ describe("imp-sql", () => {
     }
 
     const { sql } = compileSql(
-      graphToKysely(graph, {
+      compileSqlite(graph, {
         registry: testRegistry(),
         schema: { table: "people" },
       }),
@@ -138,7 +138,7 @@ describe("imp-sql", () => {
     }
 
     const { sql } = compileSql(
-      graphToKysely(graph, {
+      compileSqlite(graph, {
         registry: testRegistry(),
         schema: { table: "items" },
       }),
@@ -166,7 +166,7 @@ describe("imp-sql", () => {
     }
 
     expect(() =>
-      graphToKysely(graph, {
+      compileSqlite(graph, {
         registry: testRegistry(),
         schema: { table: "t" },
       }),
@@ -193,7 +193,7 @@ describe("imp-sql", () => {
     }
 
     expect(() =>
-      graphToKysely(graph, {
+      compileSqlite(graph, {
         registry: testRegistry(),
         schema: { table: "t" },
       }),
@@ -224,7 +224,7 @@ describe("imp-sql", () => {
     }
 
     const { sql, parameters } = compileSql(
-      graphToKysely(graph, {
+      compileSqlite(graph, {
         registry: testRegistry(),
         schema: testEdgesSchema,
       }),
@@ -261,7 +261,7 @@ describe("imp-sql", () => {
     }
 
     expect(() =>
-      graphToKysely(graph, {
+      compileSqlite(graph, {
         registry: testRegistry(),
         schema: { table: "items" },
       }),
@@ -301,7 +301,7 @@ describe("imp-sql", () => {
     }
 
     const { sql, parameters } = compileSql(
-      graphToKysely(graph, {
+      compileSqlite(graph, {
         registry: testRegistry(),
         schema: testEdgesSchema,
       }),
@@ -334,7 +334,7 @@ describe("imp-sql", () => {
     }
 
     expect(() =>
-      graphToKysely(graph, {
+      compileSqlite(graph, {
         registry: testRegistry(),
         schema: { table: "items" },
       }),
@@ -365,7 +365,7 @@ describe("imp-sql", () => {
     }
 
     const { sql } = compileSql(
-      graphToKysely(graph, {
+      compileSqlite(graph, {
         registry: testRegistry(),
         schema: {
           table: "nodes",
@@ -415,7 +415,7 @@ describe("imp-sql", () => {
     }
 
     const { sql, parameters } = compileSql(
-      graphToKysely(graph, {
+      compileSqlite(graph, {
         registry: testRegistry(),
         schema: { table: "items" },
       }),
@@ -453,7 +453,7 @@ describe("imp-sql", () => {
     }
 
     const { sql, parameters } = compileSql(
-      graphToKysely(graph, {
+      compileSqlite(graph, {
         registry: testRegistry(),
         schema: {
           table: "items",
@@ -501,7 +501,7 @@ describe("imp-sql", () => {
     }
 
     expect(() =>
-      graphToKysely(graph, {
+      compileSqlite(graph, {
         registry: testRegistry(),
         schema: testEdgesSchema,
       }),
@@ -537,7 +537,7 @@ describe("imp-sql", () => {
     }
 
     const { parameters } = compileSql(
-      graphToKysely(graph, {
+      compileSqlite(graph, {
         registry: testRegistry(),
         schema: {
           table: "items",
@@ -581,7 +581,7 @@ describe("imp-sql", () => {
     }
 
     const { parameters } = compileSql(
-      graphToKysely(graph, {
+      compileSqlite(graph, {
         registry: testRegistry(),
         schema: {
           table: "items",
@@ -600,5 +600,116 @@ describe("imp-sql", () => {
     )
     expect(parameters).toContain(0)
     expect(parameters).not.toContain("Consideration")
+  })
+})
+
+describe("imp-sql postgres (translation)", () => {
+  test("emits $n placeholders for filter/limit", () => {
+    const compiled = compilePostgres(pipelineGraph(), {
+      registry: testRegistry(),
+      schema: { table: "items" },
+    })
+    expect(compiled.dialect).toBe("postgres")
+    const { sql, parameters } = compileSql(compiled)
+    expect(sql).toContain('from "items"')
+    expect(sql).toMatch(/\$\d/)
+    expect(sql).not.toContain("?")
+    expect(parameters).toContain("active")
+    expect(parameters).toContain(10)
+  })
+
+  test("traverse with propertiesColumn uses jsonb extract and || merge", () => {
+    const graph: Graph = {
+      nodes: {
+        in: { id: "in", type: "input", inputs: {} },
+        hop: {
+          id: "hop",
+          type: "traverse",
+          inputs: {
+            association: "knows",
+            direction: 0,
+            edge_property: "priority",
+            edge_equals: "Consideration",
+          },
+        },
+        out: { id: "out", type: "output", inputs: {} },
+      },
+      edges: {
+        e_in: {
+          from: { node: "in", port: "value" },
+          to: { node: "hop", port: "collection" },
+        },
+        e_out: {
+          from: { node: "hop", port: "collection" },
+          to: { node: "out", port: "value" },
+        },
+      },
+    }
+
+    const { sql, parameters } = compileSql(
+      compilePostgres(graph, {
+        registry: testRegistry(),
+        schema: {
+          table: "items",
+          edges: {
+            table: "edges",
+            sourceColumn: "source_id",
+            targetColumn: "target_id",
+            typeColumn: "type",
+            propertiesColumn: "properties",
+          },
+        },
+      }),
+    )
+    expect(sql).toContain("->>'priority'")
+    expect(sql).toContain("::jsonb")
+    expect(sql).toContain("||")
+    expect(sql.toLowerCase()).not.toContain("json_patch")
+    expect(sql.toLowerCase()).not.toContain("json_extract")
+    expect(sql.toLowerCase()).not.toContain("is_archived")
+    expect(parameters).toContain("Consideration")
+  })
+
+  test("host traverseKeepColumns appear in merged traverse select", () => {
+    const graph: Graph = {
+      nodes: {
+        in: { id: "in", type: "input", inputs: {} },
+        hop: {
+          id: "hop",
+          type: "traverse",
+          inputs: { association: "knows", direction: 0 },
+        },
+        out: { id: "out", type: "output", inputs: {} },
+      },
+      edges: {
+        e_in: {
+          from: { node: "in", port: "value" },
+          to: { node: "hop", port: "collection" },
+        },
+        e_out: {
+          from: { node: "hop", port: "collection" },
+          to: { node: "out", port: "value" },
+        },
+      },
+    }
+
+    const { sql } = compileSql(
+      compileSqlite(graph, {
+        registry: testRegistry(),
+        schema: {
+          table: "items",
+          traverseKeepColumns: ["is_archived"],
+          edges: {
+            table: "edges",
+            sourceColumn: "source_id",
+            targetColumn: "target_id",
+            typeColumn: "type",
+            propertiesColumn: "properties",
+          },
+        },
+      }),
+    )
+    expect(sql.toLowerCase()).toContain("is_archived")
+    expect(sql.toLowerCase()).toContain("json_patch")
   })
 })

@@ -1,0 +1,107 @@
+/** Shared Imp graph → SQL lowering. Dialect entries call this with ops + Kysely DB. */
+
+import type { CompiledQuery, Kysely } from "kysely"
+import type { Graph, PortReference } from "imp-core-types"
+import type { Registry } from "imp-registry"
+import { hasGraphBackedDefinitions } from "imp-registry"
+import { flattenGraph } from "imp-graph-resolve"
+import type { DialectSqlOps, SqlDialect } from "./dialect"
+import {
+  createCollectionLowerContext,
+  lowerCollectionPort,
+} from "./lower/collection"
+import {
+  defaultSink,
+  defaultSource,
+  indexEdgesByTarget,
+  resolveInput,
+} from "./resolve"
+import type { RelationalSchema } from "./schema"
+
+type AnyDb = Record<string, Record<string, unknown>>
+
+export interface SqlHostCompileOptions {
+  registry: Registry
+  schema: RelationalSchema
+  /** Default: sole core `input` node's `value` output. */
+  source?: PortReference
+  /** Default: sole core `output` node's `value` input. */
+  sink?: PortReference
+}
+
+export interface CompiledImpQuery {
+  readonly compiled: CompiledQuery
+  readonly dialect: SqlDialect
+}
+
+/**
+ * Lower an Imp collection-transform graph using a dialect-supplied Kysely DB
+ * and SQL ops. Prefer `compileSqlite` / `compilePostgres` at the package edge.
+ */
+export function lowerGraphToCompiledQuery(
+  graph: Graph,
+  options: SqlHostCompileOptions & {
+    dialect: SqlDialect
+    dialectOps: DialectSqlOps
+    db: Kysely<AnyDb>
+  },
+): CompiledImpQuery {
+  const flattened =
+    hasGraphBackedDefinitions(options.registry)
+      ? flattenGraph(graph, options.registry)
+      : graph
+
+  const source = options.source ?? defaultSource(flattened)
+  const sink = options.sink ?? defaultSink(flattened)
+  const edgesByTarget = indexEdgesByTarget(flattened)
+
+  const ctx = createCollectionLowerContext({
+    graph: flattened,
+    registry: options.registry,
+    schema: options.schema,
+    dialect: options.dialectOps,
+    edgesByTarget,
+    db: options.db,
+    sourceNodeId: source.node,
+  })
+
+  const sinkNode = flattened.nodes[sink.node]
+  if (sinkNode == null) {
+    throw new Error(`Unknown sink node "${sink.node}"`)
+  }
+
+  let query
+  if (sinkNode.type === "output" && sink.port === "value") {
+    query = lowerCollectionPort(ctx, sink.node, "value")
+  } else {
+    const resolved = resolveInput(
+      flattened,
+      options.registry,
+      edgesByTarget,
+      sink.node,
+      sink.port,
+    )
+    if (resolved.kind === "literal") {
+      throw new Error(`Sink "${sink.node}.${sink.port}" must be a wired collection`)
+    }
+    query = lowerCollectionPort(ctx, resolved.from.node, resolved.from.port)
+  }
+
+  void source
+
+  return {
+    compiled: query.compile(),
+    dialect: options.dialect,
+  }
+}
+
+/** Extract SQL string + bound parameters for hosts such as Tome `queryAll`. */
+export function compileSql(query: CompiledImpQuery): {
+  sql: string
+  parameters: readonly unknown[]
+} {
+  return {
+    sql: query.compiled.sql,
+    parameters: query.compiled.parameters,
+  }
+}

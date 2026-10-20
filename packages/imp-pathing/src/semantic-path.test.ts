@@ -3,7 +3,7 @@ import type { Graph } from "imp-core-types"
 import { coreNodeLibrary } from "imp-core-types"
 import { collectionTransformsLibrary } from "imp-collection-transforms"
 import { createRegistry, loadLibrary } from "imp-registry"
-import { compileSql, graphToKysely } from "imp-sql"
+import { compileSql, compileSqlite } from "imp-sql"
 import { bindSemanticPath } from "./bind"
 import { desugarPath, mergeDesugarIntoGraph } from "./desugar"
 import { pathingLibrary } from "./library"
@@ -283,7 +283,7 @@ describe("bindSemanticPath", () => {
       to: { node: "out", port: "value" },
     }
 
-    const compiled = graphToKysely(graph, {
+    const compiled = compileSqlite(graph, {
       registry: testRegistry(),
       schema: {
         table: "nodes",

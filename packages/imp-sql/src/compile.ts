@@ -1,129 +1,21 @@
-/** Imp graph → Kysely SQL lowering. Spec: imp-ts/docs/features/sql.md */
+/** Package compile surface. Prefer dialect entries; shared helpers live in compile-core. */
 
-import type { CompiledQuery } from "kysely"
-import {
-  DummyDriver,
-  Kysely,
-  SqliteAdapter,
-  SqliteIntrospector,
-  SqliteQueryCompiler,
-} from "kysely"
-import type { Graph, PortReference } from "imp-core-types"
-import type { Registry } from "imp-registry"
-import { hasGraphBackedDefinitions } from "imp-registry"
-import { flattenGraph } from "imp-graph-resolve"
-import {
-  createCollectionLowerContext,
-  lowerCollectionPort,
-} from "./lower/collection"
-import {
-  defaultSink,
-  defaultSource,
-  indexEdgesByTarget,
-  resolveInput,
-} from "./resolve"
-import type { RelationalSchema } from "./schema"
+export type {
+  CompiledImpQuery,
+  SqlHostCompileOptions,
+} from "./compile-core"
+export { compileSql } from "./compile-core"
 
-type AnyDb = Record<string, Record<string, unknown>>
+export type { SqliteCompileOptions } from "./sqlite/compile"
+export { compileSqlite } from "./sqlite/compile"
 
-export interface SqlCompileOptions {
-  registry: Registry
-  schema: RelationalSchema
-  /** Default: sole core `input` node's `value` output. */
-  source?: PortReference
-  /** Default: sole core `output` node's `value` input. */
-  sink?: PortReference
-  /** Default: `"sqlite"`. */
-  dialect?: "sqlite"
-}
+export type { PostgresCompileOptions } from "./postgres/compile"
+export { compilePostgres } from "./postgres/compile"
 
-export interface CompiledImpQuery {
-  readonly compiled: CompiledQuery
-  readonly dialect: "sqlite"
-}
-
-function createSqliteCompileDb(): Kysely<AnyDb> {
-  return new Kysely({
-    dialect: {
-      createAdapter: () => new SqliteAdapter(),
-      createDriver: () => new DummyDriver(),
-      createIntrospector: (db) => new SqliteIntrospector(db),
-      createQueryCompiler: () => new SqliteQueryCompiler(),
-    },
-  })
-}
+/** @deprecated Use `SqlHostCompileOptions` — dialect is chosen by compile entry. */
+export type { SqlHostCompileOptions as SqlCompileOptions } from "./compile-core"
 
 /**
- * Lower an Imp collection-transform graph to a compiled Kysely query.
+ * @deprecated Use `compileSqlite`. Kept as an alias for in-flight callers.
  */
-export function graphToKysely(
-  graph: Graph,
-  options: SqlCompileOptions,
-): CompiledImpQuery {
-  const dialect = options.dialect ?? "sqlite"
-  if (dialect !== "sqlite") {
-    throw new Error(`Unsupported dialect "${dialect}"`)
-  }
-
-  const flattened =
-    hasGraphBackedDefinitions(options.registry)
-      ? flattenGraph(graph, options.registry)
-      : graph
-
-  const source = options.source ?? defaultSource(flattened)
-  const sink = options.sink ?? defaultSink(flattened)
-  const edgesByTarget = indexEdgesByTarget(flattened)
-  const db = createSqliteCompileDb()
-
-  const ctx = createCollectionLowerContext({
-    graph: flattened,
-    registry: options.registry,
-    schema: options.schema,
-    edgesByTarget,
-    db,
-    sourceNodeId: source.node,
-  })
-
-  // Sink is typically an `output` node's `value` *input* — resolve that input
-  // to the upstream collection output, or lower an `output` node directly.
-  const sinkNode = flattened.nodes[sink.node]
-  if (sinkNode == null) {
-    throw new Error(`Unknown sink node "${sink.node}"`)
-  }
-
-  let query
-  if (sinkNode.type === "output" && sink.port === "value") {
-    query = lowerCollectionPort(ctx, sink.node, "value")
-  } else {
-    const resolved = resolveInput(
-      flattened,
-      options.registry,
-      edgesByTarget,
-      sink.node,
-      sink.port,
-    )
-    if (resolved.kind === "literal") {
-      throw new Error(`Sink "${sink.node}.${sink.port}" must be a wired collection`)
-    }
-    query = lowerCollectionPort(ctx, resolved.from.node, resolved.from.port)
-  }
-
-  // Ensure source is reachable / used: base query comes from source input.
-  void source
-
-  return {
-    compiled: query.compile(),
-    dialect: "sqlite",
-  }
-}
-
-/** Extract SQL string + bound parameters for hosts such as Tome `queryAll`. */
-export function compileSql(query: CompiledImpQuery): {
-  sql: string
-  parameters: readonly unknown[]
-} {
-  return {
-    sql: query.compiled.sql,
-    parameters: query.compiled.parameters,
-  }
-}
+export { compileSqlite as graphToKysely } from "./sqlite/compile"
