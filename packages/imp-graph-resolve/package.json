@@ -1,6 +1,6 @@
 {
   "name": "imp-graph-resolve",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "private": true,
   "type": "module",
   "exports": {
@@ -13,7 +13,7 @@
   "dependencies": {
     "imp-core-types": "workspace:^0.5.0",
     "imp-registry": "workspace:^0.5.0",
-    "imp-typecheck": "workspace:^0.6.0"
+    "imp-typecheck": "workspace:^0.7.0"
   },
   "devDependencies": {
     "imp-collection-transforms": "workspace:^0.5.0",
