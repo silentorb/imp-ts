@@ -34,3 +34,7 @@ export function typeVar(param: TypeParamId): TypeVarSignalType {
 export function collectionOf(element: SignalType): ConcreteSignalType {
   return concreteType("collection", element)
 }
+
+export function listOf(element: SignalType): ConcreteSignalType {
+  return concreteType("list", element)
+}

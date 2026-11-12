@@ -10,7 +10,8 @@ import {
   resolvePortType,
 } from "./graph-analysis"
 import { type Substitution, type TypeCheckError, containsTypeVar } from "./substitution"
-import { formatType, unify } from "./unify"
+import { assignable } from "./assignable"
+import { formatType } from "./unify"
 import { checkTypeParamBounds } from "./check-type-param-bounds"
 
 export function checkGraph(
@@ -82,7 +83,7 @@ export function checkGraph(
       continue
     }
 
-    const result = unify(outputType, inputType, subst)
+    const result = assignable(outputType, inputType, subst)
     if (!result.ok) {
       errors.push({
         nodeId: edge.to.node,

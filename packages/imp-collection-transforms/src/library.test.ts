@@ -20,6 +20,11 @@ describe("collectionTransformsLibrary", () => {
     expect(def("sort").inputs.direction?.defaultValue).toBe("asc")
     expect(def("group").inputs.direction?.defaultValue).toBe("asc")
     expect(isTypeVar(def("filter").inputs.collection!.type.args![0]!)).toBe(true)
+    expect(def("sort").inputs.collection?.type).toEqual({
+      id: "list",
+      args: [{ param: "T" }],
+    })
+    expect(def("limit").outputs.collection?.type.id).toBe("list")
     expect(def("group").inputs.column.type.id).toBe("string")
     expect(def("equals")).toBeDefined()
     expect(def("not_equals")).toBeDefined()

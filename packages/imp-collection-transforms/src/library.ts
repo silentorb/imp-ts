@@ -7,12 +7,14 @@ import {
   type SignalType,
   collectionOf,
   concreteType,
+  listOf,
   typeVar,
   universalImplementation,
 } from "imp-core-types"
 
 const T = typeVar("T")
 const collectionT = collectionOf(T)
+const listT = listOf(T)
 const boolean = concreteType("boolean")
 const string = concreteType("string")
 const number = concreteType("number")
@@ -26,54 +28,48 @@ function port(id: string, type: SignalType, defaultValue?: Port["defaultValue"])
     : { id, type, defaultValue }
 }
 
-function collectionIn(): Port {
-  return port("collection", collectionT)
-}
-
-function collectionOut(): Port {
-  return port("collection", collectionT)
-}
-
-function collectionPreserving(
+function containerPreserving(
   id: string,
+  containerType: SignalType,
   extraInputs: Record<string, Port>,
 ): NodeDefinition {
+  const collectionPort = port("collection", containerType)
   return {
     id,
     typeParams: collectionTypeParam,
     implementation: universalImplementation(id),
-    inputs: { collection: collectionIn(), ...extraInputs },
-    outputs: { collection: collectionOut() },
+    inputs: { collection: collectionPort, ...extraInputs },
+    outputs: { collection: port("collection", containerType) },
   }
 }
 
 export const collectionTransformsLibrary: NodeLibrary = {
   id: "imp.collection.transforms",
   definitions: [
-    collectionPreserving("filter", {
+    containerPreserving("filter", collectionT, {
       predicate: port("predicate", boolean),
     }),
-    collectionPreserving("except", {
+    containerPreserving("except", collectionT, {
       exclude: port("exclude", collectionT),
     }),
-    collectionPreserving("sort", {
+    containerPreserving("sort", listT, {
       column: port("column", string),
       direction: port("direction", string, "asc"),
     }),
-    collectionPreserving("limit", {
+    containerPreserving("limit", listT, {
       count: port("count", number),
     }),
-    collectionPreserving("offset", {
+    containerPreserving("offset", listT, {
       count: port("count", number),
     }),
-    collectionPreserving("project", {
+    containerPreserving("project", collectionT, {
       columns: port("columns", string),
     }),
-    collectionPreserving("group", {
+    containerPreserving("group", listT, {
       column: port("column", string),
       direction: port("direction", string, "asc"),
     }),
-    collectionPreserving("search", {
+    containerPreserving("search", collectionT, {
       query: port("query", string),
     }),
     {

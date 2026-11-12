@@ -18,6 +18,7 @@ import {
 import type { Registry } from "imp-registry"
 import { getNodeDefinition } from "imp-registry"
 import { resolveTypeArgs } from "./resolve-type-args"
+import { isSubtypeId } from "./subtype"
 
 export interface ImplementationResolveError {
   nodeId?: string
@@ -34,7 +35,9 @@ export function signalTypeMatches(pattern: ConcreteSignalType, type: SignalType)
   if (!isConcreteSignalType(type)) return false
   if (pattern.id === "any") return true
 
-  if (pattern.id !== type.id) return false
+  if (pattern.id !== type.id && !isSubtypeId(type.id, pattern.id)) {
+    return false
+  }
 
   const patternArgs = pattern.args ?? []
   const typeArgs = type.args ?? []

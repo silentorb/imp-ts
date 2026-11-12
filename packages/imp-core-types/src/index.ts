@@ -29,6 +29,7 @@ export {
   concreteType,
   typeVar,
   collectionOf,
+  listOf,
 } from "./signal-type"
 
 export type {

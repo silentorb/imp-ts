@@ -1,7 +1,9 @@
 import { describe, expect, test } from "bun:test"
 import {
+  collectionOf,
   concreteType,
   coreNodeLibrary,
+  listOf,
   type Graph,
   type NodeLibrary,
 } from "imp-core-types"
@@ -14,6 +16,7 @@ import {
   getNodeDefinition,
 } from "imp-registry"
 import {
+  assignable,
   checkGraph,
   checkDefinition,
   instantiateNodeDefinition,
@@ -41,6 +44,37 @@ describe("unify", () => {
 
   test("reports mismatch", () => {
     const result = unify(concreteType("string"), concreteType("number"))
+    expect(result.ok).toBe(false)
+  })
+
+  test("does not unify list with collection by equality", () => {
+    const result = unify(listOf(concreteType("string")), collectionOf(concreteType("string")))
+    expect(result.ok).toBe(false)
+  })
+})
+
+describe("assignable", () => {
+  test("list is assignable to collection with matching args", () => {
+    const result = assignable(
+      listOf(concreteType("string")),
+      collectionOf(concreteType("string")),
+    )
+    expect(result.ok).toBe(true)
+  })
+
+  test("collection is not assignable to list", () => {
+    const result = assignable(
+      collectionOf(concreteType("string")),
+      listOf(concreteType("string")),
+    )
+    expect(result.ok).toBe(false)
+  })
+
+  test("list to collection requires invariant args", () => {
+    const result = assignable(
+      listOf(concreteType("string")),
+      collectionOf(concreteType("number")),
+    )
     expect(result.ok).toBe(false)
   })
 })
@@ -85,6 +119,70 @@ describe("checkGraph", () => {
     }
 
     expect(checkGraph(graph, registry)).toEqual([])
+  })
+
+  test("accepts list input wired to collection filter port", () => {
+    const registry = loadNodeLibrary(
+      loadNodeLibrary(createRegistry(), coreNodeLibrary),
+      collectionTransformsLibrary,
+    )
+
+    const graph: Graph = {
+      nodes: {
+        in: {
+          id: "in",
+          type: "input",
+          typeArgs: [listOf(concreteType("any"))],
+          inputs: {},
+        },
+        pred: { id: "pred", type: "literal", inputs: { value: true } },
+        f: { id: "f", type: "filter", inputs: {} },
+      },
+      edges: {
+        e1: {
+          from: { node: "in", port: "value" },
+          to: { node: "f", port: "collection" },
+        },
+        e2: {
+          from: { node: "pred", port: "value" },
+          to: { node: "f", port: "predicate" },
+        },
+      },
+    }
+
+    expect(checkGraph(graph, registry)).toEqual([])
+  })
+
+  test("rejects collection input wired to list sort port", () => {
+    const registry = loadNodeLibrary(
+      loadNodeLibrary(createRegistry(), coreNodeLibrary),
+      collectionTransformsLibrary,
+    )
+
+    const graph: Graph = {
+      nodes: {
+        in: {
+          id: "in",
+          type: "input",
+          typeArgs: [collectionOf(concreteType("any"))],
+          inputs: {},
+        },
+        sort: {
+          id: "sort",
+          type: "sort",
+          inputs: { column: "name", direction: "asc" },
+        },
+      },
+      edges: {
+        e1: {
+          from: { node: "in", port: "value" },
+          to: { node: "sort", port: "collection" },
+        },
+      },
+    }
+
+    const errors = checkGraph(graph, registry)
+    expect(errors.some((e) => e.portId === "collection")).toBe(true)
   })
 
   test("reports edge type mismatch", () => {
@@ -138,6 +236,15 @@ describe("implementation dispatch", () => {
   test("signalTypeMatches treats any as wildcard", () => {
     expect(signalTypeMatches(concreteType("any"), concreteType("string"))).toBe(true)
     expect(signalTypeMatches(concreteType("string"), concreteType("number"))).toBe(false)
+  })
+
+  test("signalTypeMatches allows subtype against supertype pattern", () => {
+    expect(
+      signalTypeMatches(collectionOf(concreteType("string")), listOf(concreteType("string"))),
+    ).toBe(true)
+    expect(
+      signalTypeMatches(listOf(concreteType("string")), collectionOf(concreteType("string"))),
+    ).toBe(false)
   })
 
   test("resolveImplementation uses universal default", () => {

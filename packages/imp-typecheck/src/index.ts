@@ -8,6 +8,9 @@ export {
 } from "./substitution"
 export { unify, formatType } from "./unify"
 export type { UnifyResult } from "./unify"
+export { isSubtypeId } from "./subtype"
+export { assignable } from "./assignable"
+export type { AssignableResult } from "./assignable"
 export {
   instantiateNodeDefinition,
   instantiateNodeDefinition as instantiateNodeType,

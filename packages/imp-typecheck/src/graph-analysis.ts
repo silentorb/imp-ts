@@ -5,7 +5,7 @@ import type { Registry } from "imp-registry"
 import { getNodeDefinition } from "imp-registry"
 import { instantiateNodeDefinition } from "./instantiate"
 import { type Substitution, applySubstitution, scopeSignalType } from "./substitution"
-import { unify } from "./unify"
+import { assignable } from "./assignable"
 
 export function effectiveNodeDefinition(node: Node, registry: Registry) {
   const catalog = getNodeDefinition(registry, node.type)
@@ -43,7 +43,7 @@ export function collectGraphSubstitution(graph: Graph, registry: Registry): Subs
     const inputType = catalogPortType(toNode, registry, edge.to.port, "input")
     if (!outputType || !inputType) continue
 
-    const result = unify(outputType, inputType, subst)
+    const result = assignable(outputType, inputType, subst)
     if (result.ok) {
       subst = result.subst
     }
@@ -85,7 +85,7 @@ export function resolvePortType(
         "output",
       )
       if (sourceType) {
-        const result = unify(sourceType, inputType, localSubst)
+        const result = assignable(sourceType, inputType, localSubst)
         if (result.ok) {
           localSubst = result.subst
           inputType = applySubstitution(inputType, localSubst)
