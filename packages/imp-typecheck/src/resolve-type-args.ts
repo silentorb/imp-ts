@@ -1,21 +1,28 @@
 /** Type-argument inference for implementation dispatch. */
 
-import type { Graph, Node, NodeId, SignalType } from "imp-core-types"
-import { isConcreteSignalType, isTypeVar } from "imp-core-types"
+import type { Graph, NodeId, SignalType } from "imp-core-types"
+import { isTypeVar } from "imp-core-types"
 import type { Registry } from "imp-registry"
-import { getNodeDefinition } from "imp-registry"
-import { catalogPortType, collectGraphSubstitution } from "./graph-analysis"
+import { getNodeDefinitions } from "imp-registry"
+import type { SelectedDefinitions } from "./graph-analysis"
+import { resolveSelections } from "./graph-analysis"
 import { applySubstitution, scopedParam } from "./substitution"
 
 export function resolveTypeArgs(
   graph: Graph,
   nodeId: NodeId,
   registry: Registry,
+  selected?: SelectedDefinitions,
 ): SignalType[] | undefined {
   const node = graph.nodes[nodeId]
   if (!node) return undefined
 
-  const definition = getNodeDefinition(registry, node.type)
+  const selections = selected ?? resolveSelections(graph, registry).selected
+  const definition =
+    selections.get(nodeId) ??
+    (getNodeDefinitions(registry, node.type).length === 1
+      ? getNodeDefinitions(registry, node.type)[0]
+      : undefined)
   if (!definition) return undefined
 
   const params = definition.typeParams ?? []
@@ -25,7 +32,8 @@ export function resolveTypeArgs(
     return node.typeArgs
   }
 
-  const subst = collectGraphSubstitution(graph, registry)
+  const { subst } = resolveSelections(graph, registry)
+
   const resolved: SignalType[] = []
 
   for (const param of params) {

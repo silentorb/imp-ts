@@ -4,6 +4,7 @@ import {
   concreteType,
   coreNodeLibrary,
   listOf,
+  setOf,
   type Graph,
   type NodeLibrary,
 } from "imp-core-types"
@@ -77,6 +78,22 @@ describe("assignable", () => {
     )
     expect(result.ok).toBe(false)
   })
+
+  test("set is assignable to collection with matching args", () => {
+    const result = assignable(
+      setOf(concreteType("string")),
+      collectionOf(concreteType("string")),
+    )
+    expect(result.ok).toBe(true)
+  })
+
+  test("set is not assignable to list", () => {
+    const result = assignable(
+      setOf(concreteType("string")),
+      listOf(concreteType("string")),
+    )
+    expect(result.ok).toBe(false)
+  })
 })
 
 describe("instantiateNodeDefinition", () => {
@@ -89,39 +106,7 @@ describe("instantiateNodeDefinition", () => {
 })
 
 describe("checkGraph", () => {
-  test("accepts filter wired to input boundary", () => {
-    const registry = loadNodeLibrary(
-      loadNodeLibrary(createRegistry(), coreNodeLibrary),
-      collectionTransformsLibrary,
-    )
-
-    const graph: Graph = {
-      nodes: {
-        in: {
-          id: "in",
-          type: "input",
-          typeArgs: [concreteType("any")],
-          inputs: {},
-        },
-        pred: { id: "pred", type: "literal", inputs: { value: true } },
-        f: { id: "f", type: "filter", inputs: {} },
-      },
-      edges: {
-        e1: {
-          from: { node: "in", port: "value" },
-          to: { node: "f", port: "collection" },
-        },
-        e2: {
-          from: { node: "pred", port: "value" },
-          to: { node: "f", port: "predicate" },
-        },
-      },
-    }
-
-    expect(checkGraph(graph, registry)).toEqual([])
-  })
-
-  test("accepts list input wired to collection filter port", () => {
+  test("accepts list input wired to filter (list overload)", () => {
     const registry = loadNodeLibrary(
       loadNodeLibrary(createRegistry(), coreNodeLibrary),
       collectionTransformsLibrary,
@@ -151,6 +136,184 @@ describe("checkGraph", () => {
     }
 
     expect(checkGraph(graph, registry)).toEqual([])
+  })
+
+  test("accepts list → filter → limit via list overload", () => {
+    const registry = loadNodeLibrary(
+      loadNodeLibrary(createRegistry(), coreNodeLibrary),
+      collectionTransformsLibrary,
+    )
+
+    const graph: Graph = {
+      nodes: {
+        in: {
+          id: "in",
+          type: "input",
+          typeArgs: [listOf(concreteType("any"))],
+          inputs: {},
+        },
+        pred: { id: "pred", type: "literal", inputs: { value: true } },
+        f: { id: "f", type: "filter", inputs: {} },
+        lim: { id: "lim", type: "limit", inputs: { count: 10 } },
+      },
+      edges: {
+        e1: {
+          from: { node: "in", port: "value" },
+          to: { node: "f", port: "collection" },
+        },
+        e2: {
+          from: { node: "pred", port: "value" },
+          to: { node: "f", port: "predicate" },
+        },
+        e3: {
+          from: { node: "f", port: "collection" },
+          to: { node: "lim", port: "collection" },
+        },
+      },
+    }
+
+    expect(checkGraph(graph, registry)).toEqual([])
+  })
+
+  test("rejects set → filter → limit", () => {
+    const registry = loadNodeLibrary(
+      loadNodeLibrary(createRegistry(), coreNodeLibrary),
+      collectionTransformsLibrary,
+    )
+
+    const graph: Graph = {
+      nodes: {
+        in: {
+          id: "in",
+          type: "input",
+          typeArgs: [setOf(concreteType("any"))],
+          inputs: {},
+        },
+        pred: { id: "pred", type: "literal", inputs: { value: true } },
+        f: { id: "f", type: "filter", inputs: {} },
+        lim: { id: "lim", type: "limit", inputs: { count: 10 } },
+      },
+      edges: {
+        e1: {
+          from: { node: "in", port: "value" },
+          to: { node: "f", port: "collection" },
+        },
+        e2: {
+          from: { node: "pred", port: "value" },
+          to: { node: "f", port: "predicate" },
+        },
+        e3: {
+          from: { node: "f", port: "collection" },
+          to: { node: "lim", port: "collection" },
+        },
+      },
+    }
+
+    const errors = checkGraph(graph, registry)
+    expect(errors.length).toBeGreaterThan(0)
+  })
+
+  test("accepts set → filter → project via set overload", () => {
+    const registry = loadNodeLibrary(
+      loadNodeLibrary(createRegistry(), coreNodeLibrary),
+      collectionTransformsLibrary,
+    )
+
+    const graph: Graph = {
+      nodes: {
+        in: {
+          id: "in",
+          type: "input",
+          typeArgs: [setOf(concreteType("any"))],
+          inputs: {},
+        },
+        pred: { id: "pred", type: "literal", inputs: { value: true } },
+        f: { id: "f", type: "filter", inputs: {} },
+        p: { id: "p", type: "project", inputs: { columns: "id" } },
+      },
+      edges: {
+        e1: {
+          from: { node: "in", port: "value" },
+          to: { node: "f", port: "collection" },
+        },
+        e2: {
+          from: { node: "pred", port: "value" },
+          to: { node: "f", port: "predicate" },
+        },
+        e3: {
+          from: { node: "f", port: "collection" },
+          to: { node: "p", port: "collection" },
+        },
+      },
+    }
+
+    expect(checkGraph(graph, registry)).toEqual([])
+  })
+
+  test("rejects collection input wired to filter", () => {
+    const registry = loadNodeLibrary(
+      loadNodeLibrary(createRegistry(), coreNodeLibrary),
+      collectionTransformsLibrary,
+    )
+
+    const graph: Graph = {
+      nodes: {
+        in: {
+          id: "in",
+          type: "input",
+          typeArgs: [collectionOf(concreteType("any"))],
+          inputs: {},
+        },
+        pred: { id: "pred", type: "literal", inputs: { value: true } },
+        f: { id: "f", type: "filter", inputs: {} },
+      },
+      edges: {
+        e1: {
+          from: { node: "in", port: "value" },
+          to: { node: "f", port: "collection" },
+        },
+        e2: {
+          from: { node: "pred", port: "value" },
+          to: { node: "f", port: "predicate" },
+        },
+      },
+    }
+
+    const errors = checkGraph(graph, registry)
+    expect(errors.some((e) => e.message.includes("no matching overload"))).toBe(true)
+  })
+
+  test("reports ambiguous filter when input is any", () => {
+    const registry = loadNodeLibrary(
+      loadNodeLibrary(createRegistry(), coreNodeLibrary),
+      collectionTransformsLibrary,
+    )
+
+    const graph: Graph = {
+      nodes: {
+        in: {
+          id: "in",
+          type: "input",
+          typeArgs: [concreteType("any")],
+          inputs: {},
+        },
+        pred: { id: "pred", type: "literal", inputs: { value: true } },
+        f: { id: "f", type: "filter", inputs: {} },
+      },
+      edges: {
+        e1: {
+          from: { node: "in", port: "value" },
+          to: { node: "f", port: "collection" },
+        },
+        e2: {
+          from: { node: "pred", port: "value" },
+          to: { node: "f", port: "predicate" },
+        },
+      },
+    }
+
+    const errors = checkGraph(graph, registry)
+    expect(errors.some((e) => e.message.includes("ambiguous overload"))).toBe(true)
   })
 
   test("rejects collection input wired to list sort port", () => {
@@ -247,14 +410,14 @@ describe("implementation dispatch", () => {
     ).toBe(false)
   })
 
-  test("resolveImplementation uses universal default", () => {
+  test("resolveImplementation uses selected list overload id", () => {
     const registry = loadNodeLibrary(
       loadNodeLibrary(createRegistry(), coreNodeLibrary),
       collectionTransformsLibrary,
     )
     const graph: Graph = {
       nodes: {
-        in: { id: "in", type: "input", typeArgs: [concreteType("any")], inputs: {} },
+        in: { id: "in", type: "input", typeArgs: [listOf(concreteType("any"))], inputs: {} },
         f: { id: "f", type: "filter", inputs: {} },
       },
       edges: {
@@ -264,7 +427,27 @@ describe("implementation dispatch", () => {
         },
       },
     }
-    expect(resolveImplementation(graph, "f", registry)).toBe("filter")
+    expect(resolveImplementation(graph, "f", registry)).toBe("filter_list")
+  })
+
+  test("resolveImplementation uses selected set overload id", () => {
+    const registry = loadNodeLibrary(
+      loadNodeLibrary(createRegistry(), coreNodeLibrary),
+      collectionTransformsLibrary,
+    )
+    const graph: Graph = {
+      nodes: {
+        in: { id: "in", type: "input", typeArgs: [setOf(concreteType("any"))], inputs: {} },
+        f: { id: "f", type: "filter", inputs: {} },
+      },
+      edges: {
+        e1: {
+          from: { node: "in", port: "value" },
+          to: { node: "f", port: "collection" },
+        },
+      },
+    }
+    expect(resolveImplementation(graph, "f", registry)).toBe("filter_set")
   })
 
   test("resolveImplementation dispatches on inferred type arg", () => {

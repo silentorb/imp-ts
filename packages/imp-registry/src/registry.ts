@@ -5,17 +5,20 @@ import type {
   NodeDefinition,
   NodeLibrary,
   NodeTypeId,
+  Port,
+  SignalType,
   TypeConstraint,
   TypeConstraintId,
   TypeConstraintLibrary,
 } from "imp-core-types"
-import { isGraphBackedDefinition } from "imp-core-types"
+import { isConcreteSignalType, isGraphBackedDefinition, isTypeVar } from "imp-core-types"
 
 export interface Registry {
   readonly libraries: readonly NodeLibrary[]
   readonly graphLibraries: readonly GraphLibrary[]
   readonly typeConstraintLibraries: readonly TypeConstraintLibrary[]
-  readonly definitions: Readonly<Record<NodeTypeId, NodeDefinition>>
+  /** Overload sets keyed by NodeTypeId. */
+  readonly definitions: Readonly<Record<NodeTypeId, readonly NodeDefinition[]>>
   readonly typeConstraints: Readonly<Record<TypeConstraintId, TypeConstraint>>
 }
 
@@ -29,20 +32,51 @@ export function createRegistry(): Registry {
   }
 }
 
+/** Canonical fingerprint for overload-signature equivalence (param ids normalized by declaration order). */
+export function signatureFingerprint(definition: NodeDefinition): string {
+  const paramIndex = new Map((definition.typeParams ?? []).map((p, i) => [p.id, i]))
+
+  function typeKey(type: SignalType): string {
+    if (isTypeVar(type)) {
+      const index = paramIndex.get(type.param)
+      return index === undefined ? `?${type.param}` : `#${index}`
+    }
+    if (!isConcreteSignalType(type)) return "?"
+    const args = type.args?.map(typeKey).join(",") ?? ""
+    return args ? `${type.id}<${args}>` : type.id
+  }
+
+  function portsKey(ports: Record<string, Port>): string {
+    return Object.keys(ports)
+      .sort()
+      .map((id) => `${id}:${typeKey(ports[id]!.type)}`)
+      .join(";")
+  }
+
+  return `in:{${portsKey(definition.inputs)}}|out:{${portsKey(definition.outputs)}}`
+}
+
 function mergeDefinitions(
   registry: Registry,
   libraryId: string,
   definitions: NodeDefinition[],
 ): Registry {
-  const merged: Record<NodeTypeId, NodeDefinition> = { ...registry.definitions }
+  const merged: Record<NodeTypeId, NodeDefinition[]> = {}
+  for (const [id, overloads] of Object.entries(registry.definitions)) {
+    merged[id] = [...overloads]
+  }
 
   for (const definition of definitions) {
-    if (definition.id in merged) {
-      throw new Error(
-        `NodeTypeId "${definition.id}" is already registered (loading library "${libraryId}")`,
-      )
+    const existing = merged[definition.id] ?? []
+    const fingerprint = signatureFingerprint(definition)
+    for (const prior of existing) {
+      if (signatureFingerprint(prior) === fingerprint) {
+        throw new Error(
+          `NodeTypeId "${definition.id}" already has an equivalent overload (loading library "${libraryId}")`,
+        )
+      }
     }
-    merged[definition.id] = definition
+    merged[definition.id] = [...existing, definition]
   }
 
   return {
@@ -100,11 +134,24 @@ export function loadTypeConstraintLibrary(
   }
 }
 
+/** Returns the overload set for `typeId`, or an empty array if unknown. */
+export function getNodeDefinitions(
+  registry: Registry,
+  typeId: NodeTypeId,
+): readonly NodeDefinition[] {
+  return registry.definitions[typeId] ?? []
+}
+
+/**
+ * Sole-definition convenience: returns the definition when the overload set has
+ * length 1; otherwise undefined (unknown or overloaded).
+ */
 export function getNodeDefinition(
   registry: Registry,
   typeId: NodeTypeId,
 ): NodeDefinition | undefined {
-  return registry.definitions[typeId]
+  const overloads = getNodeDefinitions(registry, typeId)
+  return overloads.length === 1 ? overloads[0] : undefined
 }
 
 /** @deprecated Use getNodeDefinition */
@@ -118,7 +165,7 @@ export function getTypeConstraint(
 }
 
 export function listNodeDefinitions(registry: Registry): NodeDefinition[] {
-  return Object.values(registry.definitions)
+  return Object.values(registry.definitions).flatMap((overloads) => [...overloads])
 }
 
 /** @deprecated Use listNodeDefinitions */
@@ -143,5 +190,5 @@ export function listTypeConstraintLibraries(
 }
 
 export function hasGraphBackedDefinitions(registry: Registry): boolean {
-  return Object.values(registry.definitions).some(isGraphBackedDefinition)
+  return listNodeDefinitions(registry).some(isGraphBackedDefinition)
 }

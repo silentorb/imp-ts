@@ -38,3 +38,7 @@ export function collectionOf(element: SignalType): ConcreteSignalType {
 export function listOf(element: SignalType): ConcreteSignalType {
   return concreteType("list", element)
 }
+
+export function setOf(element: SignalType): ConcreteSignalType {
+  return concreteType("set", element)
+}

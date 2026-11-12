@@ -3,7 +3,7 @@
 import type { Edge, Graph, NodeDefinition, NodeId, PortId, SignalType } from "imp-core-types"
 import { isGraphBackedDefinition } from "imp-core-types"
 import type { Registry } from "imp-registry"
-import { getNodeDefinition } from "imp-registry"
+import { getNodeDefinitions } from "imp-registry"
 import { instantiateNodeDefinition } from "imp-typecheck"
 
 export type SubgraphKey = string
@@ -21,9 +21,15 @@ function prefixId(instanceId: NodeId, innerId: NodeId): NodeId {
   return `${instanceId}::${innerId}`
 }
 
+function graphBackedDefinition(
+  registry: Registry,
+  typeId: string,
+): NodeDefinition | undefined {
+  return getNodeDefinitions(registry, typeId).find(isGraphBackedDefinition)
+}
+
 function isCompositeNode(nodeType: string, registry: Registry): boolean {
-  const def = getNodeDefinition(registry, nodeType)
-  return def !== undefined && isGraphBackedDefinition(def)
+  return graphBackedDefinition(registry, nodeType) !== undefined
 }
 
 function findCompositeNodes(graph: Graph, registry: Registry): NodeId[] {
@@ -33,7 +39,7 @@ function findCompositeNodes(graph: Graph, registry: Registry): NodeId[] {
 }
 
 function resolveDefinition(node: Graph["nodes"][string], registry: Registry): NodeDefinition {
-  const def = getNodeDefinition(registry, node.type)
+  const def = graphBackedDefinition(registry, node.type)
   if (!def?.body || !def.bindings) {
     throw new Error(`Node "${node.id}" type "${node.type}" is not a graph-backed definition`)
   }
@@ -168,8 +174,8 @@ export function buildExecutionProgram(graph: Graph, registry: Registry): Executi
   const subgraphs = new Map<SubgraphKey, Graph>()
 
   for (const node of Object.values(graph.nodes)) {
-    const def = getNodeDefinition(registry, node.type)
-    if (!def || !isGraphBackedDefinition(def)) continue
+    const def = graphBackedDefinition(registry, node.type)
+    if (!def) continue
 
     const key = subgraphKey(def.id, node.typeArgs)
     if (subgraphs.has(key)) continue
@@ -183,11 +189,13 @@ export function buildExecutionProgram(graph: Graph, registry: Registry): Executi
     subgraphs.set(key, resolved.body)
   }
 
-  for (const definition of Object.values(registry.definitions)) {
-    if (!isGraphBackedDefinition(definition) || !definition.body) continue
-    const defaultKey = subgraphKey(definition.id, undefined)
-    if (!subgraphs.has(defaultKey)) {
-      subgraphs.set(defaultKey, definition.body)
+  for (const overloads of Object.values(registry.definitions)) {
+    for (const definition of overloads) {
+      if (!isGraphBackedDefinition(definition) || !definition.body) continue
+      const defaultKey = subgraphKey(definition.id, undefined)
+      if (!subgraphs.has(defaultKey)) {
+        subgraphs.set(defaultKey, definition.body)
+      }
     }
   }
 
@@ -195,6 +203,5 @@ export function buildExecutionProgram(graph: Graph, registry: Registry): Executi
 }
 
 export function isGraphBackedNodeType(typeId: string, registry: Registry): boolean {
-  const def = getNodeDefinition(registry, typeId)
-  return def !== undefined && isGraphBackedDefinition(def)
+  return graphBackedDefinition(registry, typeId) !== undefined
 }

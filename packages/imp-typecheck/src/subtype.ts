@@ -3,6 +3,7 @@
 /** Direct subtype → immediate supertype. */
 const DIRECT_SUPERTYPE: Readonly<Record<string, string>> = {
   list: "collection",
+  set: "collection",
 }
 
 export function isSubtypeId(subId: string, superId: string): boolean {

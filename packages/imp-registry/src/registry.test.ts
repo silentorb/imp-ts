@@ -3,6 +3,7 @@ import type { NodeLibrary } from "imp-core-types"
 import {
   createRegistry,
   getNodeDefinition,
+  getNodeDefinitions,
   listLibraries,
   listNodeDefinitions,
   loadGraphLibrary,
@@ -41,7 +42,9 @@ const conflictingLibrary: NodeLibrary = {
     {
       id: "source",
       inputs: {},
-      outputs: {},
+      outputs: {
+        out: { id: "out", type: { id: "signal" } },
+      },
     },
   ],
 }
@@ -105,11 +108,47 @@ describe("imp-registry", () => {
     expect(getNodeDefinition(registry, "passthrough")?.body?.nodes.in_rows?.type).toBe("input")
   })
 
-  test("loadNodeLibrary throws on duplicate NodeTypeId", () => {
+  test("loadNodeLibrary throws on equivalent overload for same NodeTypeId", () => {
     const registry = loadNodeLibrary(createRegistry(), sourceLibrary)
     expect(() => loadNodeLibrary(registry, conflictingLibrary)).toThrow(
-      /NodeTypeId "source" is already registered/,
+      /NodeTypeId "source" already has an equivalent overload/,
     )
+  })
+
+  test("loadNodeLibrary accepts distinct overloads for the same NodeTypeId", () => {
+    const listFilter: NodeLibrary = {
+      id: "example.filter-list",
+      definitions: [
+        {
+          id: "filter",
+          typeParams: [{ id: "T" }],
+          inputs: {
+            collection: { id: "collection", type: { id: "list", args: [{ param: "T" }] } },
+          },
+          outputs: {
+            collection: { id: "collection", type: { id: "list", args: [{ param: "T" }] } },
+          },
+        },
+      ],
+    }
+    const setFilter: NodeLibrary = {
+      id: "example.filter-set",
+      definitions: [
+        {
+          id: "filter",
+          typeParams: [{ id: "T" }],
+          inputs: {
+            collection: { id: "collection", type: { id: "set", args: [{ param: "T" }] } },
+          },
+          outputs: {
+            collection: { id: "collection", type: { id: "set", args: [{ param: "T" }] } },
+          },
+        },
+      ],
+    }
+    const registry = loadNodeLibrary(loadNodeLibrary(createRegistry(), listFilter), setFilter)
+    expect(getNodeDefinition(registry, "filter")).toBeUndefined()
+    expect(getNodeDefinitions(registry, "filter")).toHaveLength(2)
   })
 
   test("loadNodeLibrary does not mutate the previous registry", () => {

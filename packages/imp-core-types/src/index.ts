@@ -30,6 +30,7 @@ export {
   typeVar,
   collectionOf,
   listOf,
+  setOf,
 } from "./signal-type"
 
 export type {

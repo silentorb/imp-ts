@@ -16,7 +16,7 @@ import {
   isUniversalImplementation,
 } from "imp-core-types"
 import type { Registry } from "imp-registry"
-import { getNodeDefinition } from "imp-registry"
+import { resolveSelections } from "./graph-analysis"
 import { resolveTypeArgs } from "./resolve-type-args"
 import { isSubtypeId } from "./subtype"
 
@@ -62,9 +62,10 @@ export function resolveImplementation(
     return { message: `unknown node "${nodeId}"` }
   }
 
-  const definition = getNodeDefinition(registry, node.type)
+  const { selected: selectedDefs } = resolveSelections(graph, registry)
+  const definition = selectedDefs.get(nodeId)
   if (!definition) {
-    return { nodeId, message: `unknown NodeDefinition "${node.type}"` }
+    return { nodeId, message: `unknown or unresolved NodeDefinition "${node.type}"` }
   }
 
   if (isGraphBackedDefinition(definition)) {
@@ -81,7 +82,7 @@ export function resolveImplementation(
     return { nodeId, message: "invalid NodeDefinition implementation shape" }
   }
 
-  const typeArgs = resolveTypeArgs(graph, nodeId, registry)
+  const typeArgs = resolveTypeArgs(graph, nodeId, registry, selectedDefs)
   if (!typeArgs) {
     return {
       nodeId,
@@ -90,8 +91,8 @@ export function resolveImplementation(
   }
 
   const paramIndex = implementation.paramIndex ?? 0
-  const selected = typeArgs[paramIndex]
-  if (!selected) {
+  const matchedArg = typeArgs[paramIndex]
+  if (!matchedArg) {
     return {
       nodeId,
       message: `dispatch paramIndex ${paramIndex} out of range (${typeArgs.length} type args)`,
@@ -99,7 +100,7 @@ export function resolveImplementation(
   }
 
   for (const caseEntry of implementation.cases) {
-    if (signalTypeMatches(caseEntry.match, selected)) {
+    if (signalTypeMatches(caseEntry.match, matchedArg)) {
       return caseEntry.implementation
     }
   }

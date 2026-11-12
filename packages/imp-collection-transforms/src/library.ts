@@ -5,16 +5,16 @@ import {
   type NodeLibrary,
   type Port,
   type SignalType,
-  collectionOf,
   concreteType,
   listOf,
+  setOf,
   typeVar,
   universalImplementation,
 } from "imp-core-types"
 
 const T = typeVar("T")
-const collectionT = collectionOf(T)
 const listT = listOf(T)
+const setT = setOf(T)
 const boolean = concreteType("boolean")
 const string = concreteType("string")
 const number = concreteType("number")
@@ -28,8 +28,9 @@ function port(id: string, type: SignalType, defaultValue?: Port["defaultValue"])
     : { id, type, defaultValue }
 }
 
-function containerPreserving(
+function kindPreserving(
   id: string,
+  implementationId: string,
   containerType: SignalType,
   extraInputs: Record<string, Port>,
 ): NodeDefinition {
@@ -37,39 +38,52 @@ function containerPreserving(
   return {
     id,
     typeParams: collectionTypeParam,
-    implementation: universalImplementation(id),
+    implementation: universalImplementation(implementationId),
     inputs: { collection: collectionPort, ...extraInputs },
     outputs: { collection: port("collection", containerType) },
   }
 }
 
+function listAndSetOverloads(
+  id: string,
+  extraInputs: Record<string, Port>,
+  extraInputsForSet?: Record<string, Port>,
+): NodeDefinition[] {
+  return [
+    kindPreserving(id, `${id}_list`, listT, extraInputs),
+    kindPreserving(id, `${id}_set`, setT, extraInputsForSet ?? extraInputs),
+  ]
+}
+
 export const collectionTransformsLibrary: NodeLibrary = {
   id: "imp.collection.transforms",
   definitions: [
-    containerPreserving("filter", collectionT, {
+    ...listAndSetOverloads("filter", {
       predicate: port("predicate", boolean),
     }),
-    containerPreserving("except", collectionT, {
-      exclude: port("exclude", collectionT),
+    ...listAndSetOverloads("except", {
+      exclude: port("exclude", listT),
+    }, {
+      exclude: port("exclude", setT),
     }),
-    containerPreserving("sort", listT, {
+    kindPreserving("sort", "sort", listT, {
       column: port("column", string),
       direction: port("direction", string, "asc"),
     }),
-    containerPreserving("limit", listT, {
+    kindPreserving("limit", "limit", listT, {
       count: port("count", number),
     }),
-    containerPreserving("offset", listT, {
+    kindPreserving("offset", "offset", listT, {
       count: port("count", number),
     }),
-    containerPreserving("project", collectionT, {
+    ...listAndSetOverloads("project", {
       columns: port("columns", string),
     }),
-    containerPreserving("group", listT, {
+    kindPreserving("group", "group", listT, {
       column: port("column", string),
       direction: port("direction", string, "asc"),
     }),
-    containerPreserving("search", collectionT, {
+    ...listAndSetOverloads("search", {
       query: port("query", string),
     }),
     {

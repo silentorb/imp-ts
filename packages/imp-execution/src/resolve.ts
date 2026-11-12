@@ -11,7 +11,7 @@ import type {
   PrimitiveValue,
 } from "imp-core-types";
 import type { Registry } from "imp-registry";
-import { getNodeDefinition } from "imp-registry";
+import { getNodeDefinitions } from "imp-registry";
 
 export type EdgeTargetKey = `${NodeId}\0${PortId}`;
 
@@ -42,11 +42,12 @@ export function requireNode(graph: Graph, nodeId: NodeId): Node {
 }
 
 export function requireNodeDefinition(registry: Registry, typeId: string): NodeDefinition {
-  const definition = getNodeDefinition(registry, typeId);
-  if (definition == null) {
+  const overloads = getNodeDefinitions(registry, typeId);
+  if (overloads.length === 0) {
     throw new Error(`Unknown node type "${typeId}"`);
   }
-  return definition;
+  // Overloads share port names/defaults; first signature is enough for defaultValue lookup.
+  return overloads[0]!;
 }
 
 /** @deprecated Use requireNodeDefinition */

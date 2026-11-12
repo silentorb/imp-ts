@@ -2,32 +2,53 @@
 
 import type { Graph } from "imp-core-types"
 import type { Registry } from "imp-registry"
-import { getNodeDefinition } from "imp-registry"
+import { getNodeDefinitions } from "imp-registry"
 import {
-  catalogPortType,
-  collectGraphSubstitution,
-  effectiveNodeDefinition,
+  candidateSurvives,
+  catalogPortTypeFromDefinition,
+  effectiveDefinition,
   resolvePortType,
+  resolveSelections,
 } from "./graph-analysis"
-import { type Substitution, type TypeCheckError, containsTypeVar } from "./substitution"
+import { type TypeCheckError, containsTypeVar } from "./substitution"
 import { assignable } from "./assignable"
 import { formatType } from "./unify"
 import { checkTypeParamBounds } from "./check-type-param-bounds"
 
-export function checkGraph(
-  graph: Graph,
-  registry: Registry,
-): TypeCheckError[] {
+export function checkGraph(graph: Graph, registry: Registry): TypeCheckError[] {
   const errors: TypeCheckError[] = []
-  let subst: Substitution = new Map()
+  const { selected, subst, unknownTypes } = resolveSelections(graph, registry)
+
+  for (const nodeId of unknownTypes) {
+    const node = graph.nodes[nodeId]!
+    errors.push({ nodeId, message: `unknown NodeDefinition "${node.type}"` })
+  }
 
   for (const node of Object.values(graph.nodes)) {
-    const definition = getNodeDefinition(registry, node.type)
-    if (!definition) {
-      errors.push({ nodeId: node.id, message: `unknown NodeDefinition "${node.type}"` })
+    if (unknownTypes.includes(node.id)) continue
+    const overloads = getNodeDefinitions(registry, node.type)
+    if (overloads.length === 0) continue
+
+    if (!selected.has(node.id)) {
+      const survivors = overloads.filter(
+        (candidate) =>
+          candidateSurvives(graph, node.id, candidate, registry, selected, subst).ok,
+      )
+      if (survivors.length === 0) {
+        errors.push({
+          nodeId: node.id,
+          message: `no matching overload for "${node.type}"`,
+        })
+      } else {
+        errors.push({
+          nodeId: node.id,
+          message: `ambiguous overload for "${node.type}" (${survivors.length} candidates)`,
+        })
+      }
       continue
     }
 
+    const definition = selected.get(node.id)!
     if (node.typeArgs) {
       const expected = definition.typeParams?.length ?? 0
       if (node.typeArgs.length !== expected) {
@@ -38,8 +59,7 @@ export function checkGraph(
       }
     }
 
-    const effective = effectiveNodeDefinition(node, registry) ?? definition
-
+    const effective = effectiveDefinition(node, definition)
     for (const [portId, port] of Object.entries(effective.inputs)) {
       const hasEdge = Object.values(graph.edges).some(
         (edge) => edge.to.node === node.id && edge.to.port === portId,
@@ -56,15 +76,23 @@ export function checkGraph(
     }
   }
 
-  subst = collectGraphSubstitution(graph, registry)
-
+  let edgeSubst = subst
   for (const edge of Object.values(graph.edges)) {
     const fromNode = graph.nodes[edge.from.node]
     const toNode = graph.nodes[edge.to.node]
     if (!fromNode || !toNode) continue
 
-    const outputType = catalogPortType(fromNode, registry, edge.from.port, "output")
-    const inputType = catalogPortType(toNode, registry, edge.to.port, "input")
+    const fromDef = selected.get(fromNode.id)
+    const toDef = selected.get(toNode.id)
+    if (!fromDef || !toDef) continue
+
+    const outputType = catalogPortTypeFromDefinition(
+      fromNode,
+      fromDef,
+      edge.from.port,
+      "output",
+    )
+    const inputType = catalogPortTypeFromDefinition(toNode, toDef, edge.to.port, "input")
 
     if (!outputType) {
       errors.push({
@@ -83,7 +111,7 @@ export function checkGraph(
       continue
     }
 
-    const result = assignable(outputType, inputType, subst)
+    const result = assignable(outputType, inputType, edgeSubst)
     if (!result.ok) {
       errors.push({
         nodeId: edge.to.node,
@@ -91,17 +119,23 @@ export function checkGraph(
         message: result.message,
       })
     } else {
-      subst = result.subst
+      edgeSubst = result.subst
     }
   }
 
   for (const node of Object.values(graph.nodes)) {
-    const definition =
-      effectiveNodeDefinition(node, registry) ?? getNodeDefinition(registry, node.type)
+    const definition = selected.get(node.id)
     if (!definition) continue
 
     for (const [portId] of Object.entries(definition.outputs)) {
-      const resolved = resolvePortType(graph, node.id, portId, registry, new Map(subst))
+      const resolved = resolvePortType(
+        graph,
+        node.id,
+        portId,
+        registry,
+        new Map(edgeSubst),
+        selected,
+      )
       if (resolved && containsTypeVar(resolved)) {
         errors.push({
           nodeId: node.id,
@@ -116,7 +150,14 @@ export function checkGraph(
         (e) => e.to.node === node.id && e.to.port === portId,
       )
       if (!hasEdge) continue
-      const resolved = resolvePortType(graph, node.id, portId, registry, new Map(subst))
+      const resolved = resolvePortType(
+        graph,
+        node.id,
+        portId,
+        registry,
+        new Map(edgeSubst),
+        selected,
+      )
       if (resolved && containsTypeVar(resolved)) {
         errors.push({
           nodeId: node.id,
@@ -127,7 +168,7 @@ export function checkGraph(
     }
   }
 
-  errors.push(...checkTypeParamBounds(graph, registry))
+  errors.push(...checkTypeParamBounds(graph, registry, selected))
 
   return errors
 }

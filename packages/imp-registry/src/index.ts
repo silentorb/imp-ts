@@ -4,6 +4,7 @@ export {
   loadGraphLibrary,
   loadLibrary,
   loadTypeConstraintLibrary,
+  getNodeDefinitions,
   getNodeDefinition,
   getNodeType,
   getTypeConstraint,
@@ -14,6 +15,7 @@ export {
   listGraphLibraries,
   listTypeConstraintLibraries,
   hasGraphBackedDefinitions,
+  signatureFingerprint,
 } from "./registry"
 
 export type { Registry } from "./registry"

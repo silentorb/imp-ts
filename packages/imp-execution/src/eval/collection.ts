@@ -2,7 +2,7 @@
 
 import type { BoundaryBindings, Graph, NodeId, PortId } from "imp-core-types";
 import type { Registry } from "imp-registry";
-import { getNodeDefinition } from "imp-registry";
+import { getNodeDefinitions } from "imp-registry";
 import type { ExecutionProgram } from "imp-graph-resolve";
 import { isGraphBackedNodeType, subgraphKey } from "imp-graph-resolve";
 import type { ExecutionHost, ExecutionRow } from "../host";
@@ -188,7 +188,9 @@ async function evalCompositeCollectionPort(
   }
 
   const instance = requireNode(ctx.graph, instanceId);
-  const definition = getNodeDefinition(ctx.registry, instance.type);
+  const definition = getNodeDefinitions(ctx.registry, instance.type).find(
+    (entry) => entry.bindings && entry.body,
+  );
   if (!definition?.bindings || !definition.body) {
     throw new Error(`Node "${instanceId}" is not a graph-backed definition`);
   }

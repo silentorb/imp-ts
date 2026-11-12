@@ -3,7 +3,7 @@
 import type { Graph, NodeDefinition, PortId, SignalType } from "imp-core-types"
 import { isGraphBackedDefinition } from "imp-core-types"
 import type { Registry } from "imp-registry"
-import { getNodeDefinition } from "imp-registry"
+import { getNodeDefinitions, listNodeDefinitions } from "imp-registry"
 import { catalogPortType, resolvePortType } from "./graph-analysis"
 import { type Substitution, type TypeCheckError, scopeSignalType } from "./substitution"
 import { unify } from "./unify"
@@ -168,8 +168,8 @@ export function checkDefinition(
 function collectDefinitionRefs(body: Graph, registry: Registry): string[] {
   const refs: string[] = []
   for (const node of Object.values(body.nodes)) {
-    const def = getNodeDefinition(registry, node.type)
-    if (def && isGraphBackedDefinition(def)) {
+    const overloads = getNodeDefinitions(registry, node.type)
+    if (overloads.some(isGraphBackedDefinition)) {
       refs.push(node.type)
     }
   }
@@ -186,8 +186,8 @@ function detectDefinitionCycle(
   if (visited.has(startId)) return false
 
   visiting.add(startId)
-  const def = getNodeDefinition(registry, startId)
-  if (def?.body) {
+  for (const def of getNodeDefinitions(registry, startId)) {
+    if (!def.body) continue
     for (const ref of collectDefinitionRefs(def.body, registry)) {
       if (detectDefinitionCycle(ref, registry, visiting, visited)) {
         return true
@@ -202,7 +202,7 @@ function detectDefinitionCycle(
 export function checkGraphDefinitions(registry: Registry): TypeCheckError[] {
   const errors: TypeCheckError[] = []
 
-  for (const definition of Object.values(registry.definitions)) {
+  for (const definition of listNodeDefinitions(registry)) {
     if (!isGraphBackedDefinition(definition)) continue
 
     errors.push(...checkDefinition(definition, registry))

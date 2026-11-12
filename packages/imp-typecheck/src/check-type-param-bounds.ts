@@ -3,8 +3,9 @@
 import type { Graph, SignalType, TypeConstraint } from "imp-core-types"
 import { isConcreteSignalType } from "imp-core-types"
 import type { Registry } from "imp-registry"
-import { getNodeDefinition, getTypeConstraint } from "imp-registry"
-import { effectiveNodeDefinition } from "./graph-analysis"
+import { getTypeConstraint } from "imp-registry"
+import type { SelectedDefinitions } from "./graph-analysis"
+import { resolveSelections } from "./graph-analysis"
 import { resolveTypeArgs } from "./resolve-type-args"
 import { signalTypeMatches } from "./resolve-implementation"
 import { isAnyType, type TypeCheckError } from "./substitution"
@@ -24,14 +25,16 @@ function satisfiesConstraint(
 export function checkTypeParamBounds(
   graph: Graph,
   registry: Registry,
+  selected?: SelectedDefinitions,
 ): TypeCheckError[] {
   const errors: TypeCheckError[] = []
+  const selections = selected ?? resolveSelections(graph, registry).selected
 
   for (const node of Object.values(graph.nodes)) {
-    const definition = getNodeDefinition(registry, node.type)
+    const definition = selections.get(node.id)
     if (!definition?.typeParams?.length) continue
 
-    const typeArgs = resolveTypeArgs(graph, node.id, registry)
+    const typeArgs = resolveTypeArgs(graph, node.id, registry, selections)
     if (!typeArgs) continue
 
     for (let index = 0; index < definition.typeParams.length; index++) {
