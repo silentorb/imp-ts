@@ -20,14 +20,16 @@ export interface TypeParam {
 }
 
 /**
- * One port template: identity + signal type + optional default.
+ * One port template: identity + signal type + optional default + optional variadic.
  * Used on catalog NodeType inputs/outputs — not on graph Node instances.
  * Omit `defaultValue` → required input; set → optional with that fallback.
+ * `variadic: true` → multi-edge fan-in; `type` is the element type.
  */
 export interface Port {
   id: PortId
   type: SignalType
   defaultValue?: PrimitiveValue
+  variadic?: boolean
 }
 
 /** Container of port templates — used for NodeType.inputs and NodeType.outputs. */
@@ -52,6 +54,8 @@ export interface Node {
 export interface Edge {
   from: PortReference
   to: PortReference
+  /** Required and unique among edges into the same variadic target. */
+  order?: number
 }
 
 export interface Graph {

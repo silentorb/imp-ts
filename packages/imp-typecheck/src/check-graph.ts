@@ -61,17 +61,57 @@ export function checkGraph(graph: Graph, registry: Registry): TypeCheckError[] {
 
     const effective = effectiveDefinition(node, definition)
     for (const [portId, port] of Object.entries(effective.inputs)) {
-      const hasEdge = Object.values(graph.edges).some(
-        (edge) => edge.to.node === node.id && edge.to.port === portId,
+      const inbound = Object.entries(graph.edges).filter(
+        ([, edge]) => edge.to.node === node.id && edge.to.port === portId,
       )
+      const hasEdge = inbound.length > 0
       const hasLiteral = node.inputs[portId] !== undefined
       const hasDefault = port.defaultValue !== undefined
-      if (!hasEdge && !hasLiteral && !hasDefault) {
-        errors.push({
-          nodeId: node.id,
-          portId,
-          message: `required input port "${portId}" is unsatisfied`,
-        })
+
+      if (port.variadic) {
+        if (inbound.length === 0 && !hasDefault) {
+          errors.push({
+            nodeId: node.id,
+            portId,
+            message: `required input port "${portId}" is unsatisfied`,
+          })
+        }
+        const orders = new Map<number, string>()
+        for (const [edgeId, edge] of inbound) {
+          if (edge.order === undefined) {
+            errors.push({
+              nodeId: node.id,
+              portId,
+              message: `variadic input "${portId}" requires Edge.order on edge "${edgeId}"`,
+            })
+            continue
+          }
+          const prior = orders.get(edge.order)
+          if (prior !== undefined) {
+            errors.push({
+              nodeId: node.id,
+              portId,
+              message: `duplicate Edge.order ${edge.order} on variadic input "${portId}" (edges "${prior}" and "${edgeId}")`,
+            })
+          } else {
+            orders.set(edge.order, edgeId)
+          }
+        }
+      } else {
+        if (inbound.length > 1) {
+          errors.push({
+            nodeId: node.id,
+            portId,
+            message: `multiple edges target non-variadic input "${portId}"`,
+          })
+        }
+        if (!hasEdge && !hasLiteral && !hasDefault) {
+          errors.push({
+            nodeId: node.id,
+            portId,
+            message: `required input port "${portId}" is unsatisfied`,
+          })
+        }
       }
     }
   }
@@ -111,6 +151,7 @@ export function checkGraph(graph: Graph, registry: Registry): TypeCheckError[] {
       continue
     }
 
+    // Variadic catalog type is the element type; assignability is still element → element.
     const result = assignable(outputType, inputType, edgeSubst)
     if (!result.ok) {
       errors.push({

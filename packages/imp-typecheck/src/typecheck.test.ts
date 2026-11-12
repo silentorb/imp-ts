@@ -711,3 +711,139 @@ describe("checkDefinition", () => {
     expect(checkDefinition(graphLibrary.definitions[0]!, registry)).toEqual([])
   })
 })
+
+describe("variadic ports", () => {
+  function transformsRegistry() {
+    return loadNodeLibrary(
+      loadNodeLibrary(createRegistry(), coreNodeLibrary),
+      collectionTransformsLibrary,
+    )
+  }
+
+  test("accepts N-ary and with unique Edge.order", () => {
+    const graph: Graph = {
+      nodes: {
+        a: { id: "a", type: "literal", inputs: { value: true } },
+        b: { id: "b", type: "literal", inputs: { value: false } },
+        c: { id: "c", type: "literal", inputs: { value: true } },
+        and1: { id: "and1", type: "and", inputs: {} },
+      },
+      edges: {
+        e0: {
+          from: { node: "a", port: "value" },
+          to: { node: "and1", port: "operands" },
+          order: 0,
+        },
+        e1: {
+          from: { node: "b", port: "value" },
+          to: { node: "and1", port: "operands" },
+          order: 1,
+        },
+        e2: {
+          from: { node: "c", port: "value" },
+          to: { node: "and1", port: "operands" },
+          order: 2,
+        },
+      },
+    }
+    expect(checkGraph(graph, transformsRegistry())).toEqual([])
+  })
+
+  test("rejects missing Edge.order on variadic target", () => {
+    const graph: Graph = {
+      nodes: {
+        a: { id: "a", type: "literal", inputs: { value: true } },
+        and1: { id: "and1", type: "and", inputs: {} },
+      },
+      edges: {
+        e0: {
+          from: { node: "a", port: "value" },
+          to: { node: "and1", port: "operands" },
+        },
+      },
+    }
+    const errors = checkGraph(graph, transformsRegistry())
+    expect(errors.some((e) => e.message.includes("requires Edge.order"))).toBe(true)
+  })
+
+  test("rejects duplicate Edge.order on same variadic target", () => {
+    const graph: Graph = {
+      nodes: {
+        a: { id: "a", type: "literal", inputs: { value: true } },
+        b: { id: "b", type: "literal", inputs: { value: false } },
+        and1: { id: "and1", type: "and", inputs: {} },
+      },
+      edges: {
+        e0: {
+          from: { node: "a", port: "value" },
+          to: { node: "and1", port: "operands" },
+          order: 0,
+        },
+        e1: {
+          from: { node: "b", port: "value" },
+          to: { node: "and1", port: "operands" },
+          order: 0,
+        },
+      },
+    }
+    const errors = checkGraph(graph, transformsRegistry())
+    expect(errors.some((e) => e.message.includes("duplicate Edge.order"))).toBe(true)
+  })
+
+  test("rejects multiple edges on non-variadic input", () => {
+    const graph: Graph = {
+      nodes: {
+        a: { id: "a", type: "literal", inputs: { value: true } },
+        b: { id: "b", type: "literal", inputs: { value: false } },
+        not1: { id: "not1", type: "not", inputs: {} },
+      },
+      edges: {
+        e0: {
+          from: { node: "a", port: "value" },
+          to: { node: "not1", port: "value" },
+        },
+        e1: {
+          from: { node: "b", port: "value" },
+          to: { node: "not1", port: "value" },
+        },
+      },
+    }
+    const errors = checkGraph(graph, transformsRegistry())
+    expect(errors.some((e) => e.message.includes("non-variadic"))).toBe(true)
+  })
+
+  test("checkDefinition requires list boundary for variadic input", () => {
+    const definition = {
+      id: "fold_ops",
+      inputs: {
+        operands: {
+          id: "operands",
+          type: concreteType("boolean"),
+          variadic: true,
+        },
+      },
+      outputs: {
+        value: { id: "value", type: concreteType("boolean") },
+      },
+      bindings: {
+        inputs: { operands: "in_ops" },
+        outputs: { value: "out_val" },
+      },
+      body: {
+        nodes: {
+          in_ops: {
+            id: "in_ops",
+            type: "input",
+            typeArgs: [listOf(concreteType("boolean"))],
+            inputs: {},
+          },
+          out_val: { id: "out_val", type: "output", inputs: {} },
+        },
+        edges: {},
+      },
+    }
+    const registry = loadNodeLibrary(createRegistry(), coreNodeLibrary)
+    const errors = checkDefinition(definition, registry)
+    expect(errors.filter((e) => e.nodeId === "in_ops")).toEqual([])
+  })
+})

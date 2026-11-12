@@ -1,7 +1,7 @@
 /** Graph-backed definition validation. Spec: imp-spec/docs/packages/imp-typecheck/type-system.md */
 
 import type { Graph, NodeDefinition, PortId, SignalType } from "imp-core-types"
-import { isGraphBackedDefinition } from "imp-core-types"
+import { isGraphBackedDefinition, listOf } from "imp-core-types"
 import type { Registry } from "imp-registry"
 import { getNodeDefinitions, listNodeDefinitions } from "imp-registry"
 import { catalogPortType, resolvePortType } from "./graph-analysis"
@@ -109,8 +109,11 @@ export function checkDefinition(
     }
     const boundaryType = resolvePortType(body, boundaryId, "value", registry, subst)
     if (!boundaryType) continue
-    const expected = scopeDefinitionPort(definition.inputs[portId]!.type, definition.id)
-    const result = unify(boundaryType, expected, subst)
+    const declared = definition.inputs[portId]!
+    const expectedType = declared.variadic
+      ? listOf(scopeDefinitionPort(declared.type, definition.id))
+      : scopeDefinitionPort(declared.type, definition.id)
+    const result = unify(boundaryType, expectedType, subst)
     if (!result.ok) {
       errors.push({
         definitionId: definition.id,

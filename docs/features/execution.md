@@ -18,8 +18,8 @@ Pair with **`imp-sql`** (Imp → SQL Translator) as an alternative read path for
 
 Must execute graphs using:
 
-- `imp.core` boundary nodes (`input`, `output`)
-- `imp.collection.transforms` (`filter`, `sort`, `limit`, `offset`, `project`, `except`, `search`, predicates including `contains`, …)
+- `imp.core` boundary nodes (`input`, `output`, `pack`)
+- `imp.collection.transforms` (`filter`, `sort`, `limit`, `offset`, `project`, `except`, `search`, predicates including variadic `and` / `or`, `contains`, …)
 - `imp.pathing` (`traverse` — single hop)
 
 Must **not** revive imp-kotlin language-layer execution (functions, inlining, full type interpreter).

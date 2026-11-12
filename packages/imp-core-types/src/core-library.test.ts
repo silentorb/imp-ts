@@ -5,7 +5,7 @@ import { coreNodeLibrary } from "./core-library"
 describe("coreNodeLibrary", () => {
   test("has expected library id and boundary definitions", () => {
     expect(coreNodeLibrary.id).toBe("imp.core")
-    expect(coreNodeLibrary.definitions).toHaveLength(3)
+    expect(coreNodeLibrary.definitions).toHaveLength(4)
     const input = coreNodeLibrary.definitions.find((d) => d.id === "input")
     expect(input).toEqual({
       id: "input",
@@ -30,11 +30,22 @@ describe("coreNodeLibrary", () => {
       type: { id: "string" },
       defaultValue: "",
     })
+    const pack = coreNodeLibrary.definitions.find((d) => d.id === "pack")
+    expect(pack?.inputs.items).toEqual({
+      id: "items",
+      type: { param: "T" },
+      variadic: true,
+    })
+    expect(pack?.outputs.list).toEqual({
+      id: "list",
+      type: { id: "list", args: [{ param: "T" }] },
+    })
   })
 
   test("loads into registry", () => {
     const registry = loadNodeLibrary(createRegistry(), coreNodeLibrary)
     expect(getNodeDefinition(registry, "input")?.id).toBe("input")
     expect(getNodeDefinition(registry, "output")?.id).toBe("output")
+    expect(getNodeDefinition(registry, "pack")?.id).toBe("pack")
   })
 })

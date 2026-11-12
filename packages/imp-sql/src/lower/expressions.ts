@@ -8,6 +8,7 @@ import {
   requireNode,
   requireNodeType,
   resolveInput,
+  resolveVariadicInputs,
   type EdgeTargetKey,
 } from "../resolve"
 import type { DialectSqlOps } from "../dialect"
@@ -25,7 +26,7 @@ export interface LowerContext {
   registry: Registry
   schema: RelationalSchema
   dialect: DialectSqlOps
-  edgesByTarget: Map<EdgeTargetKey, Edge>
+  edgesByTarget: Map<EdgeTargetKey, Edge[]>
   visiting: Set<NodeId>
 }
 
@@ -41,6 +42,14 @@ function requireString(value: PrimitiveValue, label: string): string {
     throw new Error(`${label} must be a string, got ${typeof value}`)
   }
   return value
+}
+
+function resolvePortExprFromWire(
+  ctx: LowerContext,
+  eb: Eb,
+  wire: { kind: "wire"; from: { node: NodeId; port: PortId } },
+): Expression<unknown> {
+  return lowerExprNode(ctx, eb, wire.from.node, wire.from.port)
 }
 
 function resolvePortExpr(
@@ -195,10 +204,28 @@ export function lowerExprNode(
         const { left, right } = comparisonOperands(ctx, eb, nodeId)
         return eb(left, ">", right)
       }
-      case "and":
-        return sql`(${resolvePortExpr(ctx, eb, nodeId, "left")} and ${resolvePortExpr(ctx, eb, nodeId, "right")})`
-      case "or":
-        return sql`(${resolvePortExpr(ctx, eb, nodeId, "left")} or ${resolvePortExpr(ctx, eb, nodeId, "right")})`
+      case "and": {
+        const wires = resolveVariadicInputs(ctx.edgesByTarget, nodeId, "operands")
+        if (wires.length === 0) {
+          throw new Error(`and on "${nodeId}" requires at least one operand`)
+        }
+        let expr = resolvePortExprFromWire(ctx, eb, wires[0]!)
+        for (let i = 1; i < wires.length; i++) {
+          expr = sql`(${expr} and ${resolvePortExprFromWire(ctx, eb, wires[i]!)})`
+        }
+        return expr
+      }
+      case "or": {
+        const wires = resolveVariadicInputs(ctx.edgesByTarget, nodeId, "operands")
+        if (wires.length === 0) {
+          throw new Error(`or on "${nodeId}" requires at least one operand`)
+        }
+        let expr = resolvePortExprFromWire(ctx, eb, wires[0]!)
+        for (let i = 1; i < wires.length; i++) {
+          expr = sql`(${expr} or ${resolvePortExprFromWire(ctx, eb, wires[i]!)})`
+        }
+        return expr
+      }
       case "not":
         return sql`(not ${resolvePortExpr(ctx, eb, nodeId, "value")})`
       default:

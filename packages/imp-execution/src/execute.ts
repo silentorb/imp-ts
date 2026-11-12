@@ -69,7 +69,8 @@ export async function executeGraph(
   if (sinkNode.type === "output" && sink.port === "value") {
     rows = await evalCollectionPort(ctx, sink.node, "value");
   } else {
-    const resolved = edgesByTarget.get(`${sink.node}\0${sink.port}` as `${string}\0${string}`);
+    const resolvedEdges = edgesByTarget.get(`${sink.node}\0${sink.port}` as `${string}\0${string}`);
+    const resolved = resolvedEdges?.[0];
     if (resolved == null) {
       throw new Error(`Sink "${sink.node}.${sink.port}" must be a wired collection`);
     }

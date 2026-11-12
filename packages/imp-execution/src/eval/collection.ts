@@ -10,6 +10,7 @@ import {
   indexEdgesByTarget,
   requireNode,
   resolveInput,
+  resolveVariadicInputs,
   type EdgeTargetKey,
 } from "../resolve";
 
@@ -22,7 +23,7 @@ export interface EvalContext {
   graph: Graph;
   registry: Registry;
   host: ExecutionHost;
-  edgesByTarget: Map<EdgeTargetKey, import("imp-core-types").Edge>;
+  edgesByTarget: Map<EdgeTargetKey, import("imp-core-types").Edge[]>;
   visiting: Set<NodeId>;
   sourceNodeId: NodeId;
   edgeType?: (association: string, direction: number) => string;
@@ -113,6 +114,9 @@ function evalExpression(ctx: EvalContext, nodeId: NodeId, portId: PortId): unkno
 function evalPredicateValue(ctx: EvalContext, nodeId: NodeId): unknown {
   const node = requireNode(ctx.graph, nodeId);
   switch (node.type) {
+    case "literal":
+    case "parameter":
+      return node.inputs?.value;
     case "equals":
       return (
         evalExpression(ctx, nodeId, "left") === evalExpression(ctx, nodeId, "right")
@@ -140,20 +144,18 @@ function evalPredicateValue(ctx: EvalContext, nodeId: NodeId): unknown {
       return haystack.toLowerCase().includes(needle.toLowerCase());
     }
     case "and": {
-      const left = resolveInput(ctx.graph, ctx.registry, ctx.edgesByTarget, nodeId, "left");
-      const right = resolveInput(ctx.graph, ctx.registry, ctx.edgesByTarget, nodeId, "right");
-      if (left.kind !== "wire" || right.kind !== "wire") {
-        throw new Error(`and on "${nodeId}" requires wired boolean inputs`);
+      const wires = resolveVariadicInputs(ctx.edgesByTarget, nodeId, "operands");
+      if (wires.length === 0) {
+        throw new Error(`and on "${nodeId}" requires at least one operand`);
       }
-      return evalPredicate(ctx, left.from.node) && evalPredicate(ctx, right.from.node);
+      return wires.every((wire) => evalPredicate(ctx, wire.from.node));
     }
     case "or": {
-      const left = resolveInput(ctx.graph, ctx.registry, ctx.edgesByTarget, nodeId, "left");
-      const right = resolveInput(ctx.graph, ctx.registry, ctx.edgesByTarget, nodeId, "right");
-      if (left.kind !== "wire" || right.kind !== "wire") {
-        throw new Error(`or on "${nodeId}" requires wired boolean inputs`);
+      const wires = resolveVariadicInputs(ctx.edgesByTarget, nodeId, "operands");
+      if (wires.length === 0) {
+        throw new Error(`or on "${nodeId}" requires at least one operand`);
       }
-      return evalPredicate(ctx, left.from.node) || evalPredicate(ctx, right.from.node);
+      return wires.some((wire) => evalPredicate(ctx, wire.from.node));
     }
     case "not": {
       const inner = resolveInput(ctx.graph, ctx.registry, ctx.edgesByTarget, nodeId, "value");
@@ -277,6 +279,23 @@ export async function evalCollectionPort(
           const inputPort = inputPortForBoundNode(ctx.compositeFrame.bindings, nodeId);
           if (inputPort) {
             const parent = ctx.parentContext;
+            const instance = requireNode(parent.graph, ctx.compositeFrame.instanceId);
+            const declared = getNodeDefinitions(parent.registry, instance.type)
+              .find((entry) => entry.bindings)?.inputs[inputPort];
+            if (declared?.variadic) {
+              const wires = resolveVariadicInputs(
+                parent.edgesByTarget,
+                ctx.compositeFrame.instanceId,
+                inputPort,
+              );
+              const rows: ExecutionRow[] = [];
+              for (const wire of wires) {
+                rows.push(
+                  ...(await evalCollectionPort(parent, wire.from.node, wire.from.port)),
+                );
+              }
+              return rows;
+            }
             return followCollectionPort(
               parent,
               ctx.compositeFrame.instanceId,
@@ -292,6 +311,17 @@ export async function evalCollectionPort(
           throw new Error(`input node "${nodeId}" only has output port "value"`);
         }
         return await ctx.host.listInputRows();
+      }
+      case "pack": {
+        if (outputPort !== "list") {
+          throw new Error(`pack node "${nodeId}" only has output port "list"`);
+        }
+        const wires = resolveVariadicInputs(ctx.edgesByTarget, nodeId, "items");
+        const rows: ExecutionRow[] = [];
+        for (const wire of wires) {
+          rows.push(...(await evalCollectionPort(ctx, wire.from.node, wire.from.port)));
+        }
+        return rows;
       }
       case "output": {
         if (outputPort !== "value") {

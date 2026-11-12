@@ -19,16 +19,17 @@ export function edgeTargetKey(node: NodeId, port: PortId): EdgeTargetKey {
   return `${node}\0${port}`
 }
 
-export function indexEdgesByTarget(graph: Graph): Map<EdgeTargetKey, Edge> {
-  const map = new Map<EdgeTargetKey, Edge>()
+/** Index inbound edges by target. Values are arrays (length > 1 only for variadic ports). */
+export function indexEdgesByTarget(graph: Graph): Map<EdgeTargetKey, Edge[]> {
+  const map = new Map<EdgeTargetKey, Edge[]>()
   for (const edge of Object.values(graph.edges)) {
     const key = edgeTargetKey(edge.to.node, edge.to.port)
-    if (map.has(key)) {
-      throw new Error(
-        `Multiple edges target ${edge.to.node}.${edge.to.port}; expected at most one`,
-      )
+    const list = map.get(key)
+    if (list) {
+      list.push(edge)
+    } else {
+      map.set(key, [edge])
     }
-    map.set(key, edge)
   }
   return map
 }
@@ -84,18 +85,23 @@ export type ResolvedWire = { kind: "wire"; from: PortReference }
 export type ResolvedInput = ResolvedLiteral | ResolvedWire
 
 /**
- * Resolve an input port: edge → local literal → catalog defaultValue → error.
+ * Resolve a singleton input port: edge → local literal → catalog defaultValue → error.
  */
 export function resolveInput(
   graph: Graph,
   registry: Registry,
-  edgesByTarget: Map<EdgeTargetKey, Edge>,
+  edgesByTarget: Map<EdgeTargetKey, Edge[]>,
   nodeId: NodeId,
   portId: PortId,
 ): ResolvedInput {
-  const edge = edgesByTarget.get(edgeTargetKey(nodeId, portId))
-  if (edge != null) {
-    return { kind: "wire", from: edge.from }
+  const edges = edgesByTarget.get(edgeTargetKey(nodeId, portId)) ?? []
+  if (edges.length > 1) {
+    throw new Error(
+      `Multiple edges target ${nodeId}.${portId}; use resolveVariadicInputs for variadic ports`,
+    )
+  }
+  if (edges.length === 1) {
+    return { kind: "wire", from: edges[0]!.from }
   }
 
   const node = requireNode(graph, nodeId)
@@ -115,4 +121,15 @@ export function resolveInput(
   throw new Error(
     `Required input "${nodeId}.${portId}" is unsatisfied (no edge, local value, or default)`,
   )
+}
+
+/** Resolve a variadic input: inbound edges sorted by Edge.order ascending. */
+export function resolveVariadicInputs(
+  edgesByTarget: Map<EdgeTargetKey, Edge[]>,
+  nodeId: NodeId,
+  portId: PortId,
+): ResolvedWire[] {
+  const edges = [...(edgesByTarget.get(edgeTargetKey(nodeId, portId)) ?? [])]
+  edges.sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+  return edges.map((edge) => ({ kind: "wire" as const, from: edge.from }))
 }

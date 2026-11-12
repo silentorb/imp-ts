@@ -45,13 +45,19 @@ export function impToReactFlow(graph: Graph): ReactFlowGraph {
     },
   }))
 
-  const edges: ImpReactFlowEdge[] = Object.entries(graph.edges).map(([id, edge]) => ({
-    id,
-    source: edge.from.node,
-    sourceHandle: edge.from.port,
-    target: edge.to.node,
-    targetHandle: edge.to.port,
-  }))
+  const edges: ImpReactFlowEdge[] = Object.entries(graph.edges).map(([id, edge]) => {
+    const rfEdge: ImpReactFlowEdge = {
+      id,
+      source: edge.from.node,
+      sourceHandle: edge.from.port,
+      target: edge.to.node,
+      targetHandle: edge.to.port,
+    }
+    if (edge.order !== undefined) {
+      rfEdge.data = { order: edge.order }
+    }
+    return rfEdge
+  })
 
   return { nodes, edges }
 }
@@ -78,6 +84,10 @@ export function reactFlowToImp(
     const impEdge: ImpEdge = {
       from: { node: edge.source, port: fromPort },
       to: { node: edge.target, port: toPort },
+    }
+    const order = (edge.data as { order?: number } | undefined)?.order
+    if (typeof order === "number") {
+      impEdge.order = order
     }
     impEdges[edge.id] = impEdge
   }

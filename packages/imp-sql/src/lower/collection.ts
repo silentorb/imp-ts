@@ -408,7 +408,7 @@ export function createCollectionLowerContext(args: {
   registry: Registry
   schema: RelationalSchema
   dialect: DialectSqlOps
-  edgesByTarget: Map<EdgeTargetKey, Edge>
+  edgesByTarget: Map<EdgeTargetKey, Edge[]>
   db: Kysely<AnyDb>
   sourceNodeId: NodeId
 }): CollectionLowerContext {

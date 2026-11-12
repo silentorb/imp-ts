@@ -82,27 +82,37 @@ function expandCompositeInstance(graph: Graph, instanceId: NodeId, registry: Reg
 
   const edges: Graph["edges"] = {}
   let edgeCounter = 0
-  const addEdge = (from: Edge["from"], to: Edge["to"]) => {
-    edges[`${prefix}edge${edgeCounter++}`] = { from, to }
+  const addEdge = (from: Edge["from"], to: Edge["to"], order?: number) => {
+    const edge: Edge = { from, to }
+    if (order !== undefined) edge.order = order
+    edges[`${prefix}edge${edgeCounter++}`] = edge
   }
 
   for (const edge of Object.values(graph.edges)) {
     if (edge.from.node === instanceId || edge.to.node === instanceId) {
       continue
     }
-    addEdge(edge.from, edge.to)
+    addEdge(edge.from, edge.to, edge.order)
   }
 
   for (const edge of Object.values(body.edges)) {
     addEdge(
       { node: prefixId(instanceId, edge.from.node), port: edge.from.port },
       { node: prefixId(instanceId, edge.to.node), port: edge.to.port },
+      edge.order,
     )
   }
 
+  const parentInboundByPort = new Map<PortId, Edge[]>()
   for (const edge of Object.values(graph.edges)) {
     if (edge.to.node !== instanceId) continue
     const inputPort = edge.to.port as PortId
+    const list = parentInboundByPort.get(inputPort)
+    if (list) list.push(edge)
+    else parentInboundByPort.set(inputPort, [edge])
+  }
+
+  for (const [inputPort, inbound] of parentInboundByPort) {
     const boundaryId = bindings.inputs[inputPort]
     if (!boundaryId) {
       throw new Error(`Composite "${instanceId}" missing input binding for port "${inputPort}"`)
@@ -115,15 +125,47 @@ function expandCompositeInstance(graph: Graph, instanceId: NodeId, registry: Reg
     }
     const prefixedBoundary = prefixId(instanceId, boundaryId)
     delete nodes[prefixedBoundary]
-    for (const bodyEdge of outbound) {
-      addEdge(edge.from, {
-        node: prefixId(instanceId, bodyEdge.to.node),
-        port: bodyEdge.to.port,
-      })
-    }
     for (const [edgeId, existing] of Object.entries(edges)) {
       if (existing.from.node === prefixedBoundary) {
         delete edges[edgeId]
+      }
+    }
+
+    const declaredPort = definition.inputs[inputPort]
+    if (declaredPort?.variadic) {
+      const packId = prefixId(instanceId, `__pack_${inputPort}`)
+      const elementType = declaredPort.type
+      nodes[packId] = {
+        id: packId,
+        type: "pack",
+        typeArgs: [elementType],
+        inputs: {},
+      }
+      const sorted = [...inbound].sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+      for (const edge of sorted) {
+        addEdge(edge.from, { node: packId, port: "items" }, edge.order)
+      }
+      for (const bodyEdge of outbound) {
+        addEdge(
+          { node: packId, port: "list" },
+          {
+            node: prefixId(instanceId, bodyEdge.to.node),
+            port: bodyEdge.to.port,
+          },
+        )
+      }
+    } else {
+      if (inbound.length !== 1) {
+        throw new Error(
+          `Composite "${instanceId}" non-variadic input "${inputPort}" expected one edge, got ${inbound.length}`,
+        )
+      }
+      const edge = inbound[0]!
+      for (const bodyEdge of outbound) {
+        addEdge(edge.from, {
+          node: prefixId(instanceId, bodyEdge.to.node),
+          port: bodyEdge.to.port,
+        })
       }
     }
   }

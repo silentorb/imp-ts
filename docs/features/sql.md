@@ -75,12 +75,14 @@ v1 has **no** Imp `from` node. The host collection is the graph boundary `input`
 
 ### Input resolution
 
-For each input port, resolve in order (see [graph-model.md](https://github.com/silentorb/imp-spec/blob/main/docs/packages/imp-core-types/graph-model.md)):
+For each **singleton** input port, resolve in order (see [graph-model.md](https://github.com/silentorb/imp-spec/blob/main/docs/packages/imp-core-types/graph-model.md)):
 
 1. Incoming edge (wired value)
 2. Local `Node.inputs` literal
 3. Catalog `Port.defaultValue`
 4. Error if required and unsatisfied
+
+**Variadic** inputs (`Port.variadic`) collect all inbound edges sorted by `Edge.order` (required and unique per target). `and` / `or` fold those operands. Core `pack` is not lowered as a collection in generic SQL in this revision (throw); prefer primitive N-ary ops or host-specific lowering for `list<T>` packs.
 
 ### Translation rules (v1)
 
@@ -102,7 +104,8 @@ For each input port, resolve in order (see [graph-model.md](https://github.com/s
 | `equals` / `not_equals` / `less_than` / `greater_than` | Comparison; when one side is a `column` and the other a literal/parameter, `schema.encodePropertyLiteral(columnName, literal)` is applied before bind when the hook is defined |
 | `contains` | Substring match: `haystack LIKE '%' \|\| needle \|\| '%'` (escape `\`); shared portable form for both dialect entries |
 | `search` | **Not translated** by generic `imp-sql` — host-delegated declarative retrieval; hosts intercept at compile or execute |
-| `and` / `or` / `not` | Boolean combinators |
+| `and` / `or` | N-ary boolean combinators over variadic `operands` (ordered by `Edge.order`) |
+| `not` | Boolean negation |
 
 Unsupported or unknown `Node.type` values **must throw**. `traverse` **must throw** when `schema.edges` is absent. Both `collection` and `exclude` on `except` **must** be wired collection ports.
 

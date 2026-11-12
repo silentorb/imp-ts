@@ -22,10 +22,20 @@ const any = concreteType("any")
 
 const collectionTypeParam = [{ id: "T" }]
 
-function port(id: string, type: SignalType, defaultValue?: Port["defaultValue"]): Port {
-  return defaultValue === undefined
-    ? { id, type }
-    : { id, type, defaultValue }
+function port(
+  id: string,
+  type: SignalType,
+  defaultValue?: Port["defaultValue"],
+  variadic?: boolean,
+): Port {
+  const result: Port = { id, type }
+  if (defaultValue !== undefined) result.defaultValue = defaultValue
+  if (variadic) result.variadic = true
+  return result
+}
+
+function variadicPort(id: string, type: SignalType): Port {
+  return port(id, type, undefined, true)
 }
 
 function kindPreserving(
@@ -139,8 +149,7 @@ export const collectionTransformsLibrary: NodeLibrary = {
     {
       id: "and",
       inputs: {
-        left: port("left", boolean),
-        right: port("right", boolean),
+        operands: variadicPort("operands", boolean),
       },
       outputs: {
         value: port("value", boolean),
@@ -149,8 +158,7 @@ export const collectionTransformsLibrary: NodeLibrary = {
     {
       id: "or",
       inputs: {
-        left: port("left", boolean),
-        right: port("right", boolean),
+        operands: variadicPort("operands", boolean),
       },
       outputs: {
         value: port("value", boolean),

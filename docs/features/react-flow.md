@@ -40,6 +40,7 @@ Converters **should**:
 | `Edge.from.port` | `Edge.sourceHandle` |
 | `Edge.to.node` | `Edge.target` |
 | `Edge.to.port` | `Edge.targetHandle` |
+| `Edge.order` (optional) | Host-defined (e.g. `edge.data.order`) — **must** be set uniquely when wiring a **variadic** Imp target handle |
 
 ### React Flow `node.data` shape
 
