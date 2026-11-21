@@ -8,7 +8,7 @@ Language-neutral specs: [imp-spec `docs/packages/`](https://github.com/silentorb
 | [`imp-registry`](./imp-registry/) | Load `NodeLibrary` / `GraphTypeLibrary` values and look up types |
 | [`imp-typecheck`](./imp-typecheck/) | Static signal-type checking for graphs |
 | [`imp-graph-resolve`](./imp-graph-resolve/) | Late nested graph resolution |
-| [`imp-react-flow`](./imp-react-flow/) | **Imp Translator** — Imp ↔ React Flow |
+| *(sibling)* [`imp-graph-view`](https://github.com/silentorb/imp-graph-view) | **Imp Translator + canvas** — Imp ↔ React Flow |
 | [`imp-collection-transforms`](./imp-collection-transforms/) | Collection combinator `NodeLibrary` |
 | [`imp-pathing`](./imp-pathing/) | GQL-like path operator `NodeLibrary` |
 | [`imp-sql`](./imp-sql/) | **Imp Translator** — Imp → SQL |
@@ -29,7 +29,7 @@ flowchart TB
   PATH --> SPEC
 
   subgraph impTs [Translators and runtime]
-    RF[imp-react-flow]
+    RF[imp-graph-view sibling]
     SQL[imp-sql]
     EXEC[imp-execution]
   end

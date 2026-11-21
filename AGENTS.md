@@ -11,7 +11,7 @@ Language-neutral specs live in **[imp-spec](https://github.com/silentorb/imp-spe
 | `packages/imp-core-types/` | Core graph + library TypeScript interfaces; core boundary `NodeLibrary` |
 | `packages/imp-registry/` | Load `NodeLibrary` / `GraphTypeLibrary` values and look up types |
 | `packages/imp-typecheck/` | Static signal-type checking for graphs |
-| `packages/imp-react-flow/` | **Imp Translator** — Imp ↔ React Flow |
+| *(sibling)* [`imp-graph-view`](https://github.com/silentorb/imp-graph-view) | **Imp Translator + canvas** — Imp ↔ React Flow + `ImpGraphView` |
 | `packages/imp-collection-transforms/` | Collection combinator `NodeLibrary` |
 | `packages/imp-pathing/` | GQL-like path operator `NodeLibrary` |
 | `packages/imp-sql/` | **Imp Translator** — Imp → SQL via Kysely |
@@ -55,7 +55,7 @@ Cross-package overview: [imp-spec `docs/overview/`](https://github.com/silentorb
 | If your task involves… | Read |
 | --- | --- |
 | Imp → SQL translation | [sql.md](./docs/features/sql.md) |
-| Imp ↔ React Flow | [react-flow.md](./docs/features/react-flow.md) |
+| Imp ↔ React Flow (lives in imp-graph-view) | [react-flow.md](./docs/features/react-flow.md) |
 | Dynamic execution | [execution.md](./docs/features/execution.md) |
 | Imp → Cypher (sibling repo) | [imp-cypher](https://github.com/silentorb/imp-cypher) → `docs/features/cypher.md` |
 

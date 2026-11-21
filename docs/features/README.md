@@ -7,7 +7,7 @@ Implementation-specific specs for packages that translate Imp graphs to other fo
 | Package | Role | Spec |
 | --- | --- | --- |
 | `imp-sql` | **Imp Translator** — Imp → SQL | [sql.md](./sql.md) |
-| `imp-react-flow` | **Imp Translator** — Imp ↔ React Flow | [react-flow.md](./react-flow.md) |
+| `imp-graph-view` (sibling) | **Imp Translator + canvas** — Imp ↔ React Flow | [react-flow.md](./react-flow.md) |
 | `imp-execution` | **Runtime consumer** — in-place graph execution | [execution.md](./execution.md) |
 
 ## Split of concerns
