@@ -43,9 +43,11 @@ export interface PortReference {
   port: PortId
 }
 
-/** Graph node instance: identity, type ref, and local input literals. */
+/** Graph node instance: identity, optional title, type ref, and local input literals. */
 export interface Node {
   id: NodeId
+  /** Optional human-facing label; editors display `title` when present, otherwise `id`. */
+  title?: string
   type: NodeTypeId
   typeArgs?: SignalType[]
   inputs: InputValues
