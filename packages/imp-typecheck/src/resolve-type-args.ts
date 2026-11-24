@@ -1,6 +1,6 @@
 /** Type-argument inference for implementation dispatch. */
 
-import type { Graph, NodeId, SignalType } from "imp-core-types"
+import type { GraphSource, NodeId, SignalType } from "imp-core-types"
 import { isTypeVar } from "imp-core-types"
 import type { Registry } from "imp-registry"
 import { getNodeDefinitions } from "imp-registry"
@@ -9,15 +9,15 @@ import { resolveSelections } from "./graph-analysis"
 import { applySubstitution, scopedParam } from "./substitution"
 
 export function resolveTypeArgs(
-  graph: Graph,
+  source: GraphSource,
   nodeId: NodeId,
   registry: Registry,
   selected?: SelectedDefinitions,
 ): SignalType[] | undefined {
-  const node = graph.nodes[nodeId]
+  const node = source.nodes.getNode(nodeId)
   if (!node) return undefined
 
-  const selections = selected ?? resolveSelections(graph, registry).selected
+  const selections = selected ?? resolveSelections(source, registry).selected
   const definition =
     selections.get(nodeId) ??
     (getNodeDefinitions(registry, node.type).length === 1
@@ -32,7 +32,7 @@ export function resolveTypeArgs(
     return node.typeArgs
   }
 
-  const { subst } = resolveSelections(graph, registry)
+  const { subst } = resolveSelections(source, registry)
 
   const resolved: SignalType[] = []
 

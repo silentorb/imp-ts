@@ -1,6 +1,7 @@
 /** Graph instance type checking. Spec: imp-spec/docs/packages/imp-typecheck/type-system.md */
 
-import type { Graph } from "imp-core-types"
+import type { GraphSource } from "imp-core-types"
+import { resolvedNodes } from "imp-core-types"
 import type { Registry } from "imp-registry"
 import { getNodeDefinitions } from "imp-registry"
 import {
@@ -15,16 +16,16 @@ import { assignable } from "./assignable"
 import { formatType } from "./unify"
 import { checkTypeParamBounds } from "./check-type-param-bounds"
 
-export function checkGraph(graph: Graph, registry: Registry): TypeCheckError[] {
+export function checkGraph(source: GraphSource, registry: Registry): TypeCheckError[] {
   const errors: TypeCheckError[] = []
-  const { selected, subst, unknownTypes } = resolveSelections(graph, registry)
+  const { selected, subst, unknownTypes } = resolveSelections(source, registry)
 
   for (const nodeId of unknownTypes) {
-    const node = graph.nodes[nodeId]!
+    const node = source.nodes.getNode(nodeId)!
     errors.push({ nodeId, message: `unknown NodeDefinition "${node.type}"` })
   }
 
-  for (const node of Object.values(graph.nodes)) {
+  for (const node of resolvedNodes(source)) {
     if (unknownTypes.includes(node.id)) continue
     const overloads = getNodeDefinitions(registry, node.type)
     if (overloads.length === 0) continue
@@ -32,7 +33,7 @@ export function checkGraph(graph: Graph, registry: Registry): TypeCheckError[] {
     if (!selected.has(node.id)) {
       const survivors = overloads.filter(
         (candidate) =>
-          candidateSurvives(graph, node.id, candidate, registry, selected, subst).ok,
+          candidateSurvives(source, node.id, candidate, registry, selected, subst).ok,
       )
       if (survivors.length === 0) {
         errors.push({
@@ -61,7 +62,7 @@ export function checkGraph(graph: Graph, registry: Registry): TypeCheckError[] {
 
     const effective = effectiveDefinition(node, definition)
     for (const [portId, port] of Object.entries(effective.inputs)) {
-      const inbound = Object.entries(graph.edges).filter(
+      const inbound = source.edges.edgeEntries().filter(
         ([, edge]) => edge.to.node === node.id && edge.to.port === portId,
       )
       const hasEdge = inbound.length > 0
@@ -117,10 +118,17 @@ export function checkGraph(graph: Graph, registry: Registry): TypeCheckError[] {
   }
 
   let edgeSubst = subst
-  for (const edge of Object.values(graph.edges)) {
-    const fromNode = graph.nodes[edge.from.node]
-    const toNode = graph.nodes[edge.to.node]
-    if (!fromNode || !toNode) continue
+  for (const [, edge] of source.edges.edgeEntries()) {
+    const fromNode = source.nodes.getNode(edge.from.node)
+    if (!fromNode) {
+      errors.push({ nodeId: edge.from.node, message: `unknown node "${edge.from.node}"` })
+      continue
+    }
+    const toNode = source.nodes.getNode(edge.to.node)
+    if (!toNode) {
+      errors.push({ nodeId: edge.to.node, message: `unknown node "${edge.to.node}"` })
+      continue
+    }
 
     const fromDef = selected.get(fromNode.id)
     const toDef = selected.get(toNode.id)
@@ -164,13 +172,13 @@ export function checkGraph(graph: Graph, registry: Registry): TypeCheckError[] {
     }
   }
 
-  for (const node of Object.values(graph.nodes)) {
+  for (const node of resolvedNodes(source)) {
     const definition = selected.get(node.id)
     if (!definition) continue
 
     for (const [portId] of Object.entries(definition.outputs)) {
       const resolved = resolvePortType(
-        graph,
+        source,
         node.id,
         portId,
         registry,
@@ -187,12 +195,12 @@ export function checkGraph(graph: Graph, registry: Registry): TypeCheckError[] {
     }
 
     for (const [portId] of Object.entries(definition.inputs)) {
-      const hasEdge = Object.values(graph.edges).some(
-        (e) => e.to.node === node.id && e.to.port === portId,
-      )
+      const hasEdge = source.edges
+        .edgeEntries()
+        .some(([, e]) => e.to.node === node.id && e.to.port === portId)
       if (!hasEdge) continue
       const resolved = resolvePortType(
-        graph,
+        source,
         node.id,
         portId,
         registry,
@@ -209,7 +217,7 @@ export function checkGraph(graph: Graph, registry: Registry): TypeCheckError[] {
     }
   }
 
-  errors.push(...checkTypeParamBounds(graph, registry, selected))
+  errors.push(...checkTypeParamBounds(source, registry, selected))
 
   return errors
 }

@@ -1,6 +1,7 @@
 /** Shared graph analysis helpers for type checking and implementation dispatch. */
 
-import type { Graph, Node, NodeDefinition, NodeId, PortId, SignalType } from "imp-core-types"
+import type { GraphSource, Node, NodeDefinition, NodeId, PortId, SignalType } from "imp-core-types"
+import { resolvedNodes } from "imp-core-types"
 import type { Registry } from "imp-registry"
 import { getNodeDefinitions } from "imp-registry"
 import { instantiateNodeDefinition } from "./instantiate"
@@ -57,22 +58,22 @@ export function catalogPortType(
  * other endpoint already has a selected definition (or a sole overload).
  */
 export function candidateSurvives(
-  graph: Graph,
+  source: GraphSource,
   nodeId: NodeId,
   candidate: NodeDefinition,
   registry: Registry,
   selected: SelectedDefinitions,
   subst: Substitution,
 ): { ok: true; subst: Substitution } | { ok: false } {
-  const node = graph.nodes[nodeId]
+  const node = source.nodes.getNode(nodeId)
   if (!node) return { ok: false }
 
   let trial = new Map(subst)
 
-  for (const edge of Object.values(graph.edges)) {
+  for (const [, edge] of source.edges.edgeEntries()) {
     if (edge.to.node === nodeId) {
-      const fromNode = graph.nodes[edge.from.node]
-      if (!fromNode) return { ok: false }
+      const fromNode = source.nodes.getNode(edge.from.node)
+      if (!fromNode) continue // unresolved endpoints are reported by checkGraph
       const fromDef = selected.get(fromNode.id)
       if (!fromDef) continue
       const outputType = catalogPortTypeFromDefinition(
@@ -89,8 +90,8 @@ export function candidateSurvives(
     }
 
     if (edge.from.node === nodeId) {
-      const toNode = graph.nodes[edge.to.node]
-      if (!toNode) return { ok: false }
+      const toNode = source.nodes.getNode(edge.to.node)
+      if (!toNode) continue
       const toDef = selected.get(toNode.id)
       if (!toDef) continue
       const outputType = catalogPortTypeFromDefinition(
@@ -116,7 +117,7 @@ export function candidateSurvives(
  * plus the accumulated substitution — or partial results with errors deferred to checkGraph.
  */
 export function resolveSelections(
-  graph: Graph,
+  source: GraphSource,
   registry: Registry,
 ): {
   selected: Map<NodeId, NodeDefinition>
@@ -127,7 +128,7 @@ export function resolveSelections(
   const unknownTypes: NodeId[] = []
   let subst: Substitution = new Map()
 
-  for (const node of Object.values(graph.nodes)) {
+  for (const node of resolvedNodes(source)) {
     const overloads = getNodeDefinitions(registry, node.type)
     if (overloads.length === 0) {
       unknownTypes.push(node.id)
@@ -142,7 +143,7 @@ export function resolveSelections(
   while (changed) {
     changed = false
 
-    for (const node of Object.values(graph.nodes)) {
+    for (const node of resolvedNodes(source)) {
       if (selected.has(node.id)) continue
       const overloads = getNodeDefinitions(registry, node.type)
       if (overloads.length <= 1) continue
@@ -150,7 +151,7 @@ export function resolveSelections(
       const survivors: { definition: NodeDefinition; subst: Substitution }[] = []
       for (const candidate of overloads) {
         const result = candidateSurvives(
-          graph,
+          source,
           node.id,
           candidate,
           registry,
@@ -169,9 +170,9 @@ export function resolveSelections(
       }
     }
 
-    for (const edge of Object.values(graph.edges)) {
-      const fromNode = graph.nodes[edge.from.node]
-      const toNode = graph.nodes[edge.to.node]
+    for (const [, edge] of source.edges.edgeEntries()) {
+      const fromNode = source.nodes.getNode(edge.from.node)
+      const toNode = source.nodes.getNode(edge.to.node)
       if (!fromNode || !toNode) continue
       const fromDef = selected.get(fromNode.id)
       const toDef = selected.get(toNode.id)
@@ -212,19 +213,19 @@ export function resolveSelections(
   return { selected, subst, unknownTypes }
 }
 
-export function collectGraphSubstitution(graph: Graph, registry: Registry): Substitution {
-  return resolveSelections(graph, registry).subst
+export function collectGraphSubstitution(source: GraphSource, registry: Registry): Substitution {
+  return resolveSelections(source, registry).subst
 }
 
 export function resolvePortType(
-  graph: Graph,
+  source: GraphSource,
   nodeId: NodeId,
   portId: PortId,
   registry: Registry,
   subst: Substitution = new Map(),
   selected?: SelectedDefinitions,
 ): SignalType | undefined {
-  const node = graph.nodes[nodeId]
+  const node = source.nodes.getNode(nodeId)
   if (!node) return undefined
 
   const definition =
@@ -245,9 +246,9 @@ export function resolvePortType(
   let inputType = scopeSignalType(inputTemplate.type, node.id)
   let localSubst = subst
 
-  for (const edge of Object.values(graph.edges)) {
+  for (const [, edge] of source.edges.edgeEntries()) {
     if (edge.to.node === nodeId && edge.to.port === portId) {
-      const sourceNode = graph.nodes[edge.from.node]
+      const sourceNode = source.nodes.getNode(edge.from.node)
       if (!sourceNode) continue
       const sourceType = catalogPortType(
         sourceNode,

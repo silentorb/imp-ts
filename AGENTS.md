@@ -40,6 +40,7 @@ When specs and code disagree, update imp-spec or the code explicitly.
 | If your task involves… | Read |
 | --- | --- |
 | Core graph model | [`imp-spec` graph-model](https://github.com/silentorb/imp-spec/blob/main/docs/packages/imp-core-types/graph-model.md) |
+| Graph sources (edge / node providers) | [`imp-spec` graph-sources](https://github.com/silentorb/imp-spec/blob/main/docs/packages/imp-core-types/graph-sources.md) |
 | Node type libraries | [`imp-spec` node-libraries](https://github.com/silentorb/imp-spec/blob/main/docs/packages/imp-core-types/node-libraries.md) |
 | Graph libraries | [`imp-spec` graph-libraries](https://github.com/silentorb/imp-spec/blob/main/docs/packages/imp-core-types/graph-libraries.md) |
 | Graph resolution | [`imp-spec` resolve](https://github.com/silentorb/imp-spec/blob/main/docs/packages/imp-graph-resolve/resolve.md) |

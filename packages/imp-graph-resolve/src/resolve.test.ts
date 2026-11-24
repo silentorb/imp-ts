@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { coreNodeLibrary } from "imp-core-types"
+import { coreNodeLibrary, graphSource } from "imp-core-types"
 import { collectionTransformsLibrary } from "imp-collection-transforms"
 import {
   createRegistry,
@@ -68,7 +68,7 @@ describe("flattenGraph", () => {
       },
     }
 
-    const flat = flattenGraph(graph, registry)
+    const flat = flattenGraph(graphSource(graph), registry)
     expect(flat.nodes.comp).toBeUndefined()
     expect(flat.nodes["comp::in_rows"]).toBeUndefined()
     expect(flat.nodes["comp::out_rows"]?.type).toBe("output")
@@ -99,7 +99,7 @@ describe("buildExecutionProgram", () => {
       },
     }
 
-    const program = buildExecutionProgram(graph, registry)
+    const program = buildExecutionProgram(graphSource(graph), registry)
     expect(program.subgraphs.size).toBe(1)
     expect(program.subgraphs.has(subgraphKey("passthrough", undefined))).toBe(true)
     expect(program.root.nodes.a?.type).toBe("passthrough")

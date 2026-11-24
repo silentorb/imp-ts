@@ -26,7 +26,12 @@ import {
   signalTypeMatches,
   unify,
 } from "./index"
-import { dispatchImplementation } from "imp-core-types"
+import {
+  dispatchImplementation,
+  graphSource,
+  layeredNodes,
+  nodeMapProvider,
+} from "imp-core-types"
 
 function coreDef(id: string) {
   return coreNodeLibrary.definitions.find((entry) => entry.id === id)!
@@ -135,7 +140,7 @@ describe("checkGraph", () => {
       },
     }
 
-    expect(checkGraph(graph, registry)).toEqual([])
+    expect(checkGraph(graphSource(graph), registry)).toEqual([])
   })
 
   test("accepts list → filter → limit via list overload", () => {
@@ -172,7 +177,7 @@ describe("checkGraph", () => {
       },
     }
 
-    expect(checkGraph(graph, registry)).toEqual([])
+    expect(checkGraph(graphSource(graph), registry)).toEqual([])
   })
 
   test("rejects set → filter → limit", () => {
@@ -209,7 +214,7 @@ describe("checkGraph", () => {
       },
     }
 
-    const errors = checkGraph(graph, registry)
+    const errors = checkGraph(graphSource(graph), registry)
     expect(errors.length).toBeGreaterThan(0)
   })
 
@@ -247,7 +252,7 @@ describe("checkGraph", () => {
       },
     }
 
-    expect(checkGraph(graph, registry)).toEqual([])
+    expect(checkGraph(graphSource(graph), registry)).toEqual([])
   })
 
   test("rejects collection input wired to filter", () => {
@@ -279,7 +284,7 @@ describe("checkGraph", () => {
       },
     }
 
-    const errors = checkGraph(graph, registry)
+    const errors = checkGraph(graphSource(graph), registry)
     expect(errors.some((e) => e.message.includes("no matching overload"))).toBe(true)
   })
 
@@ -312,7 +317,7 @@ describe("checkGraph", () => {
       },
     }
 
-    const errors = checkGraph(graph, registry)
+    const errors = checkGraph(graphSource(graph), registry)
     expect(errors.some((e) => e.message.includes("ambiguous overload"))).toBe(true)
   })
 
@@ -344,7 +349,7 @@ describe("checkGraph", () => {
       },
     }
 
-    const errors = checkGraph(graph, registry)
+    const errors = checkGraph(graphSource(graph), registry)
     expect(errors.some((e) => e.portId === "collection")).toBe(true)
   })
 
@@ -367,7 +372,7 @@ describe("checkGraph", () => {
       },
     }
 
-    const errors = checkGraph(graph, registry)
+    const errors = checkGraph(graphSource(graph), registry)
     expect(errors.length).toBeGreaterThan(0)
   })
 })
@@ -427,7 +432,7 @@ describe("implementation dispatch", () => {
         },
       },
     }
-    expect(resolveImplementation(graph, "f", registry)).toBe("filter_list")
+    expect(resolveImplementation(graphSource(graph), "f", registry)).toBe("filter_list")
   })
 
   test("resolveImplementation uses selected set overload id", () => {
@@ -447,7 +452,7 @@ describe("implementation dispatch", () => {
         },
       },
     }
-    expect(resolveImplementation(graph, "f", registry)).toBe("filter_set")
+    expect(resolveImplementation(graphSource(graph), "f", registry)).toBe("filter_set")
   })
 
   test("resolveImplementation dispatches on inferred type arg", () => {
@@ -467,8 +472,8 @@ describe("implementation dispatch", () => {
         },
       },
     }
-    expect(resolveTypeArgs(graph, "c", registry)).toEqual([concreteType("number")])
-    expect(resolveImplementation(graph, "c", registry)).toBe("cast_number")
+    expect(resolveTypeArgs(graphSource(graph), "c", registry)).toEqual([concreteType("number")])
+    expect(resolveImplementation(graphSource(graph), "c", registry)).toBe("cast_number")
   })
 
   test("resolveImplementation uses dispatch default", () => {
@@ -488,7 +493,7 @@ describe("implementation dispatch", () => {
         },
       },
     }
-    expect(resolveImplementation(graph, "c", registry)).toBe("cast_any")
+    expect(resolveImplementation(graphSource(graph), "c", registry)).toBe("cast_any")
   })
 })
 
@@ -540,7 +545,7 @@ describe("type param bounds", () => {
         },
       },
     }
-    expect(checkGraph(graph, registry)).toEqual([])
+    expect(checkGraph(graphSource(graph), registry)).toEqual([])
   })
 
   test("rejects type arg that violates bound", () => {
@@ -557,7 +562,7 @@ describe("type param bounds", () => {
         },
       },
     }
-    const errors = checkGraph(graph, registry)
+    const errors = checkGraph(graphSource(graph), registry)
     expect(errors.some((e) => e.message.includes("does not satisfy bound \"Scalar\""))).toBe(true)
   })
 
@@ -575,7 +580,7 @@ describe("type param bounds", () => {
         },
       },
     }
-    expect(checkGraph(graph, registry)).toEqual([])
+    expect(checkGraph(graphSource(graph), registry)).toEqual([])
   })
 
   test("reports unknown bound id", () => {
@@ -606,7 +611,7 @@ describe("type param bounds", () => {
         },
       },
     }
-    const errors = checkGraph(graph, registry)
+    const errors = checkGraph(graphSource(graph), registry)
     expect(errors.some((e) => e.message.includes("unknown type constraint \"Missing\""))).toBe(
       true,
     )
@@ -661,7 +666,7 @@ describe("type param bounds", () => {
         },
       },
     }
-    expect(checkGraph(graph, registry)).toEqual([])
+    expect(checkGraph(graphSource(graph), registry)).toEqual([])
   })
 })
 
@@ -746,7 +751,7 @@ describe("variadic ports", () => {
         },
       },
     }
-    expect(checkGraph(graph, transformsRegistry())).toEqual([])
+    expect(checkGraph(graphSource(graph), transformsRegistry())).toEqual([])
   })
 
   test("rejects missing Edge.order on variadic target", () => {
@@ -762,7 +767,7 @@ describe("variadic ports", () => {
         },
       },
     }
-    const errors = checkGraph(graph, transformsRegistry())
+    const errors = checkGraph(graphSource(graph), transformsRegistry())
     expect(errors.some((e) => e.message.includes("requires Edge.order"))).toBe(true)
   })
 
@@ -786,7 +791,7 @@ describe("variadic ports", () => {
         },
       },
     }
-    const errors = checkGraph(graph, transformsRegistry())
+    const errors = checkGraph(graphSource(graph), transformsRegistry())
     expect(errors.some((e) => e.message.includes("duplicate Edge.order"))).toBe(true)
   })
 
@@ -808,7 +813,7 @@ describe("variadic ports", () => {
         },
       },
     }
-    const errors = checkGraph(graph, transformsRegistry())
+    const errors = checkGraph(graphSource(graph), transformsRegistry())
     expect(errors.some((e) => e.message.includes("non-variadic"))).toBe(true)
   })
 
@@ -845,5 +850,44 @@ describe("variadic ports", () => {
     const registry = loadNodeLibrary(createRegistry(), coreNodeLibrary)
     const errors = checkDefinition(definition, registry)
     expect(errors.filter((e) => e.nodeId === "in_ops")).toEqual([])
+  })
+})
+
+describe("graph sources", () => {
+  const registry = () =>
+    loadNodeLibrary(
+      loadNodeLibrary(createRegistry(), coreNodeLibrary),
+      collectionTransformsLibrary,
+    )
+
+  const doc: Graph = {
+    nodes: { out: { id: "out", type: "output", inputs: {} } },
+    edges: {
+      e: { from: { node: "remote", port: "value" }, to: { node: "out", port: "value" } },
+    },
+  }
+
+  test("reports an endpoint no provider resolves as unknown node", () => {
+    const errors = checkGraph(graphSource(doc), registry())
+    expect(
+      errors.some((e) => e.nodeId === "remote" && e.message.includes("unknown node")),
+    ).toBe(true)
+  })
+
+  test("checks a node from a layered provider like a local one", () => {
+    const remote = nodeMapProvider({
+      remote: { id: "remote", type: "literal", inputs: { value: 1 } },
+    })
+    const source = { ...graphSource(doc), nodes: layeredNodes(graphSource(doc).nodes, remote) }
+    expect(checkGraph(source, registry())).toEqual([])
+  })
+
+  test("type-checks layered nodes through the registry", () => {
+    const remote = nodeMapProvider({
+      remote: { id: "remote", type: "not_registered", inputs: {} },
+    })
+    const source = { ...graphSource(doc), nodes: layeredNodes(graphSource(doc).nodes, remote) }
+    const errors = checkGraph(source, registry())
+    expect(errors.some((e) => e.nodeId === "remote" && e.message.includes("unknown NodeDefinition"))).toBe(true)
   })
 })

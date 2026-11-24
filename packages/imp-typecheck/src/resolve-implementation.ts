@@ -2,7 +2,7 @@
 
 import type {
   ConcreteSignalType,
-  Graph,
+  GraphSource,
   ImplementationId,
   NodeDefinition,
   NodeImplementation,
@@ -53,16 +53,16 @@ export function signalTypeMatches(pattern: ConcreteSignalType, type: SignalType)
 }
 
 export function resolveImplementation(
-  graph: Graph,
+  source: GraphSource,
   nodeId: string,
   registry: Registry,
 ): ImplementationId | ImplementationResolveError {
-  const node = graph.nodes[nodeId]
+  const node = source.nodes.getNode(nodeId)
   if (!node) {
     return { message: `unknown node "${nodeId}"` }
   }
 
-  const { selected: selectedDefs } = resolveSelections(graph, registry)
+  const { selected: selectedDefs } = resolveSelections(source, registry)
   const definition = selectedDefs.get(nodeId)
   if (!definition) {
     return { nodeId, message: `unknown or unresolved NodeDefinition "${node.type}"` }
@@ -82,7 +82,7 @@ export function resolveImplementation(
     return { nodeId, message: "invalid NodeDefinition implementation shape" }
   }
 
-  const typeArgs = resolveTypeArgs(graph, nodeId, registry, selectedDefs)
+  const typeArgs = resolveTypeArgs(source, nodeId, registry, selectedDefs)
   if (!typeArgs) {
     return {
       nodeId,

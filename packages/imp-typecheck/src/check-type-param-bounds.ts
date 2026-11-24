@@ -1,6 +1,7 @@
 /** Type-parameter bound checking. Spec: imp-spec/docs/packages/imp-typecheck/type-system.md */
 
-import type { Graph, SignalType, TypeConstraint } from "imp-core-types"
+import type { GraphSource, SignalType, TypeConstraint } from "imp-core-types"
+import { resolvedNodes } from "imp-core-types"
 import { isConcreteSignalType } from "imp-core-types"
 import type { Registry } from "imp-registry"
 import { getTypeConstraint } from "imp-registry"
@@ -23,18 +24,18 @@ function satisfiesConstraint(
 }
 
 export function checkTypeParamBounds(
-  graph: Graph,
+  source: GraphSource,
   registry: Registry,
   selected?: SelectedDefinitions,
 ): TypeCheckError[] {
   const errors: TypeCheckError[] = []
-  const selections = selected ?? resolveSelections(graph, registry).selected
+  const selections = selected ?? resolveSelections(source, registry).selected
 
-  for (const node of Object.values(graph.nodes)) {
+  for (const node of resolvedNodes(source)) {
     const definition = selections.get(node.id)
     if (!definition?.typeParams?.length) continue
 
-    const typeArgs = resolveTypeArgs(graph, node.id, registry, selections)
+    const typeArgs = resolveTypeArgs(source, node.id, registry, selections)
     if (!typeArgs) continue
 
     for (let index = 0; index < definition.typeParams.length; index++) {

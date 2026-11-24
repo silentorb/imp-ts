@@ -144,7 +144,7 @@ Host binders call the matching dialect entry (`compileSqlite` / `compilePostgres
 1. Load registry with core library + collection transforms (+ pathing when needed) + any graph libraries.
 2. Build an Imp graph: `input` → transforms / composites / `traverse` → `output`.
    - **Semantic paths:** when authoring with untagged ontology tokens, run `resolveSemanticPath` / `bindSemanticPath` (see [semantic-paths.md](https://github.com/silentorb/imp-spec/blob/main/docs/packages/imp-pathing/semantic-paths.md)) **before** this step so the graph already contains technical `traverse` / `project` / `column` nodes. SQL translation does not resolve semantic tokens.
-3. **`flattenGraph(graph, registry)`** — expand graph-backed node references (see [resolve.md](https://github.com/silentorb/imp-spec/blob/main/docs/packages/imp-graph-resolve/resolve.md)).
+3. **`flattenGraph(graphSource(graph), registry)`** — expand graph-backed node references (see [resolve.md](https://github.com/silentorb/imp-spec/blob/main/docs/packages/imp-graph-resolve/resolve.md)).
 4. Host builds `RelationalSchema`, then calls `compileSqlite` or `compilePostgres`.
 5. `compileSql(query)` → run against a DB (when the host has an executor).
 

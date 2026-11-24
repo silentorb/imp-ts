@@ -1,6 +1,7 @@
 /** Dynamic Imp graph execution. Spec: imp-ts/docs/features/execution.md */
 
 import type { Graph, PortReference } from "imp-core-types";
+import { graphSource } from "imp-core-types";
 import type { Registry } from "imp-registry";
 import { hasGraphBackedDefinitions } from "imp-registry";
 import {
@@ -41,7 +42,7 @@ export async function executeGraph(
   const program =
     options.program ??
     (hasGraphBackedDefinitions(options.registry)
-      ? buildExecutionProgram(graph, options.registry)
+      ? buildExecutionProgram(graphSource(graph), options.registry)
       : { root: graph, subgraphs: new Map() });
 
   const root = program.root;

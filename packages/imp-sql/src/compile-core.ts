@@ -2,6 +2,7 @@
 
 import type { CompiledQuery, Kysely } from "kysely"
 import type { Graph, PortReference } from "imp-core-types"
+import { graphSource } from "imp-core-types"
 import type { Registry } from "imp-registry"
 import { hasGraphBackedDefinitions } from "imp-registry"
 import { flattenGraph } from "imp-graph-resolve"
@@ -48,7 +49,7 @@ export function lowerGraphToCompiledQuery(
 ): CompiledImpQuery {
   const flattened =
     hasGraphBackedDefinitions(options.registry)
-      ? flattenGraph(graph, options.registry)
+      ? flattenGraph(graphSource(graph), options.registry)
       : graph
 
   const source = options.source ?? defaultSource(flattened)

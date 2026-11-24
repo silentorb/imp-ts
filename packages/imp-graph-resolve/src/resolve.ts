@@ -1,7 +1,15 @@
 /** Late nested graph resolution. Spec: imp-spec/docs/packages/imp-graph-resolve/resolve.md */
 
-import type { Edge, Graph, NodeDefinition, NodeId, PortId, SignalType } from "imp-core-types"
-import { isGraphBackedDefinition } from "imp-core-types"
+import type {
+  Edge,
+  Graph,
+  GraphSource,
+  NodeDefinition,
+  NodeId,
+  PortId,
+  SignalType,
+} from "imp-core-types"
+import { isGraphBackedDefinition, materializeGraph } from "imp-core-types"
 import type { Registry } from "imp-registry"
 import { getNodeDefinitions } from "imp-registry"
 import { instantiateNodeDefinition } from "imp-typecheck"
@@ -193,8 +201,8 @@ function expandCompositeInstance(graph: Graph, instanceId: NodeId, registry: Reg
   return { nodes, edges }
 }
 
-export function flattenGraph(graph: Graph, registry: Registry): Graph {
-  let current = graph
+export function flattenGraph(source: GraphSource, registry: Registry): Graph {
+  let current = materializeGraph(source)
   const visiting = new Set<NodeId>()
 
   while (true) {
@@ -212,7 +220,11 @@ export function flattenGraph(graph: Graph, registry: Registry): Graph {
   }
 }
 
-export function buildExecutionProgram(graph: Graph, registry: Registry): ExecutionProgram {
+export function buildExecutionProgram(
+  source: GraphSource,
+  registry: Registry,
+): ExecutionProgram {
+  const graph = materializeGraph(source)
   const subgraphs = new Map<SubgraphKey, Graph>()
 
   for (const node of Object.values(graph.nodes)) {

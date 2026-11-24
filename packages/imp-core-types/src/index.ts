@@ -17,6 +17,20 @@ export type {
   Graph,
 } from "./graph"
 
+export type { NodeProvider, EdgeProvider, GraphSource } from "./graph-source"
+
+export {
+  nodeMapProvider,
+  edgeMapProvider,
+  graphSource,
+  layeredNodes,
+  graphNodeIds,
+  resolvedNodes,
+  unresolvedNodeIds,
+  inboundEdges,
+  materializeGraph,
+} from "./graph-source"
+
 export type {
   ConcreteSignalType,
   TypeVarSignalType,
