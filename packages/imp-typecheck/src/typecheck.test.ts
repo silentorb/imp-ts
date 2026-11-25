@@ -23,7 +23,7 @@ import {
   instantiateNodeDefinition,
   resolveImplementation,
   resolveTypeArgs,
-  signalTypeMatches,
+  typeMatches,
   unify,
 } from "./index"
 import {
@@ -401,17 +401,17 @@ describe("implementation dispatch", () => {
     ],
   }
 
-  test("signalTypeMatches treats any as wildcard", () => {
-    expect(signalTypeMatches(concreteType("any"), concreteType("string"))).toBe(true)
-    expect(signalTypeMatches(concreteType("string"), concreteType("number"))).toBe(false)
+  test("typeMatches treats any as wildcard", () => {
+    expect(typeMatches(concreteType("any"), concreteType("string"))).toBe(true)
+    expect(typeMatches(concreteType("string"), concreteType("number"))).toBe(false)
   })
 
-  test("signalTypeMatches allows subtype against supertype pattern", () => {
+  test("typeMatches allows subtype against supertype pattern", () => {
     expect(
-      signalTypeMatches(collectionOf(concreteType("string")), listOf(concreteType("string"))),
+      typeMatches(collectionOf(concreteType("string")), listOf(concreteType("string"))),
     ).toBe(true)
     expect(
-      signalTypeMatches(listOf(concreteType("string")), collectionOf(concreteType("string"))),
+      typeMatches(listOf(concreteType("string")), collectionOf(concreteType("string"))),
     ).toBe(false)
   })
 

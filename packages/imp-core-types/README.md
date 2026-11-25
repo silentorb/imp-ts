@@ -17,7 +17,7 @@ import type {
   Port,
   Ports,
   InputValues,
-  SignalType,
+  Type,
   NodeType,
   NodeLibrary,
 } from "imp-core-types"

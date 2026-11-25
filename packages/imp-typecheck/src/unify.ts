@@ -1,7 +1,7 @@
-/** Signal-type unification. Spec: imp-spec/docs/packages/imp-typecheck/type-system.md */
+/** Type unification. Spec: imp-spec/docs/packages/imp-typecheck/type-system.md */
 
-import type { SignalType } from "imp-core-types"
-import { concreteType, isConcreteSignalType, isTypeVar } from "imp-core-types"
+import type { Type } from "imp-core-types"
+import { concreteType, isConcreteType, isTypeVar } from "imp-core-types"
 import {
   type Substitution,
   applySubstitution,
@@ -15,8 +15,8 @@ export type UnifyResult =
   | { ok: false; message: string }
 
 export function unify(
-  left: SignalType,
-  right: SignalType,
+  left: Type,
+  right: Type,
   subst: Substitution = new Map(),
 ): UnifyResult {
   const a = applySubstitution(left, subst)
@@ -54,8 +54,8 @@ export function unify(
     return unifyVar(b.param, a, subst)
   }
 
-  if (!isConcreteSignalType(a) || !isConcreteSignalType(b)) {
-    return { ok: false, message: "invalid signal type shape" }
+  if (!isConcreteType(a) || !isConcreteType(b)) {
+    return { ok: false, message: "invalid type shape" }
   }
 
   if (a.id !== b.id) {
@@ -83,7 +83,7 @@ export function unify(
 
 function unifyVar(
   param: string,
-  other: SignalType,
+  other: Type,
   subst: Substitution,
 ): UnifyResult {
   const resolved = applySubstitution(other, subst)
@@ -104,7 +104,7 @@ function unifyVar(
   return { ok: true, subst: next }
 }
 
-export function formatType(type: SignalType): string {
+export function formatType(type: Type): string {
   const rigid = rigidParts(type)
   if (rigid) return rigid.param
   if (isTypeVar(type)) return type.param
@@ -113,8 +113,8 @@ export function formatType(type: SignalType): string {
 }
 
 function bindAllTypeVars(
-  type: SignalType,
-  binding: SignalType,
+  type: Type,
+  binding: Type,
   subst: Substitution,
 ): Substitution {
   if (isTypeVar(type)) {
@@ -124,7 +124,7 @@ function bindAllTypeVars(
     next.set(type.param, binding)
     return next
   }
-  if (isConcreteSignalType(type) && type.args?.length) {
+  if (isConcreteType(type) && type.args?.length) {
     let current = subst
     for (const arg of type.args) {
       current = bindAllTypeVars(arg, binding, current)

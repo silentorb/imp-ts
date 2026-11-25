@@ -7,7 +7,7 @@ import type {
   NodeDefinition,
   NodeId,
   PortId,
-  SignalType,
+  Type,
 } from "imp-core-types"
 import { isGraphBackedDefinition, materializeGraph } from "imp-core-types"
 import type { Registry } from "imp-registry"
@@ -21,7 +21,7 @@ export interface ExecutionProgram {
   subgraphs: ReadonlyMap<SubgraphKey, Graph>
 }
 
-export function subgraphKey(definitionId: string, typeArgs?: SignalType[]): SubgraphKey {
+export function subgraphKey(definitionId: string, typeArgs?: Type[]): SubgraphKey {
   return `${definitionId}::${JSON.stringify(typeArgs ?? [])}`
 }
 

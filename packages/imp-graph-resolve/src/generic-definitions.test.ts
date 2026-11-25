@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { coreNodeLibrary, graphSource, type Graph, type SignalType } from "imp-core-types"
+import { coreNodeLibrary, graphSource, type Graph, type Type } from "imp-core-types"
 import {
   createRegistry,
   loadGraphLibrary,
@@ -9,9 +9,9 @@ import {
 import { checkDefinition, checkGraph, resolveTypeArgs } from "imp-typecheck"
 import { flattenGraph } from "./resolve"
 
-const number: SignalType = { id: "number" }
-const string: SignalType = { id: "string" }
-const a: SignalType = { param: "A" }
+const number: Type = { id: "number" }
+const string: Type = { id: "string" }
+const a: Type = { param: "A" }
 const typeParams = [{ id: "A", bounds: ["Scalar"] }]
 
 /** `twice<A: Scalar>(value: A) → A` = `mix(value, value)`. */

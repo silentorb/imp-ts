@@ -2,7 +2,7 @@
 
 ## What it is
 
-**Core type interfaces** for the Imp graph model (`Graph`, `Node`, `Edge`, ports, signal types, `InputValues`) and node type libraries (`NodeType`, `NodeLibrary`), plus the core boundary library (`coreNodeLibrary`). This package is the TypeScript implementation of those specs.
+**Core type interfaces** for the Imp graph model (`Graph`, `Node`, `Edge`, ports, types, `InputValues`) and node type libraries (`NodeType`, `NodeLibrary`), plus the core boundary library (`coreNodeLibrary`). This package is the TypeScript implementation of those specs.
 
 ## Specs vs code
 
@@ -17,7 +17,7 @@ When the model changes, update imp-spec first, then regenerate or edit the TypeS
 
 | Path | Contents |
 | --- | --- |
-| `src/graph.ts` | Id aliases, `SignalType`, `Port` / `Ports`, `InputValues`, `Node`, `Edge`, `Graph` |
+| `src/graph.ts` | Id aliases, `Type`, `Port` / `Ports`, `InputValues`, `Node`, `Edge`, `Graph` |
 | `src/library.ts` | `NodeType`, `NodeLibrary` |
 | `src/core-library.ts` | `coreNodeLibrary` (`input`, `output`, `parameter` boundary types) |
 | `src/index.ts` | Public re-exports |

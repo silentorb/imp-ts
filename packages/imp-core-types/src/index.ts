@@ -3,7 +3,7 @@ export type {
   EdgeId,
   NodeTypeId,
   PortId,
-  SignalTypeId,
+  TypeId,
   TypeParamId,
   TypeConstraintId,
   PrimitiveValue,
@@ -32,20 +32,20 @@ export {
 } from "./graph-source"
 
 export type {
-  ConcreteSignalType,
-  TypeVarSignalType,
-  SignalType,
-} from "./signal-type"
+  ConcreteType,
+  TypeVar,
+  Type,
+} from "./type"
 
 export {
-  isConcreteSignalType,
+  isConcreteType,
   isTypeVar,
   concreteType,
   typeVar,
   collectionOf,
   listOf,
   setOf,
-} from "./signal-type"
+} from "./type"
 
 export type {
   NodeDefinition,

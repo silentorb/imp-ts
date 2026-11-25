@@ -10,7 +10,7 @@ Language-neutral specs live in **[imp-spec](https://github.com/silentorb/imp-spe
 | --- | --- |
 | `packages/imp-core-types/` | Core graph + library TypeScript interfaces; core boundary `NodeLibrary` |
 | `packages/imp-registry/` | Load `NodeLibrary` / `GraphTypeLibrary` values and look up types |
-| `packages/imp-typecheck/` | Static signal-type checking for graphs |
+| `packages/imp-typecheck/` | Static type checking for graphs |
 | *(sibling)* [`imp-graph-view`](https://github.com/silentorb/imp-graph-view) | **Imp Translator + canvas** — Imp ↔ React Flow + `ImpGraphView` |
 | `packages/imp-collection-transforms/` | Collection combinator `NodeLibrary` |
 | `packages/imp-pathing/` | GQL-like path operator `NodeLibrary` |

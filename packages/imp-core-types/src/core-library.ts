@@ -1,7 +1,7 @@
 /** Core boundary node types. Authoritative spec: imp-spec/docs/packages/imp-core-types/graph-model.md */
 
 import type { NodeDefinition, NodeLibrary } from "./library"
-import { concreteType, listOf, typeVar } from "./signal-type"
+import { concreteType, listOf, typeVar } from "./type"
 
 const T = typeVar("T")
 const stringSignal = concreteType("string")

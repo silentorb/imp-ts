@@ -1,14 +1,14 @@
 /** NodeDefinition instantiation. Spec: imp-spec/docs/packages/imp-typecheck/type-system.md */
 
-import type { Graph, NodeDefinition, Port, Ports, SignalType } from "imp-core-types"
+import type { Graph, NodeDefinition, Port, Ports, Type } from "imp-core-types"
 import { isTypeVar } from "imp-core-types"
 import { assertConcreteArgs } from "./substitution"
 
 function substituteInType(
-  type: SignalType,
+  type: Type,
   params: string[],
-  args: SignalType[],
-): SignalType {
+  args: Type[],
+): Type {
   if (isTypeVar(type)) {
     const index = params.indexOf(type.param)
     if (index === -1) {
@@ -25,7 +25,7 @@ function substituteInType(
   return type
 }
 
-function substitutePorts(ports: Ports, params: string[], args: SignalType[]): Ports {
+function substitutePorts(ports: Ports, params: string[], args: Type[]): Ports {
   const result: Ports = {}
   for (const [key, port] of Object.entries(ports)) {
     result[key] = substitutePort(port, params, args)
@@ -33,14 +33,14 @@ function substitutePorts(ports: Ports, params: string[], args: SignalType[]): Po
   return result
 }
 
-function substitutePort(port: Port, params: string[], args: SignalType[]): Port {
+function substitutePort(port: Port, params: string[], args: Type[]): Port {
   return {
     ...port,
     type: substituteInType(port.type, params, args),
   }
 }
 
-function substituteInGraph(graph: Graph, params: string[], args: SignalType[]): Graph {
+function substituteInGraph(graph: Graph, params: string[], args: Type[]): Graph {
   const nodes: Graph["nodes"] = {}
   for (const [id, node] of Object.entries(graph.nodes)) {
     nodes[id] = {
@@ -53,7 +53,7 @@ function substituteInGraph(graph: Graph, params: string[], args: SignalType[]): 
 
 export function instantiateNodeDefinition(
   definition: NodeDefinition,
-  typeArgs: SignalType[],
+  typeArgs: Type[],
 ): NodeDefinition {
   const params = definition.typeParams?.map((p) => p.id) ?? []
   if (params.length !== typeArgs.length) {

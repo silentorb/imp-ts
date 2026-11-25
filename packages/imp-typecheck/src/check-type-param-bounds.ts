@@ -1,26 +1,26 @@
 /** Type-parameter bound checking. Spec: imp-spec/docs/packages/imp-typecheck/type-system.md */
 
-import type { GraphSource, SignalType, TypeConstraint } from "imp-core-types"
+import type { GraphSource, Type, TypeConstraint } from "imp-core-types"
 import { resolvedNodes } from "imp-core-types"
-import { isConcreteSignalType } from "imp-core-types"
+import { isConcreteType } from "imp-core-types"
 import type { Registry } from "imp-registry"
 import { getTypeConstraint } from "imp-registry"
 import type { SelectedDefinitions } from "./graph-analysis"
 import { resolveSelections } from "./graph-analysis"
 import { resolveTypeArgs } from "./resolve-type-args"
-import { signalTypeMatches } from "./resolve-implementation"
+import { typeMatches } from "./resolve-implementation"
 import { isAnyType, rigidParts, type TypeCheckError } from "./substitution"
 import { formatType } from "./unify"
 
 function satisfiesConstraint(
-  typeArg: SignalType,
+  typeArg: Type,
   constraint: TypeConstraint,
 ): boolean {
   const rigid = rigidParts(typeArg)
   if (rigid) return rigid.bounds.includes(constraint.id)
   for (const member of constraint.members) {
-    if (!isConcreteSignalType(member)) continue
-    if (signalTypeMatches(member, typeArg)) return true
+    if (!isConcreteType(member)) continue
+    if (typeMatches(member, typeArg)) return true
   }
   return false
 }
@@ -45,7 +45,7 @@ export function checkTypeParamBounds(
       if (!param.bounds?.length) continue
 
       const typeArg = typeArgs[index]
-      if (!typeArg || !isConcreteSignalType(typeArg)) continue
+      if (!typeArg || !isConcreteType(typeArg)) continue
 
       if (isAnyType(typeArg)) continue
 
@@ -76,7 +76,7 @@ export function checkTypeParamBounds(
 }
 
 /** A rigid type also satisfies `constraint` when every member of one of its own bounds does. */
-function rigidImplies(typeArg: SignalType, constraint: TypeConstraint, registry: Registry): boolean {
+function rigidImplies(typeArg: Type, constraint: TypeConstraint, registry: Registry): boolean {
   const rigid = rigidParts(typeArg)
   if (!rigid) return false
   return rigid.bounds.some((bound) => {

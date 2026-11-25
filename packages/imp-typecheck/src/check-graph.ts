@@ -1,6 +1,6 @@
 /** Graph instance type checking. Spec: imp-spec/docs/packages/imp-typecheck/type-system.md */
 
-import type { Edge, GraphSource, Node, NodeDefinition, SignalType } from "imp-core-types"
+import type { Edge, GraphSource, Node, NodeDefinition, Type } from "imp-core-types"
 import { isTypeVar, resolvedNodes } from "imp-core-types"
 import type { Registry } from "imp-registry"
 import { getNodeDefinitions } from "imp-registry"
@@ -16,7 +16,7 @@ import {
   type TypeCheckError,
   applySubstitution,
   containsTypeVar,
-  scopeSignalType,
+  scopeType,
   unscopedParam,
 } from "./substitution"
 import { assignable } from "./assignable"
@@ -240,8 +240,8 @@ function typeParamConflict(
   toNode: Node,
   toDef: NodeDefinition,
   edge: Edge,
-  outputType: SignalType,
-  inputType: SignalType,
+  outputType: Type,
+  inputType: Type,
   subst: Substitution,
 ): string | undefined {
   if (!isTypeVar(inputType)) return undefined
@@ -259,7 +259,7 @@ function typeParamConflict(
     if (sameEdge) continue
     const port = effective.inputs[other.to.port]
     if (!port) continue
-    const scoped = scopeSignalType(port.type, toNode.id)
+    const scoped = scopeType(port.type, toNode.id)
     if (isTypeVar(scoped) && scoped.param === inputType.param) {
       otherPort = other.to.port
       break

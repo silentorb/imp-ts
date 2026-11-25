@@ -1,12 +1,12 @@
 /** Core Imp graph model. Authoritative spec: imp-spec/docs/packages/imp-core-types/graph-model.md */
 
-import type { SignalType } from "./signal-type"
+import type { Type } from "./type"
 
 export type NodeId = string
 export type EdgeId = string
 export type NodeTypeId = string
 export type PortId = string
-export type SignalTypeId = string
+export type TypeId = string
 export type TypeParamId = string
 export type TypeConstraintId = string
 
@@ -20,14 +20,14 @@ export interface TypeParam {
 }
 
 /**
- * One port template: identity + signal type + optional default + optional variadic.
+ * One port template: identity + type + optional default + optional variadic.
  * Used on catalog NodeType inputs/outputs — not on graph Node instances.
  * Omit `defaultValue` → required input; set → optional with that fallback.
  * `variadic: true` → multi-edge fan-in; `type` is the element type.
  */
 export interface Port {
   id: PortId
-  type: SignalType
+  type: Type
   defaultValue?: PrimitiveValue
   variadic?: boolean
 }
@@ -49,7 +49,7 @@ export interface Node {
   /** Optional human-facing label; editors display `title` when present, otherwise `id`. */
   title?: string
   type: NodeTypeId
-  typeArgs?: SignalType[]
+  typeArgs?: Type[]
   inputs: InputValues
 }
 

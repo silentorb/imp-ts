@@ -4,7 +4,7 @@ import {
   type NodeDefinition,
   type NodeLibrary,
   type Port,
-  type SignalType,
+  type Type,
   concreteType,
   listOf,
   setOf,
@@ -24,7 +24,7 @@ const collectionTypeParam = [{ id: "T" }]
 
 function port(
   id: string,
-  type: SignalType,
+  type: Type,
   defaultValue?: Port["defaultValue"],
   variadic?: boolean,
 ): Port {
@@ -34,14 +34,14 @@ function port(
   return result
 }
 
-function variadicPort(id: string, type: SignalType): Port {
+function variadicPort(id: string, type: Type): Port {
   return port(id, type, undefined, true)
 }
 
 function kindPreserving(
   id: string,
   implementationId: string,
-  containerType: SignalType,
+  containerType: Type,
   extraInputs: Record<string, Port>,
 ): NodeDefinition {
   const collectionPort = port("collection", containerType)

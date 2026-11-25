@@ -1,16 +1,16 @@
 /** Implementation resolution from type arguments. Spec: imp-spec/docs/packages/imp-typecheck/type-system.md */
 
 import type {
-  ConcreteSignalType,
+  ConcreteType,
   GraphSource,
   ImplementationId,
   NodeDefinition,
   NodeImplementation,
-  SignalType,
+  Type,
 } from "imp-core-types"
 import {
   defaultNodeImplementation,
-  isConcreteSignalType,
+  isConcreteType,
   isDispatchImplementation,
   isGraphBackedDefinition,
   isUniversalImplementation,
@@ -31,8 +31,8 @@ export function effectiveNodeImplementation(
   return definition.implementation ?? defaultNodeImplementation(definition.id)
 }
 
-export function signalTypeMatches(pattern: ConcreteSignalType, type: SignalType): boolean {
-  if (!isConcreteSignalType(type)) return false
+export function typeMatches(pattern: ConcreteType, type: Type): boolean {
+  if (!isConcreteType(type)) return false
   if (pattern.id === "any") return true
 
   if (pattern.id !== type.id && !isSubtypeId(type.id, pattern.id)) {
@@ -45,8 +45,8 @@ export function signalTypeMatches(pattern: ConcreteSignalType, type: SignalType)
 
   for (let i = 0; i < patternArgs.length; i++) {
     const patternArg = patternArgs[i]!
-    if (!isConcreteSignalType(patternArg)) return false
-    if (!signalTypeMatches(patternArg, typeArgs[i]!)) return false
+    if (!isConcreteType(patternArg)) return false
+    if (!typeMatches(patternArg, typeArgs[i]!)) return false
   }
 
   return true
@@ -100,7 +100,7 @@ export function resolveImplementation(
   }
 
   for (const caseEntry of implementation.cases) {
-    if (signalTypeMatches(caseEntry.match, matchedArg)) {
+    if (typeMatches(caseEntry.match, matchedArg)) {
       return caseEntry.implementation
     }
   }

@@ -1,14 +1,14 @@
-/** Type substitution and signal-type utilities. Spec: imp-spec/docs/packages/imp-typecheck/type-system.md */
+/** Type substitution and type utilities. Spec: imp-spec/docs/packages/imp-typecheck/type-system.md */
 
 import type { NodeId, TypeParamId } from "imp-core-types"
 import {
-  type ConcreteSignalType,
-  type SignalType,
-  isConcreteSignalType,
+  type ConcreteType,
+  type Type,
+  isConcreteType,
   isTypeVar,
 } from "imp-core-types"
 
-export type Substitution = Map<TypeParamId, SignalType>
+export type Substitution = Map<TypeParamId, Type>
 
 export interface TypeCheckError {
   nodeId?: string
@@ -21,29 +21,29 @@ export function scopedParam(nodeId: NodeId, param: TypeParamId): TypeParamId {
   return `${nodeId}::${param}`
 }
 
-export function scopeSignalType(type: SignalType, nodeId: NodeId): SignalType {
+export function scopeType(type: Type, nodeId: NodeId): Type {
   if (isTypeVar(type)) {
     return { param: scopedParam(nodeId, type.param) }
   }
-  if (isConcreteSignalType(type) && type.args?.length) {
+  if (isConcreteType(type) && type.args?.length) {
     return {
       id: type.id,
-      args: type.args.map((arg) => scopeSignalType(arg, nodeId)),
+      args: type.args.map((arg) => scopeType(arg, nodeId)),
     }
   }
   return type
 }
 
 export function applySubstitution(
-  type: SignalType,
+  type: Type,
   subst: Substitution,
-): SignalType {
+): Type {
   if (isTypeVar(type)) {
     const resolved = subst.get(type.param)
     if (!resolved) return type
     return applySubstitution(resolved, subst)
   }
-  if (isConcreteSignalType(type) && type.args?.length) {
+  if (isConcreteType(type) && type.args?.length) {
     return {
       id: type.id,
       args: type.args.map((arg) => applySubstitution(arg, subst)),
@@ -52,28 +52,28 @@ export function applySubstitution(
   return type
 }
 
-export function isAnyType(type: SignalType): boolean {
-  return isConcreteSignalType(type) && type.id === "any" && !type.args?.length
+export function isAnyType(type: Type): boolean {
+  return isConcreteType(type) && type.id === "any" && !type.args?.length
 }
 
-export function containsTypeVar(type: SignalType): boolean {
+export function containsTypeVar(type: Type): boolean {
   if (isTypeVar(type)) return true
-  if (isConcreteSignalType(type) && type.args?.length) {
+  if (isConcreteType(type) && type.args?.length) {
     return type.args.some(containsTypeVar)
   }
   return false
 }
 
-export function assertConcreteArgs(args: SignalType[]): ConcreteSignalType[] | string {
+export function assertConcreteArgs(args: Type[]): ConcreteType[] | string {
   for (const arg of args) {
     if (isTypeVar(arg)) {
-      return "typeArgs must be concrete signal types"
+      return "typeArgs must be concrete types"
     }
-    if (isConcreteSignalType(arg) && arg.args?.some(containsTypeVar)) {
-      return "typeArgs must be concrete signal types"
+    if (isConcreteType(arg) && arg.args?.some(containsTypeVar)) {
+      return "typeArgs must be concrete types"
     }
   }
-  return args as ConcreteSignalType[]
+  return args as ConcreteType[]
 }
 
 /**
@@ -83,14 +83,14 @@ export function assertConcreteArgs(args: SignalType[]): ConcreteSignalType[] | s
 export const RIGID_TYPE_ID = "$rigid"
 
 /** A rigid stand-in for definition type parameter `param`, encoded as `$rigid<param, bound…>`. */
-export function rigidType(param: string, bounds: readonly string[] = []): ConcreteSignalType {
+export function rigidType(param: string, bounds: readonly string[] = []): ConcreteType {
   return { id: RIGID_TYPE_ID, args: [{ id: param }, ...bounds.map((bound) => ({ id: bound }))] }
 }
 
 /** The parameter id and bounds of a rigid type, or `undefined` for any other type. */
-export function rigidParts(type: SignalType): { param: string; bounds: string[] } | undefined {
-  if (!isConcreteSignalType(type) || type.id !== RIGID_TYPE_ID) return undefined
-  const ids = (type.args ?? []).flatMap((arg) => (isConcreteSignalType(arg) ? [arg.id] : []))
+export function rigidParts(type: Type): { param: string; bounds: string[] } | undefined {
+  if (!isConcreteType(type) || type.id !== RIGID_TYPE_ID) return undefined
+  const ids = (type.args ?? []).flatMap((arg) => (isConcreteType(arg) ? [arg.id] : []))
   const [param, ...bounds] = ids
   return param === undefined ? undefined : { param, bounds }
 }

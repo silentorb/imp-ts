@@ -1,6 +1,6 @@
 /** Graph-backed definition validation. Spec: imp-spec/docs/packages/imp-typecheck/type-system.md */
 
-import type { Graph, NodeDefinition, PortId, SignalType } from "imp-core-types"
+import type { Graph, NodeDefinition, PortId, Type } from "imp-core-types"
 import { graphSource, isGraphBackedDefinition, listOf } from "imp-core-types"
 import type { Registry } from "imp-registry"
 import { getNodeDefinitions, listNodeDefinitions } from "imp-registry"
@@ -11,13 +11,13 @@ import {
   type TypeCheckError,
   containsTypeVar,
   rigidType,
-  scopeSignalType,
+  scopeType,
 } from "./substitution"
 import { unify } from "./unify"
 import { checkGraph } from "./check-graph"
 
-function scopeDefinitionPort(type: SignalType, definitionId: string): SignalType {
-  return scopeSignalType(type, `__def__${definitionId}`)
+function scopeDefinitionPort(type: Type, definitionId: string): Type {
+  return scopeType(type, `__def__${definitionId}`)
 }
 
 export function checkDefinition(
@@ -254,7 +254,7 @@ function rigidDefinition(definition: NodeDefinition): NodeDefinition {
   const { bindings } = definition
   if (!body || !bindings) return rigid
 
-  const boundaries: [string, SignalType, SignalType][] = []
+  const boundaries: [string, Type, Type][] = []
   for (const [portId, nodeId] of Object.entries(bindings.inputs)) {
     const declared = definition.inputs[portId]
     const rigidPort = rigid.inputs[portId]

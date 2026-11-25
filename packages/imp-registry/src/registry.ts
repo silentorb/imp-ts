@@ -6,12 +6,12 @@ import type {
   NodeLibrary,
   NodeTypeId,
   Port,
-  SignalType,
+  Type,
   TypeConstraint,
   TypeConstraintId,
   TypeConstraintLibrary,
 } from "imp-core-types"
-import { isConcreteSignalType, isGraphBackedDefinition, isTypeVar } from "imp-core-types"
+import { isConcreteType, isGraphBackedDefinition, isTypeVar } from "imp-core-types"
 
 export interface Registry {
   readonly libraries: readonly NodeLibrary[]
@@ -36,12 +36,12 @@ export function createRegistry(): Registry {
 export function signatureFingerprint(definition: NodeDefinition): string {
   const paramIndex = new Map((definition.typeParams ?? []).map((p, i) => [p.id, i]))
 
-  function typeKey(type: SignalType): string {
+  function typeKey(type: Type): string {
     if (isTypeVar(type)) {
       const index = paramIndex.get(type.param)
       return index === undefined ? `?${type.param}` : `#${index}`
     }
-    if (!isConcreteSignalType(type)) return "?"
+    if (!isConcreteType(type)) return "?"
     const args = type.args?.map(typeKey).join(",") ?? ""
     return args ? `${type.id}<${args}>` : type.id
   }

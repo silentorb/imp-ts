@@ -1,6 +1,6 @@
 # imp-typecheck
 
-Static signal-type checking for Imp graphs.
+Static type checking for Imp graphs.
 
 **Spec:** [imp-spec type-system](https://github.com/silentorb/imp-spec/blob/main/docs/packages/imp-typecheck/type-system.md)
 

@@ -1,7 +1,7 @@
 export type { Substitution, TypeCheckError } from "./substitution"
 export {
   scopedParam,
-  scopeSignalType,
+  scopeType,
   applySubstitution,
   isAnyType,
   containsTypeVar,
@@ -29,7 +29,7 @@ export { checkTypeParamBounds } from "./check-type-param-bounds"
 export { resolveTypeArgs } from "./resolve-type-args"
 export {
   effectiveNodeImplementation,
-  signalTypeMatches,
+  typeMatches,
   resolveImplementation,
 } from "./resolve-implementation"
 export type { ImplementationResolveError } from "./resolve-implementation"

@@ -1,7 +1,7 @@
 /** Edge assignability (directional). Spec: imp-spec/docs/packages/imp-typecheck/type-system.md */
 
-import type { SignalType } from "imp-core-types"
-import { isConcreteSignalType } from "imp-core-types"
+import type { Type } from "imp-core-types"
+import { isConcreteType } from "imp-core-types"
 import { type Substitution, applySubstitution } from "./substitution"
 import { isSubtypeId } from "./subtype"
 import { formatType, unify, type UnifyResult } from "./unify"
@@ -14,8 +14,8 @@ export type AssignableResult = UnifyResult
  * invariant type-argument unification.
  */
 export function assignable(
-  source: SignalType,
-  target: SignalType,
+  source: Type,
+  target: Type,
   subst: Substitution = new Map(),
 ): AssignableResult {
   const unified = unify(source, target, subst)
@@ -24,7 +24,7 @@ export function assignable(
   const a = applySubstitution(source, subst)
   const b = applySubstitution(target, subst)
 
-  if (!isConcreteSignalType(a) || !isConcreteSignalType(b)) {
+  if (!isConcreteType(a) || !isConcreteType(b)) {
     return unified
   }
 

@@ -1,6 +1,6 @@
 /** Node implementation dispatch. Spec: imp-spec/docs/packages/imp-core-types/node-libraries.md */
 
-import type { ConcreteSignalType } from "./signal-type"
+import type { ConcreteType } from "./type"
 import type { NodeTypeId } from "./graph"
 
 export type ImplementationId = string
@@ -8,7 +8,7 @@ export type ImplementationId = string
 /** One dispatch case: match a concrete type pattern to an implementation id. */
 export interface ImplementationCase {
   /** Pattern to match; `{ id: "any" }` matches any concrete type. */
-  match: ConcreteSignalType
+  match: ConcreteType
   implementation: ImplementationId
 }
 

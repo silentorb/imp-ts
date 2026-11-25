@@ -1,11 +1,11 @@
 /** Shared graph analysis helpers for type checking and implementation dispatch. */
 
-import type { GraphSource, Node, NodeDefinition, NodeId, PortId, SignalType } from "imp-core-types"
+import type { GraphSource, Node, NodeDefinition, NodeId, PortId, Type } from "imp-core-types"
 import { resolvedNodes } from "imp-core-types"
 import type { Registry } from "imp-registry"
 import { getNodeDefinitions } from "imp-registry"
 import { instantiateNodeDefinition } from "./instantiate"
-import { type Substitution, applySubstitution, isAnyType, scopeSignalType } from "./substitution"
+import { type Substitution, applySubstitution, isAnyType, scopeType } from "./substitution"
 import { assignable } from "./assignable"
 
 export type SelectedDefinitions = ReadonlyMap<NodeId, NodeDefinition>
@@ -33,12 +33,12 @@ export function catalogPortTypeFromDefinition(
   definition: NodeDefinition,
   portId: PortId,
   direction: "input" | "output",
-): SignalType | undefined {
+): Type | undefined {
   const effective = effectiveDefinition(node, definition)
   const ports = direction === "input" ? effective.inputs : effective.outputs
   const port = ports[portId]
   if (!port) return undefined
-  return scopeSignalType(port.type, node.id)
+  return scopeType(port.type, node.id)
 }
 
 export function catalogPortType(
@@ -47,7 +47,7 @@ export function catalogPortType(
   portId: PortId,
   direction: "input" | "output",
   selected?: SelectedDefinitions,
-): SignalType | undefined {
+): Type | undefined {
   // The raw (sole) definition: catalogPortTypeFromDefinition applies Node.typeArgs itself.
   const overloads = getNodeDefinitions(registry, node.type)
   const definition = selected?.get(node.id) ?? (overloads.length === 1 ? overloads[0] : undefined)
@@ -233,7 +233,7 @@ export function resolvePortType(
   registry: Registry,
   subst: Substitution = new Map(),
   selected?: SelectedDefinitions,
-): SignalType | undefined {
+): Type | undefined {
   const node = source.nodes.getNode(nodeId)
   if (!node) return undefined
 
@@ -252,7 +252,7 @@ export function resolvePortType(
   const inputTemplate = effectiveDefinition(node, definition).inputs[portId]
   if (!inputTemplate) return undefined
 
-  let inputType = scopeSignalType(inputTemplate.type, node.id)
+  let inputType = scopeType(inputTemplate.type, node.id)
   let localSubst = subst
 
   for (const [, edge] of source.edges.edgeEntries()) {
@@ -280,6 +280,6 @@ export function resolvePortType(
 }
 
 /** True when an edge's target port type is `any` under `subst` (the weakest inference constraint). */
-function targetsAny(inputType: SignalType, subst: Substitution): boolean {
+function targetsAny(inputType: Type, subst: Substitution): boolean {
   return isAnyType(applySubstitution(inputType, subst))
 }

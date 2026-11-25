@@ -7,16 +7,16 @@ import {
   type Node,
   type NodeDefinition,
   type Port,
-  type SignalType,
+  type Type,
 } from "imp-core-types"
 import { createRegistry, loadNodeLibrary, loadTypeConstraintLibrary } from "imp-registry"
 import { checkDefinition, checkGraph, resolveTypeArgs } from "./index"
 
-const number: SignalType = { id: "number" }
-const string: SignalType = { id: "string" }
-const a: SignalType = { param: "A" }
+const number: Type = { id: "number" }
+const string: Type = { id: "string" }
+const a: Type = { param: "A" }
 
-function port(id: string, type: SignalType, variadic = false): Port {
+function port(id: string, type: Type, variadic = false): Port {
   return variadic ? { id, type, variadic } : { id, type }
 }
 
@@ -57,7 +57,7 @@ function registry() {
   })
 }
 
-function node(id: string, type: string, typeArgs?: SignalType[]): [string, Node] {
+function node(id: string, type: string, typeArgs?: Type[]): [string, Node] {
   return [id, { id, type, inputs: {}, ...(typeArgs ? { typeArgs } : {}) }]
 }
 

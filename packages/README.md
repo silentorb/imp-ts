@@ -6,7 +6,7 @@ Language-neutral specs: [imp-spec `docs/packages/`](https://github.com/silentorb
 | --- | --- |
 | [`imp-core-types`](./imp-core-types/) | Core graph + library type interfaces; `coreNodeLibrary` |
 | [`imp-registry`](./imp-registry/) | Load `NodeLibrary` / `GraphTypeLibrary` values and look up types |
-| [`imp-typecheck`](./imp-typecheck/) | Static signal-type checking for graphs |
+| [`imp-typecheck`](./imp-typecheck/) | Static type checking for graphs |
 | [`imp-graph-resolve`](./imp-graph-resolve/) | Late nested graph resolution |
 | *(sibling)* [`imp-graph-view`](https://github.com/silentorb/imp-graph-view) | **Imp Translator + canvas** — Imp ↔ React Flow |
 | [`imp-collection-transforms`](./imp-collection-transforms/) | Collection combinator `NodeLibrary` |
