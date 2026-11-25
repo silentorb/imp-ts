@@ -5,7 +5,7 @@ import { resolvedNodes } from "imp-core-types"
 import type { Registry } from "imp-registry"
 import { getNodeDefinitions } from "imp-registry"
 import { instantiateNodeDefinition } from "./instantiate"
-import { type Substitution, applySubstitution, scopeSignalType } from "./substitution"
+import { type Substitution, applySubstitution, isAnyType, scopeSignalType } from "./substitution"
 import { assignable } from "./assignable"
 
 export type SelectedDefinitions = ReadonlyMap<NodeId, NodeDefinition>
@@ -48,7 +48,9 @@ export function catalogPortType(
   direction: "input" | "output",
   selected?: SelectedDefinitions,
 ): SignalType | undefined {
-  const definition = selected?.get(node.id) ?? effectiveNodeDefinition(node, registry)
+  // The raw (sole) definition: catalogPortTypeFromDefinition applies Node.typeArgs itself.
+  const overloads = getNodeDefinitions(registry, node.type)
+  const definition = selected?.get(node.id) ?? (overloads.length === 1 ? overloads[0] : undefined)
   if (!definition) return undefined
   return catalogPortTypeFromDefinition(node, definition, portId, direction)
 }
@@ -84,6 +86,7 @@ export function candidateSurvives(
       )
       const inputType = catalogPortTypeFromDefinition(node, candidate, edge.to.port, "input")
       if (!outputType || !inputType) return { ok: false }
+      if (targetsAny(inputType, trial)) continue
       const result = assignable(outputType, inputType, trial)
       if (!result.ok) return { ok: false }
       trial = result.subst
@@ -102,6 +105,7 @@ export function candidateSurvives(
       )
       const inputType = catalogPortTypeFromDefinition(toNode, toDef, edge.to.port, "input")
       if (!outputType || !inputType) return { ok: false }
+      if (targetsAny(inputType, trial)) continue
       const result = assignable(outputType, inputType, trial)
       if (!result.ok) return { ok: false }
       trial = result.subst
@@ -139,72 +143,77 @@ export function resolveSelections(
     }
   }
 
-  let changed = true
-  while (changed) {
-    changed = false
+  // Edges into `any` ports are the weakest constraint: settle everything else first, then
+  // apply them (binding still-free variables to `any`) and settle again.
+  for (const includeAnyTargets of [false, true]) {
+    let changed = true
+    while (changed) {
+      changed = false
 
-    for (const node of resolvedNodes(source)) {
-      if (selected.has(node.id)) continue
-      const overloads = getNodeDefinitions(registry, node.type)
-      if (overloads.length <= 1) continue
+      for (const node of resolvedNodes(source)) {
+        if (selected.has(node.id)) continue
+        const overloads = getNodeDefinitions(registry, node.type)
+        if (overloads.length <= 1) continue
 
-      const survivors: { definition: NodeDefinition; subst: Substitution }[] = []
-      for (const candidate of overloads) {
-        const result = candidateSurvives(
-          source,
-          node.id,
-          candidate,
-          registry,
-          selected,
-          subst,
-        )
-        if (result.ok) {
-          survivors.push({ definition: candidate, subst: result.subst })
-        }
-      }
-
-      if (survivors.length === 1) {
-        selected.set(node.id, survivors[0]!.definition)
-        subst = survivors[0]!.subst
-        changed = true
-      }
-    }
-
-    for (const [, edge] of source.edges.edgeEntries()) {
-      const fromNode = source.nodes.getNode(edge.from.node)
-      const toNode = source.nodes.getNode(edge.to.node)
-      if (!fromNode || !toNode) continue
-      const fromDef = selected.get(fromNode.id)
-      const toDef = selected.get(toNode.id)
-      if (!fromDef || !toDef) continue
-
-      const outputType = catalogPortTypeFromDefinition(
-        fromNode,
-        fromDef,
-        edge.from.port,
-        "output",
-      )
-      const inputType = catalogPortTypeFromDefinition(toNode, toDef, edge.to.port, "input")
-      if (!outputType || !inputType) continue
-
-      const result = assignable(outputType, inputType, subst)
-      if (result.ok && result.subst !== subst && result.subst.size !== subst.size) {
-        subst = result.subst
-        changed = true
-      } else if (result.ok) {
-        // Also detect deeper binding changes by comparing entries
-        let differs = result.subst.size !== subst.size
-        if (!differs) {
-          for (const [k, v] of result.subst) {
-            if (subst.get(k) !== v) {
-              differs = true
-              break
-            }
+        const survivors: { definition: NodeDefinition; subst: Substitution }[] = []
+        for (const candidate of overloads) {
+          const result = candidateSurvives(
+            source,
+            node.id,
+            candidate,
+            registry,
+            selected,
+            subst,
+          )
+          if (result.ok) {
+            survivors.push({ definition: candidate, subst: result.subst })
           }
         }
-        if (differs) {
+
+        if (survivors.length === 1) {
+          selected.set(node.id, survivors[0]!.definition)
+          subst = survivors[0]!.subst
+          changed = true
+        }
+      }
+
+      for (const [, edge] of source.edges.edgeEntries()) {
+        const fromNode = source.nodes.getNode(edge.from.node)
+        const toNode = source.nodes.getNode(edge.to.node)
+        if (!fromNode || !toNode) continue
+        const fromDef = selected.get(fromNode.id)
+        const toDef = selected.get(toNode.id)
+        if (!fromDef || !toDef) continue
+
+        const outputType = catalogPortTypeFromDefinition(
+          fromNode,
+          fromDef,
+          edge.from.port,
+          "output",
+        )
+        const inputType = catalogPortTypeFromDefinition(toNode, toDef, edge.to.port, "input")
+        if (!outputType || !inputType) continue
+
+        if (!includeAnyTargets && targetsAny(inputType, subst)) continue
+        const result = assignable(outputType, inputType, subst)
+        if (result.ok && result.subst !== subst && result.subst.size !== subst.size) {
           subst = result.subst
           changed = true
+        } else if (result.ok) {
+          // Also detect deeper binding changes by comparing entries
+          let differs = result.subst.size !== subst.size
+          if (!differs) {
+            for (const [k, v] of result.subst) {
+              if (subst.get(k) !== v) {
+                differs = true
+                break
+              }
+            }
+          }
+          if (differs) {
+            subst = result.subst
+            changed = true
+          }
         }
       }
     }
@@ -268,4 +277,9 @@ export function resolvePortType(
   }
 
   return applySubstitution(inputType, localSubst)
+}
+
+/** True when an edge's target port type is `any` under `subst` (the weakest inference constraint). */
+function targetsAny(inputType: SignalType, subst: Substitution): boolean {
+  return isAnyType(applySubstitution(inputType, subst))
 }

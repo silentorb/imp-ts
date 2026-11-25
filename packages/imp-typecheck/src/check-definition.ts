@@ -5,7 +5,14 @@ import { graphSource, isGraphBackedDefinition, listOf } from "imp-core-types"
 import type { Registry } from "imp-registry"
 import { getNodeDefinitions, listNodeDefinitions } from "imp-registry"
 import { catalogPortType, resolvePortType } from "./graph-analysis"
-import { type Substitution, type TypeCheckError, scopeSignalType } from "./substitution"
+import { instantiateNodeDefinition } from "./instantiate"
+import {
+  type Substitution,
+  type TypeCheckError,
+  containsTypeVar,
+  rigidType,
+  scopeSignalType,
+} from "./substitution"
 import { unify } from "./unify"
 import { checkGraph } from "./check-graph"
 
@@ -17,6 +24,16 @@ export function checkDefinition(
   definition: NodeDefinition,
   registry: Registry,
 ): TypeCheckError[] {
+  if (definition.typeParams?.length && isGraphBackedDefinition(definition)) {
+    let rigid: NodeDefinition
+    try {
+      rigid = rigidDefinition(definition)
+    } catch (error) {
+      return [{ definitionId: definition.id, message: (error as Error).message }]
+    }
+    return checkDefinition(rigid, registry)
+  }
+
   const errors: TypeCheckError[] = []
 
   if (!isGraphBackedDefinition(definition)) {
@@ -221,4 +238,45 @@ export function checkGraphDefinitions(registry: Registry): TypeCheckError[] {
   }
 
   return errors
+}
+
+/**
+ * A generic graph-backed definition with each type parameter replaced by a rigid type, so its
+ * body is checked once for every instantiation. Bound boundary nodes without `typeArgs` take
+ * their declared port type (spec: Generic graph-backed definitions).
+ */
+function rigidDefinition(definition: NodeDefinition): NodeDefinition {
+  const rigidArgs = (definition.typeParams ?? []).map((param) =>
+    rigidType(param.id, param.bounds ?? []),
+  )
+  const rigid = instantiateNodeDefinition(definition, rigidArgs)
+  const { body } = rigid
+  const { bindings } = definition
+  if (!body || !bindings) return rigid
+
+  const boundaries: [string, SignalType, SignalType][] = []
+  for (const [portId, nodeId] of Object.entries(bindings.inputs)) {
+    const declared = definition.inputs[portId]
+    const rigidPort = rigid.inputs[portId]
+    if (!declared || !rigidPort) continue
+    boundaries.push([
+      nodeId,
+      declared.type,
+      declared.variadic ? listOf(rigidPort.type) : rigidPort.type,
+    ])
+  }
+  for (const [portId, nodeId] of Object.entries(bindings.outputs)) {
+    const declared = definition.outputs[portId]
+    const rigidPort = rigid.outputs[portId]
+    if (!declared || !rigidPort) continue
+    boundaries.push([nodeId, declared.type, rigidPort.type])
+  }
+
+  const nodes = { ...body.nodes }
+  for (const [nodeId, declaredType, boundaryType] of boundaries) {
+    const node = nodes[nodeId]
+    if (!node || !containsTypeVar(declaredType) || node.typeArgs?.length) continue
+    nodes[nodeId] = { ...node, typeArgs: [boundaryType] }
+  }
+  return { ...rigid, body: { ...body, nodes } }
 }

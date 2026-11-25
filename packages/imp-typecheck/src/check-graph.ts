@@ -1,7 +1,7 @@
 /** Graph instance type checking. Spec: imp-spec/docs/packages/imp-typecheck/type-system.md */
 
-import type { GraphSource } from "imp-core-types"
-import { resolvedNodes } from "imp-core-types"
+import type { Edge, GraphSource, Node, NodeDefinition, SignalType } from "imp-core-types"
+import { isTypeVar, resolvedNodes } from "imp-core-types"
 import type { Registry } from "imp-registry"
 import { getNodeDefinitions } from "imp-registry"
 import {
@@ -11,7 +11,14 @@ import {
   resolvePortType,
   resolveSelections,
 } from "./graph-analysis"
-import { type TypeCheckError, containsTypeVar } from "./substitution"
+import {
+  type Substitution,
+  type TypeCheckError,
+  applySubstitution,
+  containsTypeVar,
+  scopeSignalType,
+  unscopedParam,
+} from "./substitution"
 import { assignable } from "./assignable"
 import { formatType } from "./unify"
 import { checkTypeParamBounds } from "./check-type-param-bounds"
@@ -165,7 +172,9 @@ export function checkGraph(source: GraphSource, registry: Registry): TypeCheckEr
       errors.push({
         nodeId: edge.to.node,
         portId: edge.to.port,
-        message: result.message,
+        message:
+          typeParamConflict(source, toNode, toDef, edge, outputType, inputType, edgeSubst) ??
+          result.message,
       })
     } else {
       edgeSubst = result.subst
@@ -220,4 +229,42 @@ export function checkGraph(source: GraphSource, registry: Registry): TypeCheckEr
   errors.push(...checkTypeParamBounds(source, registry, selected))
 
   return errors
+}
+
+/**
+ * Describes a failed edge whose target port is a type parameter already bound through another
+ * input of the same node: names the parameter, both types and both ports.
+ */
+function typeParamConflict(
+  source: GraphSource,
+  toNode: Node,
+  toDef: NodeDefinition,
+  edge: Edge,
+  outputType: SignalType,
+  inputType: SignalType,
+  subst: Substitution,
+): string | undefined {
+  if (!isTypeVar(inputType)) return undefined
+  const bound = applySubstitution(inputType, subst)
+  if (containsTypeVar(bound)) return undefined
+  const incoming = applySubstitution(outputType, subst)
+  const effective = effectiveDefinition(toNode, toDef)
+  let otherPort: string | undefined
+  for (const [, other] of source.edges.edgeEntries()) {
+    if (other.to.node !== toNode.id) continue
+    const sameEdge =
+      other.to.port === edge.to.port &&
+      other.from.node === edge.from.node &&
+      other.from.port === edge.from.port
+    if (sameEdge) continue
+    const port = effective.inputs[other.to.port]
+    if (!port) continue
+    const scoped = scopeSignalType(port.type, toNode.id)
+    if (isTypeVar(scoped) && scoped.param === inputType.param) {
+      otherPort = other.to.port
+      break
+    }
+  }
+  const origin = otherPort === undefined ? "" : ` (from input ${otherPort})`
+  return `type parameter ${unscopedParam(inputType.param)} is ${formatType(bound)}${origin} but input ${edge.to.port} receives ${formatType(incoming)}`
 }

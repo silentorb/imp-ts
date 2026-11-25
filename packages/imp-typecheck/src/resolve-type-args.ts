@@ -1,12 +1,11 @@
 /** Type-argument inference for implementation dispatch. */
 
 import type { GraphSource, NodeId, SignalType } from "imp-core-types"
-import { isTypeVar } from "imp-core-types"
 import type { Registry } from "imp-registry"
 import { getNodeDefinitions } from "imp-registry"
 import type { SelectedDefinitions } from "./graph-analysis"
 import { resolveSelections } from "./graph-analysis"
-import { applySubstitution, scopedParam } from "./substitution"
+import { applySubstitution, containsTypeVar, scopedParam } from "./substitution"
 
 export function resolveTypeArgs(
   source: GraphSource,
@@ -39,10 +38,11 @@ export function resolveTypeArgs(
   for (const param of params) {
     const scoped = scopedParam(node.id, param.id)
     const bound = subst.get(scoped)
-    if (!bound || isTypeVar(bound)) {
-      return undefined
-    }
-    resolved.push(applySubstitution(bound, subst))
+    if (!bound) return undefined
+    // A parameter bound to another variable is resolved once that variable is.
+    const type = applySubstitution(bound, subst)
+    if (containsTypeVar(type)) return undefined
+    resolved.push(type)
   }
 
   return resolved

@@ -9,13 +9,15 @@ import type { SelectedDefinitions } from "./graph-analysis"
 import { resolveSelections } from "./graph-analysis"
 import { resolveTypeArgs } from "./resolve-type-args"
 import { signalTypeMatches } from "./resolve-implementation"
-import { isAnyType, type TypeCheckError } from "./substitution"
+import { isAnyType, rigidParts, type TypeCheckError } from "./substitution"
 import { formatType } from "./unify"
 
 function satisfiesConstraint(
   typeArg: SignalType,
   constraint: TypeConstraint,
 ): boolean {
+  const rigid = rigidParts(typeArg)
+  if (rigid) return rigid.bounds.includes(constraint.id)
   for (const member of constraint.members) {
     if (!isConcreteSignalType(member)) continue
     if (signalTypeMatches(member, typeArg)) return true
@@ -57,7 +59,10 @@ export function checkTypeParamBounds(
           continue
         }
 
-        if (!satisfiesConstraint(typeArg, constraint)) {
+        if (
+          !satisfiesConstraint(typeArg, constraint) &&
+          !rigidImplies(typeArg, constraint, registry)
+        ) {
           errors.push({
             nodeId: node.id,
             message: `type argument ${formatType(typeArg)} does not satisfy bound "${boundId}"`,
@@ -68,4 +73,18 @@ export function checkTypeParamBounds(
   }
 
   return errors
+}
+
+/** A rigid type also satisfies `constraint` when every member of one of its own bounds does. */
+function rigidImplies(typeArg: SignalType, constraint: TypeConstraint, registry: Registry): boolean {
+  const rigid = rigidParts(typeArg)
+  if (!rigid) return false
+  return rigid.bounds.some((bound) => {
+    const own = getTypeConstraint(registry, bound)
+    return (
+      own !== undefined &&
+      own.members.length > 0 &&
+      own.members.every((member) => satisfiesConstraint(member, constraint))
+    )
+  })
 }

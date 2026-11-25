@@ -7,6 +7,7 @@ import {
   applySubstitution,
   containsTypeVar,
   isAnyType,
+  rigidParts,
 } from "./substitution"
 
 export type UnifyResult =
@@ -104,6 +105,8 @@ function unifyVar(
 }
 
 export function formatType(type: SignalType): string {
+  const rigid = rigidParts(type)
+  if (rigid) return rigid.param
   if (isTypeVar(type)) return type.param
   const args = type.args?.map(formatType).join(", ") ?? ""
   return args.length > 0 ? `${type.id}<${args}>` : type.id

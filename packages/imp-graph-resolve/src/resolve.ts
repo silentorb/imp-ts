@@ -12,7 +12,7 @@ import type {
 import { isGraphBackedDefinition, materializeGraph } from "imp-core-types"
 import type { Registry } from "imp-registry"
 import { getNodeDefinitions } from "imp-registry"
-import { instantiateNodeDefinition } from "imp-typecheck"
+import { containsTypeVar, instantiateNodeDefinition } from "imp-typecheck"
 
 export type SubgraphKey = string
 
@@ -54,7 +54,20 @@ function resolveDefinition(node: Graph["nodes"][string], registry: Registry): No
   if (node.typeArgs?.length) {
     return instantiateNodeDefinition(def, node.typeArgs)
   }
-  return def
+  return withoutParamTypeArgs(def)
+}
+
+/**
+ * A generic definition inlined without use-site `typeArgs`: body nodes drop `typeArgs` that
+ * reference the definition's parameters, so the flattened graph infers them from edges.
+ */
+function withoutParamTypeArgs(def: NodeDefinition): NodeDefinition {
+  if (!def.body) return def
+  const nodes: Graph["nodes"] = {}
+  for (const [id, node] of Object.entries(def.body.nodes)) {
+    nodes[id] = node.typeArgs?.some(containsTypeVar) ? { ...node, typeArgs: undefined } : node
+  }
+  return { ...def, body: { ...def.body, nodes } }
 }
 
 function edgesFromBoundaryOutput(body: Graph, boundaryNodeId: NodeId): Edge[] {
@@ -146,7 +159,7 @@ function expandCompositeInstance(graph: Graph, instanceId: NodeId, registry: Reg
       nodes[packId] = {
         id: packId,
         type: "pack",
-        typeArgs: [elementType],
+        typeArgs: containsTypeVar(elementType) ? undefined : [elementType],
         inputs: {},
       }
       const sorted = [...inbound].sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
