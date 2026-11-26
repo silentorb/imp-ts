@@ -141,7 +141,7 @@ Host binders call the matching dialect entry (`compileSqlite` / `compilePostgres
 
 ## Behavior / pipeline
 
-1. Load registry with core library + collection transforms (+ pathing when needed) + any graph libraries.
+1. Load registry with core library + collection transforms (+ pathing when needed) + any Imp files carrying definitions or types.
 2. Build an Imp graph: `input` → transforms / composites / `traverse` → `output`.
    - **Semantic paths:** when authoring with untagged ontology tokens, run `resolveSemanticPath` / `bindSemanticPath` (see [semantic-paths.md](https://github.com/silentorb/imp-spec/blob/main/docs/packages/imp-pathing/semantic-paths.md)) **before** this step so the graph already contains technical `traverse` / `project` / `column` nodes. SQL translation does not resolve semantic tokens.
 3. **`flattenGraph(graphSource(graph), registry)`** — expand graph-backed node references (see [resolve.md](https://github.com/silentorb/imp-spec/blob/main/docs/packages/imp-graph-resolve/resolve.md)).

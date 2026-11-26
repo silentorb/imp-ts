@@ -5,8 +5,10 @@ import { resolvedNodes } from "imp-core-types"
 import type { Registry } from "imp-registry"
 import { getNodeDefinitions } from "imp-registry"
 import { instantiateNodeDefinition } from "./instantiate"
+import { isUnionType } from "imp-core-types"
 import { type Substitution, applySubstitution, isAnyType, scopeType } from "./substitution"
 import { assignable } from "./assignable"
+import { normalizeNode, normalizedRegistry, prepare } from "./normalize"
 
 export type SelectedDefinitions = ReadonlyMap<NodeId, NodeDefinition>
 
@@ -20,9 +22,10 @@ export function effectiveDefinition(
 
 /** @deprecated Prefer selected overload + effectiveDefinition */
 export function effectiveNodeDefinition(node: Node, registry: Registry) {
-  const overloads = getNodeDefinitions(registry, node.type)
+  const normalized = normalizedRegistry(registry)
+  const overloads = getNodeDefinitions(normalized, node.type)
   if (overloads.length !== 1) return undefined
-  return effectiveDefinition(node, overloads[0]!)
+  return effectiveDefinition(normalizeNode(node, normalized), overloads[0]!)
 }
 
 /** @deprecated Use effectiveNodeDefinition */
@@ -49,10 +52,11 @@ export function catalogPortType(
   selected?: SelectedDefinitions,
 ): Type | undefined {
   // The raw (sole) definition: catalogPortTypeFromDefinition applies Node.typeArgs itself.
-  const overloads = getNodeDefinitions(registry, node.type)
+  const normalized = normalizedRegistry(registry)
+  const overloads = getNodeDefinitions(normalized, node.type)
   const definition = selected?.get(node.id) ?? (overloads.length === 1 ? overloads[0] : undefined)
   if (!definition) return undefined
-  return catalogPortTypeFromDefinition(node, definition, portId, direction)
+  return catalogPortTypeFromDefinition(normalizeNode(node, normalized), definition, portId, direction)
 }
 
 /**
@@ -86,10 +90,9 @@ export function candidateSurvives(
       )
       const inputType = catalogPortTypeFromDefinition(node, candidate, edge.to.port, "input")
       if (!outputType || !inputType) return { ok: false }
-      if (targetsAny(inputType, trial)) continue
-      const result = assignable(outputType, inputType, trial)
-      if (!result.ok) return { ok: false }
-      trial = result.subst
+      const outcome = tryEdge(outputType, inputType, trial)
+      if (!outcome) return { ok: false }
+      trial = outcome
     }
 
     if (edge.from.node === nodeId) {
@@ -105,10 +108,9 @@ export function candidateSurvives(
       )
       const inputType = catalogPortTypeFromDefinition(toNode, toDef, edge.to.port, "input")
       if (!outputType || !inputType) return { ok: false }
-      if (targetsAny(inputType, trial)) continue
-      const result = assignable(outputType, inputType, trial)
-      if (!result.ok) return { ok: false }
-      trial = result.subst
+      const outcome = tryEdge(outputType, inputType, trial)
+      if (!outcome) return { ok: false }
+      trial = outcome
     }
   }
 
@@ -128,6 +130,7 @@ export function resolveSelections(
   subst: Substitution
   unknownTypes: NodeId[]
 } {
+  ({ source, registry } = prepare(source, registry))
   const selected = new Map<NodeId, NodeDefinition>()
   const unknownTypes: NodeId[] = []
   let subst: Substitution = new Map()
@@ -143,9 +146,9 @@ export function resolveSelections(
     }
   }
 
-  // Edges into `any` ports are the weakest constraint: settle everything else first, then
-  // apply them (binding still-free variables to `any`) and settle again.
-  for (const includeAnyTargets of [false, true]) {
+  // Edges into `any` or union ports are the weakest constraint: settle everything else first,
+  // then apply them (binding still-free variables to `any` or the whole union) and settle again.
+  for (const includeWeakTargets of [false, true]) {
     let changed = true
     while (changed) {
       changed = false
@@ -194,7 +197,7 @@ export function resolveSelections(
         const inputType = catalogPortTypeFromDefinition(toNode, toDef, edge.to.port, "input")
         if (!outputType || !inputType) continue
 
-        if (!includeAnyTargets && targetsAny(inputType, subst)) continue
+        if (!includeWeakTargets && targetsWeak(inputType, subst)) continue
         const result = assignable(outputType, inputType, subst)
         if (result.ok && result.subst !== subst && result.subst.size !== subst.size) {
           subst = result.subst
@@ -223,6 +226,7 @@ export function resolveSelections(
 }
 
 export function collectGraphSubstitution(source: GraphSource, registry: Registry): Substitution {
+  ({ source, registry } = prepare(source, registry))
   return resolveSelections(source, registry).subst
 }
 
@@ -234,6 +238,7 @@ export function resolvePortType(
   subst: Substitution = new Map(),
   selected?: SelectedDefinitions,
 ): Type | undefined {
+  ({ source, registry } = prepare(source, registry))
   const node = source.nodes.getNode(nodeId)
   if (!node) return undefined
 
@@ -279,7 +284,21 @@ export function resolvePortType(
   return applySubstitution(inputType, localSubst)
 }
 
-/** True when an edge's target port type is `any` under `subst` (the weakest inference constraint). */
-function targetsAny(inputType: Type, subst: Substitution): boolean {
-  return isAnyType(applySubstitution(inputType, subst))
+/** True when an edge's target port type is `any` or a union under `subst` (the weakest inference constraints). */
+function targetsWeak(inputType: Type, subst: Substitution): boolean {
+  const resolved = applySubstitution(inputType, subst)
+  return isAnyType(resolved) || isUnionType(resolved)
+}
+
+/**
+ * One edge of an overload trial. `any` targets are skipped; union targets must accept the source
+ * but do not bind anything (they are weak: see resolveSelections). Returns the next trial
+ * substitution, or `undefined` when the edge rules the candidate out.
+ */
+function tryEdge(outputType: Type, inputType: Type, trial: Substitution): Substitution | undefined {
+  const resolved = applySubstitution(inputType, trial)
+  if (isAnyType(resolved)) return trial
+  const result = assignable(outputType, inputType, trial)
+  if (!result.ok) return undefined
+  return isUnionType(resolved) ? trial : result.subst
 }

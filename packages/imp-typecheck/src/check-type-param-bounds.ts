@@ -1,35 +1,27 @@
 /** Type-parameter bound checking. Spec: imp-spec/docs/packages/imp-typecheck/type-system.md */
 
-import type { GraphSource, Type, TypeConstraint } from "imp-core-types"
+import type { GraphSource } from "imp-core-types"
 import { resolvedNodes } from "imp-core-types"
-import { isConcreteType } from "imp-core-types"
 import type { Registry } from "imp-registry"
-import { getTypeConstraint } from "imp-registry"
+import { assignable } from "./assignable"
 import type { SelectedDefinitions } from "./graph-analysis"
 import { resolveSelections } from "./graph-analysis"
+import { prepare } from "./normalize"
 import { resolveTypeArgs } from "./resolve-type-args"
-import { typeMatches } from "./resolve-implementation"
-import { isAnyType, rigidParts, type TypeCheckError } from "./substitution"
+import type { TypeCheckError } from "./substitution"
 import { formatType } from "./unify"
 
-function satisfiesConstraint(
-  typeArg: Type,
-  constraint: TypeConstraint,
-): boolean {
-  const rigid = rigidParts(typeArg)
-  if (rigid) return rigid.bounds.includes(constraint.id)
-  for (const member of constraint.members) {
-    if (!isConcreteType(member)) continue
-    if (typeMatches(member, typeArg)) return true
-  }
-  return false
-}
-
+/**
+ * Every resolved type argument must be assignable to each of its parameter's bounds (with an
+ * empty substitution). `any` satisfies every bound; a rigid parameter satisfies a bound when one
+ * of its own bounds is assignable to it.
+ */
 export function checkTypeParamBounds(
   source: GraphSource,
   registry: Registry,
   selected?: SelectedDefinitions,
 ): TypeCheckError[] {
+  ({ source, registry } = prepare(source, registry))
   const errors: TypeCheckError[] = []
   const selections = selected ?? resolveSelections(source, registry).selected
 
@@ -42,30 +34,14 @@ export function checkTypeParamBounds(
 
     for (let index = 0; index < definition.typeParams.length; index++) {
       const param = definition.typeParams[index]!
-      if (!param.bounds?.length) continue
-
       const typeArg = typeArgs[index]
-      if (!typeArg || !isConcreteType(typeArg)) continue
+      if (!typeArg || !param.bounds?.length) continue
 
-      if (isAnyType(typeArg)) continue
-
-      for (const boundId of param.bounds) {
-        const constraint = getTypeConstraint(registry, boundId)
-        if (!constraint) {
+      for (const bound of param.bounds) {
+        if (!assignable(typeArg, bound).ok) {
           errors.push({
             nodeId: node.id,
-            message: `unknown type constraint "${boundId}"`,
-          })
-          continue
-        }
-
-        if (
-          !satisfiesConstraint(typeArg, constraint) &&
-          !rigidImplies(typeArg, constraint, registry)
-        ) {
-          errors.push({
-            nodeId: node.id,
-            message: `type argument ${formatType(typeArg)} does not satisfy bound "${boundId}"`,
+            message: `type argument ${formatType(typeArg)} does not satisfy bound ${formatType(bound)}`,
           })
         }
       }
@@ -73,18 +49,4 @@ export function checkTypeParamBounds(
   }
 
   return errors
-}
-
-/** A rigid type also satisfies `constraint` when every member of one of its own bounds does. */
-function rigidImplies(typeArg: Type, constraint: TypeConstraint, registry: Registry): boolean {
-  const rigid = rigidParts(typeArg)
-  if (!rigid) return false
-  return rigid.bounds.some((bound) => {
-    const own = getTypeConstraint(registry, bound)
-    return (
-      own !== undefined &&
-      own.members.length > 0 &&
-      own.members.every((member) => satisfiesConstraint(member, constraint))
-    )
-  })
 }

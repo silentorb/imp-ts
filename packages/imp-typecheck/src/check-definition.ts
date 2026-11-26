@@ -15,6 +15,8 @@ import {
 } from "./substitution"
 import { unify } from "./unify"
 import { checkGraph } from "./check-graph"
+import { checkTypeDefinitions } from "./check-type-definitions"
+import { normalizeDefinition, normalizedRegistry } from "./normalize"
 
 function scopeDefinitionPort(type: Type, definitionId: string): Type {
   return scopeType(type, `__def__${definitionId}`)
@@ -24,6 +26,8 @@ export function checkDefinition(
   definition: NodeDefinition,
   registry: Registry,
 ): TypeCheckError[] {
+  registry = normalizedRegistry(registry)
+  definition = normalizeDefinition(definition, registry)
   if (definition.typeParams?.length && isGraphBackedDefinition(definition)) {
     let rigid: NodeDefinition
     try {
@@ -220,7 +224,9 @@ function detectDefinitionCycle(
 }
 
 export function checkGraphDefinitions(registry: Registry): TypeCheckError[] {
-  const errors: TypeCheckError[] = []
+  // Type definitions first: every later check reads normalized (expanded) types.
+  const errors: TypeCheckError[] = checkTypeDefinitions(registry)
+  registry = normalizedRegistry(registry)
 
   for (const definition of listNodeDefinitions(registry)) {
     if (!isGraphBackedDefinition(definition)) continue

@@ -2,6 +2,7 @@
 
 import type { NodeImplementation } from "./implementation"
 import type { Graph, NodeId, NodeTypeId, Ports, TypeParam } from "./graph"
+import type { TypeDefinition } from "./type-definition"
 
 /** Maps declared external ports to boundary nodes in a graph-backed body. */
 export interface BoundaryBindings {
@@ -24,16 +25,11 @@ export interface NodeDefinition {
   bindings?: BoundaryBindings
 }
 
-/** Named declarative collection of `NodeDefinition`s. */
+/** Named declarative collection of `NodeDefinition`s, plus the type definitions they rely on. */
 export interface NodeLibrary {
   id: string
   definitions: NodeDefinition[]
-}
-
-/** JSON-serializable catalog of graph-backed definitions. Spec: graph-libraries.md */
-export interface GraphLibrary {
-  id: string
-  definitions: NodeDefinition[]
+  types?: TypeDefinition[]
 }
 
 export function isGraphBackedDefinition(def: NodeDefinition): boolean {

@@ -9,8 +9,9 @@ Language-neutral specs live in **[imp-spec](https://github.com/silentorb/imp-spe
 | Package | Role |
 | --- | --- |
 | `packages/imp-core-types/` | Core graph + library TypeScript interfaces; core boundary `NodeLibrary` |
-| `packages/imp-registry/` | Load `NodeLibrary` / `GraphTypeLibrary` values and look up types |
-| `packages/imp-typecheck/` | Static type checking for graphs |
+| `packages/imp-registry/` | Load `NodeLibrary` values and Imp files; look up node and type definitions |
+| `packages/imp-file/` | Parse, validate and serialize Imp files (types, definitions, nodes, edges) |
+| `packages/imp-typecheck/` | Static type checking for graphs: type definitions, unions, generics |
 | *(sibling)* [`imp-graph-view`](https://github.com/silentorb/imp-graph-view) | **Imp Translator + canvas** — Imp ↔ React Flow + `ImpGraphView` |
 | `packages/imp-collection-transforms/` | Collection combinator `NodeLibrary` |
 | `packages/imp-pathing/` | GQL-like path operator `NodeLibrary` |
@@ -42,7 +43,8 @@ When specs and code disagree, update imp-spec or the code explicitly.
 | Core graph model | [`imp-spec` graph-model](https://github.com/silentorb/imp-spec/blob/main/docs/packages/imp-core-types/graph-model.md) |
 | Graph sources (edge / node providers) | [`imp-spec` graph-sources](https://github.com/silentorb/imp-spec/blob/main/docs/packages/imp-core-types/graph-sources.md) |
 | Node type libraries | [`imp-spec` node-libraries](https://github.com/silentorb/imp-spec/blob/main/docs/packages/imp-core-types/node-libraries.md) |
-| Graph libraries | [`imp-spec` graph-libraries](https://github.com/silentorb/imp-spec/blob/main/docs/packages/imp-core-types/graph-libraries.md) |
+| Imp files (JSON: types, definitions, nodes, edges) | [`imp-spec` imp-files](https://github.com/silentorb/imp-spec/blob/main/docs/packages/imp-file/imp-files.md) |
+| Type definitions and union types | [`imp-spec` type-definitions](https://github.com/silentorb/imp-spec/blob/main/docs/packages/imp-core-types/type-definitions.md) |
 | Graph resolution | [`imp-spec` resolve](https://github.com/silentorb/imp-spec/blob/main/docs/packages/imp-graph-resolve/resolve.md) |
 | Static type checking | [`imp-spec` type-system](https://github.com/silentorb/imp-spec/blob/main/docs/packages/imp-typecheck/type-system.md) |
 | Registry | [`imp-spec` registry](https://github.com/silentorb/imp-spec/blob/main/docs/packages/imp-registry/registry.md) |

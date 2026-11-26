@@ -1,7 +1,8 @@
 /** Type unification. Spec: imp-spec/docs/packages/imp-typecheck/type-system.md */
 
 import type { Type } from "imp-core-types"
-import { concreteType, isConcreteType, isTypeVar } from "imp-core-types"
+import { concreteType, isConcreteType, isTypeVar, isUnionType } from "imp-core-types"
+import { assignable } from "./assignable"
 import {
   type Substitution,
   applySubstitution,
@@ -54,6 +55,19 @@ export function unify(
     return unifyVar(b.param, a, subst)
   }
 
+  if (isUnionType(a) && isUnionType(b)) {
+    // Two unions are equal when each is assignable to the other (member order does not matter).
+    const forward = assignable(a, b, subst)
+    if (!forward.ok) return { ok: false, message: `cannot unify ${formatType(a)} with ${formatType(b)}` }
+    const backward = assignable(b, a, forward.subst)
+    if (!backward.ok) return { ok: false, message: `cannot unify ${formatType(a)} with ${formatType(b)}` }
+    return backward
+  }
+
+  if (isUnionType(a) || isUnionType(b)) {
+    return { ok: false, message: `cannot unify ${formatType(a)} with ${formatType(b)}` }
+  }
+
   if (!isConcreteType(a) || !isConcreteType(b)) {
     return { ok: false, message: "invalid type shape" }
   }
@@ -104,11 +118,17 @@ function unifyVar(
   return { ok: true, subst: next }
 }
 
+/** Union members inside type arguments are parenthesized: `list<(a | b)>`. */
+function formatArg(type: Type): string {
+  return isUnionType(type) ? `(${formatType(type)})` : formatType(type)
+}
+
 export function formatType(type: Type): string {
   const rigid = rigidParts(type)
   if (rigid) return rigid.param
   if (isTypeVar(type)) return type.param
-  const args = type.args?.map(formatType).join(", ") ?? ""
+  if (isUnionType(type)) return type.union.map(formatType).join(" | ")
+  const args = type.args?.map(formatArg).join(", ") ?? ""
   return args.length > 0 ? `${type.id}<${args}>` : type.id
 }
 
@@ -124,9 +144,10 @@ function bindAllTypeVars(
     next.set(type.param, binding)
     return next
   }
-  if (isConcreteType(type) && type.args?.length) {
+  const children = isConcreteType(type) ? (type.args ?? []) : isUnionType(type) ? type.union : []
+  if (children.length) {
     let current = subst
-    for (const arg of type.args) {
+    for (const arg of children) {
       current = bindAllTypeVars(arg, binding, current)
     }
     return current

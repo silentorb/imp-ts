@@ -12,4 +12,6 @@ const registry = loadLibrary(createRegistry(), library)
 getNodeType(registry, "add")
 ```
 
+Type definitions (`types` on a `NodeLibrary` or an Imp file) share one global namespace; `loadImpFile` merges an Imp file's `types` and `definitions` (see [`imp-file`](../imp-file/)).
+
 See [`imp-spec` registry](https://github.com/silentorb/imp-spec/blob/main/docs/packages/imp-registry/registry.md).

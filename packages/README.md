@@ -5,8 +5,9 @@ Language-neutral specs: [imp-spec `docs/packages/`](https://github.com/silentorb
 | Package | Role |
 | --- | --- |
 | [`imp-core-types`](./imp-core-types/) | Core graph + library type interfaces; `coreNodeLibrary` |
-| [`imp-registry`](./imp-registry/) | Load `NodeLibrary` / `GraphTypeLibrary` values and look up types |
-| [`imp-typecheck`](./imp-typecheck/) | Static type checking for graphs |
+| [`imp-registry`](./imp-registry/) | Load `NodeLibrary` values and Imp files; look up node and type definitions |
+| [`imp-file`](./imp-file/) | Parse, validate and serialize Imp files (types, definitions, nodes, edges) |
+| [`imp-typecheck`](./imp-typecheck/) | Static type checking for graphs: type definitions, unions, generics |
 | [`imp-graph-resolve`](./imp-graph-resolve/) | Late nested graph resolution |
 | *(sibling)* [`imp-graph-view`](https://github.com/silentorb/imp-graph-view) | **Imp Translator + canvas** — Imp ↔ React Flow |
 | [`imp-collection-transforms`](./imp-collection-transforms/) | Collection combinator `NodeLibrary` |
@@ -24,7 +25,9 @@ flowchart TB
     PATH[imp-pathing]
   end
 
+  FILE[imp-file]
   REG --> SPEC
+  FILE --> SPEC
   CT --> SPEC
   PATH --> SPEC
 

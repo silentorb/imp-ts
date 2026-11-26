@@ -5,7 +5,6 @@ export type {
   PortId,
   TypeId,
   TypeParamId,
-  TypeConstraintId,
   PrimitiveValue,
   TypeParam,
   Port,
@@ -34,14 +33,21 @@ export {
 export type {
   ConcreteType,
   TypeVar,
+  UnionType,
   Type,
 } from "./type"
+
+export type { TypeDefinition } from "./type-definition"
 
 export {
   isConcreteType,
   isTypeVar,
+  isUnionType,
   concreteType,
   typeVar,
+  unionOf,
+  childTypes,
+  mapChildTypes,
   collectionOf,
   listOf,
   setOf,
@@ -50,9 +56,11 @@ export {
 export type {
   NodeDefinition,
   NodeLibrary,
-  GraphLibrary,
   BoundaryBindings,
 } from "./library"
+
+export type { ImpFile, ImpFileEdge, ImpFileSection } from "./imp-file"
+export { IMP_FILE_SECTIONS } from "./imp-file"
 
 export {
   isGraphBackedDefinition,
@@ -74,10 +82,5 @@ export {
   isUniversalImplementation,
   isDispatchImplementation,
 } from "./implementation"
-
-export type {
-  TypeConstraint,
-  TypeConstraintLibrary,
-} from "./type-constraint"
 
 export { coreNodeLibrary } from "./core-library"

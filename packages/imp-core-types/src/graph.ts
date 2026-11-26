@@ -8,7 +8,6 @@ export type NodeTypeId = string
 export type PortId = string
 export type TypeId = string
 export type TypeParamId = string
-export type TypeConstraintId = string
 
 /** Literal value for instance inputs or port defaults. */
 export type PrimitiveValue = string | number | boolean | null
@@ -16,7 +15,8 @@ export type PrimitiveValue = string | number | boolean | null
 /** Opaque type parameter on a polymorphic catalog entry. */
 export interface TypeParam {
   id: TypeParamId
-  bounds?: TypeConstraintId[]
+  /** A type argument must be assignable to every bound (typically a named union). */
+  bounds?: Type[]
 }
 
 /**

@@ -1,7 +1,6 @@
 /** Implementation resolution from type arguments. Spec: imp-spec/docs/packages/imp-typecheck/type-system.md */
 
 import type {
-  ConcreteType,
   GraphSource,
   ImplementationId,
   NodeDefinition,
@@ -10,7 +9,6 @@ import type {
 } from "imp-core-types"
 import {
   defaultNodeImplementation,
-  isConcreteType,
   isDispatchImplementation,
   isGraphBackedDefinition,
   isUniversalImplementation,
@@ -18,7 +16,8 @@ import {
 import type { Registry } from "imp-registry"
 import { resolveSelections } from "./graph-analysis"
 import { resolveTypeArgs } from "./resolve-type-args"
-import { isSubtypeId } from "./subtype"
+import { assignable } from "./assignable"
+import { prepare } from "./normalize"
 
 export interface ImplementationResolveError {
   nodeId?: string
@@ -31,25 +30,12 @@ export function effectiveNodeImplementation(
   return definition.implementation ?? defaultNodeImplementation(definition.id)
 }
 
-export function typeMatches(pattern: ConcreteType, type: Type): boolean {
-  if (!isConcreteType(type)) return false
-  if (pattern.id === "any") return true
-
-  if (pattern.id !== type.id && !isSubtypeId(type.id, pattern.id)) {
-    return false
-  }
-
-  const patternArgs = pattern.args ?? []
-  const typeArgs = type.args ?? []
-  if (patternArgs.length !== typeArgs.length) return false
-
-  for (let i = 0; i < patternArgs.length; i++) {
-    const patternArg = patternArgs[i]!
-    if (!isConcreteType(patternArg)) return false
-    if (!typeMatches(patternArg, typeArgs[i]!)) return false
-  }
-
-  return true
+/**
+ * Whether a (normalized) type argument matches a dispatch or bound pattern: it is assignable to
+ * the pattern. `{ id: "any" }` matches every type; a union pattern matches any of its members.
+ */
+export function typeMatches(pattern: Type, type: Type): boolean {
+  return assignable(type, pattern).ok
 }
 
 export function resolveImplementation(
@@ -57,6 +43,7 @@ export function resolveImplementation(
   nodeId: string,
   registry: Registry,
 ): ImplementationId | ImplementationResolveError {
+  ({ source, registry } = prepare(source, registry))
   const node = source.nodes.getNode(nodeId)
   if (!node) {
     return { message: `unknown node "${nodeId}"` }

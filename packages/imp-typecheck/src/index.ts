@@ -5,6 +5,8 @@ export {
   applySubstitution,
   isAnyType,
   containsTypeVar,
+  canonicalUnion,
+  typesEqual,
 } from "./substitution"
 export { unify, formatType } from "./unify"
 export type { UnifyResult } from "./unify"
@@ -26,6 +28,8 @@ export {
   checkGraphDefinitions,
 } from "./check"
 export { checkTypeParamBounds } from "./check-type-param-bounds"
+export { checkTypeDefinitions, typeReferenceProblems } from "./check-type-definitions"
+export { normalizeType, normalizeDefinition, normalizedRegistry } from "./normalize"
 export { resolveTypeArgs } from "./resolve-type-args"
 export {
   effectiveNodeImplementation,

@@ -2,9 +2,8 @@ import { describe, expect, test } from "bun:test"
 import { coreNodeLibrary, graphSource, type Graph, type Type } from "imp-core-types"
 import {
   createRegistry,
-  loadGraphLibrary,
+  loadImpFile,
   loadNodeLibrary,
-  loadTypeConstraintLibrary,
 } from "imp-registry"
 import { checkDefinition, checkGraph, resolveTypeArgs } from "imp-typecheck"
 import { flattenGraph } from "./resolve"
@@ -12,7 +11,7 @@ import { flattenGraph } from "./resolve"
 const number: Type = { id: "number" }
 const string: Type = { id: "string" }
 const a: Type = { param: "A" }
-const typeParams = [{ id: "A", bounds: ["Scalar"] }]
+const typeParams = [{ id: "A", bounds: [{ id: "Scalar" }] }]
 
 /** `twice<A: Scalar>(value: A) → A` = `mix(value, value)`. */
 const twice = {
@@ -37,12 +36,9 @@ const twice = {
 
 function registry() {
   let registry = loadNodeLibrary(createRegistry(), coreNodeLibrary)
-  registry = loadTypeConstraintLibrary(registry, {
-    id: "example.constraints",
-    constraints: { Scalar: { id: "Scalar", members: [number, string] } },
-  })
   registry = loadNodeLibrary(registry, {
     id: "example.primitives",
+    types: [{ id: "Scalar", type: { union: [number, string] } }],
     definitions: [
       { id: "number_source", inputs: {}, outputs: { value: { id: "value", type: number } } },
       { id: "string_source", inputs: {}, outputs: { value: { id: "value", type: string } } },
@@ -54,7 +50,7 @@ function registry() {
       },
     ],
   })
-  return loadGraphLibrary(registry, { id: "example.graphs", definitions: [twice] })
+  return loadImpFile(registry, { id: "example.graphs", definitions: [twice] })
 }
 
 function useSite(source: string): Graph {

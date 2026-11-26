@@ -5,15 +5,15 @@ import {
   coreNodeLibrary,
   listOf,
   setOf,
+  unionOf,
   type Graph,
   type NodeLibrary,
 } from "imp-core-types"
 import { collectionTransformsLibrary } from "imp-collection-transforms"
 import {
   createRegistry,
-  loadGraphLibrary,
+  loadImpFile,
   loadNodeLibrary,
-  loadTypeConstraintLibrary,
   getNodeDefinition,
 } from "imp-registry"
 import {
@@ -498,22 +498,13 @@ describe("implementation dispatch", () => {
 })
 
 describe("type param bounds", () => {
-  const scalarConstraintLibrary = {
-    id: "example.constraints",
-    constraints: {
-      Scalar: {
-        id: "Scalar",
-        members: [concreteType("string"), concreteType("number")],
-      },
-    },
-  }
-
   const identityLibrary: NodeLibrary = {
     id: "example.identity",
+    types: [{ id: "Scalar", type: unionOf(concreteType("string"), concreteType("number")) }],
     definitions: [
       {
         id: "identity",
-        typeParams: [{ id: "T", bounds: ["Scalar"] }],
+        typeParams: [{ id: "T", bounds: [concreteType("Scalar")] }],
         inputs: {
           value: { id: "value", type: { param: "T" } },
         },
@@ -525,10 +516,7 @@ describe("type param bounds", () => {
   }
 
   function registryWithBounds() {
-    return loadTypeConstraintLibrary(
-      loadNodeLibrary(loadNodeLibrary(createRegistry(), coreNodeLibrary), identityLibrary),
-      scalarConstraintLibrary,
-    )
+    return loadNodeLibrary(loadNodeLibrary(createRegistry(), coreNodeLibrary), identityLibrary)
   }
 
   test("accepts type arg that satisfies bound", () => {
@@ -563,7 +551,7 @@ describe("type param bounds", () => {
       },
     }
     const errors = checkGraph(graphSource(graph), registry)
-    expect(errors.some((e) => e.message.includes("does not satisfy bound \"Scalar\""))).toBe(true)
+    expect(errors.some((e) => e.message.includes("does not satisfy bound string | number"))).toBe(true)
   })
 
   test("any satisfies bound", () => {
@@ -583,13 +571,13 @@ describe("type param bounds", () => {
     expect(checkGraph(graphSource(graph), registry)).toEqual([])
   })
 
-  test("reports unknown bound id", () => {
+  test("an undefined bound name is an opaque type no argument satisfies", () => {
     const badLibrary: NodeLibrary = {
       id: "example.bad",
       definitions: [
         {
           id: "bad",
-          typeParams: [{ id: "T", bounds: ["Missing"] }],
+          typeParams: [{ id: "T", bounds: [concreteType("Missing")] }],
           inputs: { value: { id: "value", type: { param: "T" } } },
           outputs: { value: { id: "value", type: { param: "T" } } },
         },
@@ -612,27 +600,17 @@ describe("type param bounds", () => {
       },
     }
     const errors = checkGraph(graphSource(graph), registry)
-    expect(errors.some((e) => e.message.includes("unknown type constraint \"Missing\""))).toBe(
-      true,
-    )
+    expect(errors.some((e) => e.message.includes("does not satisfy bound Missing"))).toBe(true)
   })
 
-  test("matches parametric member patterns", () => {
-    const collectionConstraintLibrary = {
-      id: "example.collection-constraints",
-      constraints: {
-        StringCollection: {
-          id: "StringCollection",
-          members: [{ id: "collection", args: [concreteType("string")] }],
-        },
-      },
-    }
+  test("matches parametric bound types", () => {
     const passthroughLibrary: NodeLibrary = {
       id: "example.passthrough",
+      types: [{ id: "StringCollection", type: { id: "collection", args: [concreteType("string")] } }],
       definitions: [
         {
           id: "passthrough",
-          typeParams: [{ id: "T", bounds: ["StringCollection"] }],
+          typeParams: [{ id: "T", bounds: [concreteType("StringCollection")] }],
           inputs: {
             collection: { id: "collection", type: { param: "T" } },
           },
@@ -642,12 +620,9 @@ describe("type param bounds", () => {
         },
       ],
     }
-    const registry = loadTypeConstraintLibrary(
-      loadNodeLibrary(
-        loadNodeLibrary(createRegistry(), coreNodeLibrary),
-        passthroughLibrary,
-      ),
-      collectionConstraintLibrary,
+    const registry = loadNodeLibrary(
+      loadNodeLibrary(createRegistry(), coreNodeLibrary),
+      passthroughLibrary,
     )
     const graph: Graph = {
       nodes: {
@@ -708,7 +683,7 @@ describe("checkDefinition", () => {
       ],
     }
 
-    const registry = loadGraphLibrary(
+    const registry = loadImpFile(
       loadNodeLibrary(createRegistry(), coreNodeLibrary),
       graphLibrary,
     )

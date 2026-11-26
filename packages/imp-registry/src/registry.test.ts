@@ -6,7 +6,9 @@ import {
   getNodeDefinitions,
   listLibraries,
   listNodeDefinitions,
-  loadGraphLibrary,
+  getTypeDefinition,
+  listImpFiles,
+  loadImpFile,
   loadNodeLibrary,
 } from "./registry"
 
@@ -103,8 +105,8 @@ describe("imp-registry", () => {
     expect(listLibraries(registry)).toEqual([sourceLibrary, sinkLibrary])
   })
 
-  test("loadGraphLibrary merges graph-backed definitions", () => {
-    const registry = loadGraphLibrary(createRegistry(), graphLibrary)
+  test("loadImpFile merges graph-backed definitions", () => {
+    const registry = loadImpFile(createRegistry(), graphLibrary)
     expect(getNodeDefinition(registry, "passthrough")?.body?.nodes.in_rows?.type).toBe("input")
   })
 
@@ -158,5 +160,30 @@ describe("imp-registry", () => {
     expect(listNodeDefinitions(empty)).toEqual([])
     expect(listLibraries(empty)).toEqual([])
     expect(listNodeDefinitions(withSource)).toHaveLength(1)
+  })
+})
+
+describe("Imp files", () => {
+  const audio = { id: "Audio", type: { union: [{ id: "audio_mono" }, { id: "audio_stereo" }] } }
+
+  test("loadImpFile registers types and primitive definitions, not topology", () => {
+    const registry = loadImpFile(createRegistry(), {
+      format: "imp",
+      id: "example.audio",
+      types: [audio],
+      definitions: [{ id: "sine", inputs: {}, outputs: {} }],
+      nodes: [{ id: "n", type: "sine", inputs: {} }],
+    })
+    expect(getTypeDefinition(registry, "Audio")).toEqual(audio)
+    expect(getNodeDefinition(registry, "sine")?.id).toBe("sine")
+    expect(getNodeDefinition(registry, "n")).toBeUndefined()
+    expect(listImpFiles(registry)).toHaveLength(1)
+  })
+
+  test("a type id defined twice across files throws", () => {
+    const once = loadImpFile(createRegistry(), { id: "a", types: [audio] })
+    expect(() => loadImpFile(once, { id: "b", types: [audio] })).toThrow(
+      'TypeId "Audio" is already defined (loading library "b")',
+    )
   })
 })

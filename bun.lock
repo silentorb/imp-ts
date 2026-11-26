@@ -42,8 +42,8 @@
         "typescript": "5.8.2",
       },
     },
-    "packages/imp-graph-library": {
-      "name": "imp-graph-library",
+    "packages/imp-file": {
+      "name": "imp-file",
       "version": "0.3.0",
       "dependencies": {
         "imp-core-types": "workspace:^0.6.0",
@@ -128,7 +128,7 @@
 
     "imp-execution": ["imp-execution@workspace:packages/imp-execution"],
 
-    "imp-graph-library": ["imp-graph-library@workspace:packages/imp-graph-library"],
+    "imp-file": ["imp-file@workspace:packages/imp-file"],
 
     "imp-graph-resolve": ["imp-graph-resolve@workspace:packages/imp-graph-resolve"],
 

@@ -76,7 +76,7 @@ Use **execute** / **execution**, not **interpret** — active DAG evaluation, no
 
 ## Behavior / pipeline
 
-1. Host builds `Registry` (core + collection.transforms + pathing + graph libraries).
+1. Host builds `Registry` (core + collection.transforms + pathing + any Imp files carrying definitions or types).
 2. **`buildExecutionProgram(graphSource(graph), registry)`** — shared subgraph table (see [resolve.md](https://github.com/silentorb/imp-spec/blob/main/docs/packages/imp-graph-resolve/resolve.md)).
 3. Caller invokes `executeGraph(program, { registry, host, capabilities })`.
 4. Runtime resolves inputs (same order as imp-sql: edge → local literal → catalog default).

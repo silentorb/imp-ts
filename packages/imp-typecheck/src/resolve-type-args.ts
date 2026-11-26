@@ -5,6 +5,7 @@ import type { Registry } from "imp-registry"
 import { getNodeDefinitions } from "imp-registry"
 import type { SelectedDefinitions } from "./graph-analysis"
 import { resolveSelections } from "./graph-analysis"
+import { prepare } from "./normalize"
 import { applySubstitution, containsTypeVar, scopedParam } from "./substitution"
 
 export function resolveTypeArgs(
@@ -13,6 +14,7 @@ export function resolveTypeArgs(
   registry: Registry,
   selected?: SelectedDefinitions,
 ): Type[] | undefined {
+  ({ source, registry } = prepare(source, registry))
   const node = source.nodes.getNode(nodeId)
   if (!node) return undefined
 

@@ -1,34 +1,32 @@
-/** Registry for loading NodeLibrary and GraphLibrary catalogs. Spec: imp-spec/docs/packages/imp-registry/registry.md */
+/** Registry for loading node libraries and type definitions. Spec: imp-spec/docs/packages/imp-registry/registry.md */
 
 import type {
-  GraphLibrary,
+  ImpFile,
   NodeDefinition,
   NodeLibrary,
   NodeTypeId,
   Port,
   Type,
-  TypeConstraint,
-  TypeConstraintId,
-  TypeConstraintLibrary,
+  TypeDefinition,
+  TypeId,
 } from "imp-core-types"
-import { isConcreteType, isGraphBackedDefinition, isTypeVar } from "imp-core-types"
+import { isConcreteType, isGraphBackedDefinition, isTypeVar, isUnionType } from "imp-core-types"
 
 export interface Registry {
   readonly libraries: readonly NodeLibrary[]
-  readonly graphLibraries: readonly GraphLibrary[]
-  readonly typeConstraintLibraries: readonly TypeConstraintLibrary[]
+  readonly impFiles: readonly ImpFile[]
   /** Overload sets keyed by NodeTypeId. */
   readonly definitions: Readonly<Record<NodeTypeId, readonly NodeDefinition[]>>
-  readonly typeConstraints: Readonly<Record<TypeConstraintId, TypeConstraint>>
+  /** The single global type namespace: type definitions from every loaded library. */
+  readonly typeDefinitions: Readonly<Record<TypeId, TypeDefinition>>
 }
 
 export function createRegistry(): Registry {
   return {
     libraries: [],
-    graphLibraries: [],
-    typeConstraintLibraries: [],
+    impFiles: [],
     definitions: {},
-    typeConstraints: {},
+    typeDefinitions: {},
   }
 }
 
@@ -41,6 +39,7 @@ export function signatureFingerprint(definition: NodeDefinition): string {
       const index = paramIndex.get(type.param)
       return index === undefined ? `?${type.param}` : `#${index}`
     }
+    if (isUnionType(type)) return `(${type.union.map(typeKey).join("|")})`
     if (!isConcreteType(type)) return "?"
     const args = type.args?.map(typeKey).join(",") ?? ""
     return args ? `${type.id}<${args}>` : type.id
@@ -85,54 +84,48 @@ function mergeDefinitions(
   }
 }
 
+/** Merges type definitions into the global namespace; a duplicate `TypeId` throws. */
+function mergeTypes(
+  registry: Registry,
+  libraryId: string,
+  types: readonly TypeDefinition[] | undefined,
+): Registry {
+  if (!types?.length) return registry
+  const typeDefinitions: Record<TypeId, TypeDefinition> = { ...registry.typeDefinitions }
+  for (const definition of types) {
+    if (definition.id in typeDefinitions) {
+      throw new Error(
+        `TypeId "${definition.id}" is already defined (loading library "${libraryId}")`,
+      )
+    }
+    typeDefinitions[definition.id] = definition
+  }
+  return { ...registry, typeDefinitions }
+}
+
 export function loadNodeLibrary(registry: Registry, library: NodeLibrary): Registry {
+  const withTypes = mergeTypes(registry, library.id, library.types)
   return {
-    ...mergeDefinitions(registry, library.id, library.definitions),
+    ...mergeDefinitions(withTypes, library.id, library.definitions),
     libraries: [...registry.libraries, library],
   }
 }
 
-export function loadGraphLibrary(registry: Registry, library: GraphLibrary): Registry {
-  for (const definition of library.definitions) {
-    if (!isGraphBackedDefinition(definition)) {
-      throw new Error(
-        `GraphLibrary "${library.id}" entry "${definition.id}" must include body and bindings`,
-      )
-    }
-  }
-
+/**
+ * Merges an Imp file's `types` and `definitions` (primitive or graph-backed) into the registry.
+ * Its `nodes` / `edges` are topology, not registry content (see `impFileGraphSource` in imp-file).
+ */
+export function loadImpFile(registry: Registry, file: ImpFile): Registry {
+  const label = file.id ?? "(Imp file)"
+  const withTypes = mergeTypes(registry, label, file.types)
   return {
-    ...mergeDefinitions(registry, library.id, library.definitions),
-    graphLibraries: [...registry.graphLibraries, library],
+    ...mergeDefinitions(withTypes, label, file.definitions ?? []),
+    impFiles: [...registry.impFiles, file],
   }
 }
 
 /** @deprecated Use loadNodeLibrary */
 export const loadLibrary = loadNodeLibrary
-
-export function loadTypeConstraintLibrary(
-  registry: Registry,
-  library: TypeConstraintLibrary,
-): Registry {
-  const typeConstraints: Record<TypeConstraintId, TypeConstraint> = {
-    ...registry.typeConstraints,
-  }
-
-  for (const [key, constraint] of Object.entries(library.constraints)) {
-    if (key in typeConstraints) {
-      throw new Error(
-        `TypeConstraintId "${key}" is already registered (loading library "${library.id}")`,
-      )
-    }
-    typeConstraints[key] = constraint
-  }
-
-  return {
-    ...registry,
-    typeConstraintLibraries: [...registry.typeConstraintLibraries, library],
-    typeConstraints,
-  }
-}
 
 /** Returns the overload set for `typeId`, or an empty array if unknown. */
 export function getNodeDefinitions(
@@ -157,11 +150,8 @@ export function getNodeDefinition(
 /** @deprecated Use getNodeDefinition */
 export const getNodeType = getNodeDefinition
 
-export function getTypeConstraint(
-  registry: Registry,
-  constraintId: TypeConstraintId,
-): TypeConstraint | undefined {
-  return registry.typeConstraints[constraintId]
+export function getTypeDefinition(registry: Registry, typeId: TypeId): TypeDefinition | undefined {
+  return registry.typeDefinitions[typeId]
 }
 
 export function listNodeDefinitions(registry: Registry): NodeDefinition[] {
@@ -171,22 +161,16 @@ export function listNodeDefinitions(registry: Registry): NodeDefinition[] {
 /** @deprecated Use listNodeDefinitions */
 export const listNodeTypes = listNodeDefinitions
 
-export function listTypeConstraints(registry: Registry): TypeConstraint[] {
-  return Object.values(registry.typeConstraints)
+export function listTypeDefinitions(registry: Registry): TypeDefinition[] {
+  return Object.values(registry.typeDefinitions)
 }
 
 export function listLibraries(registry: Registry): readonly NodeLibrary[] {
   return registry.libraries
 }
 
-export function listGraphLibraries(registry: Registry): readonly GraphLibrary[] {
-  return registry.graphLibraries
-}
-
-export function listTypeConstraintLibraries(
-  registry: Registry,
-): readonly TypeConstraintLibrary[] {
-  return registry.typeConstraintLibraries
+export function listImpFiles(registry: Registry): readonly ImpFile[] {
+  return registry.impFiles
 }
 
 export function hasGraphBackedDefinitions(registry: Registry): boolean {

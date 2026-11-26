@@ -9,7 +9,7 @@ import {
   type Port,
   type Type,
 } from "imp-core-types"
-import { createRegistry, loadNodeLibrary, loadTypeConstraintLibrary } from "imp-registry"
+import { createRegistry, loadNodeLibrary } from "imp-registry"
 import { checkDefinition, checkGraph, resolveTypeArgs } from "./index"
 
 const number: Type = { id: "number" }
@@ -28,7 +28,7 @@ function definition(
 ): NodeDefinition {
   return {
     id,
-    ...(bound ? { typeParams: [{ id: "A", bounds: [bound] }] } : {}),
+    ...(bound ? { typeParams: [{ id: "A", bounds: [{ id: bound }] }] } : {}),
     inputs: Object.fromEntries(inputs.map((entry) => [entry.id, entry])),
     outputs: Object.fromEntries(outputs.map((entry) => [entry.id, entry])),
   }
@@ -37,15 +37,12 @@ function definition(
 /** `Scalar = number | string`; `Numeric = number`. */
 function registry() {
   let registry = loadNodeLibrary(createRegistry(), coreNodeLibrary)
-  registry = loadTypeConstraintLibrary(registry, {
-    id: "example.constraints",
-    constraints: {
-      Scalar: { id: "Scalar", members: [number, string] },
-      Numeric: { id: "Numeric", members: [number] },
-    },
-  })
   return loadNodeLibrary(registry, {
     id: "example.generic",
+    types: [
+      { id: "Scalar", type: { union: [number, string] } },
+      { id: "Numeric", type: number },
+    ],
     definitions: [
       definition("number_source", undefined, [], [port("value", number)]),
       definition("string_source", undefined, [], [port("value", string)]),
@@ -220,6 +217,6 @@ describe("generic graph-backed definitions", () => {
     const errors = checkDefinition(genericChain("Scalar", "numeric_only", "value"), reg).map(
       (error) => error.message,
     )
-    expect(errors).toContain('type argument A does not satisfy bound "Numeric"')
+    expect(errors).toContain("type argument A does not satisfy bound number")
   })
 })

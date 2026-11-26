@@ -1,8 +1,8 @@
 /** NodeDefinition instantiation. Spec: imp-spec/docs/packages/imp-typecheck/type-system.md */
 
 import type { Graph, NodeDefinition, Port, Ports, Type } from "imp-core-types"
-import { isTypeVar } from "imp-core-types"
-import { assertConcreteArgs } from "./substitution"
+import { isTypeVar, isUnionType, mapChildTypes } from "imp-core-types"
+import { assertConcreteArgs, canonicalUnion } from "./substitution"
 
 function substituteInType(
   type: Type,
@@ -16,13 +16,10 @@ function substituteInType(
     }
     return args[index]!
   }
-  if ("id" in type && type.args?.length) {
-    return {
-      id: type.id,
-      args: type.args.map((arg) => substituteInType(arg, params, args)),
-    }
+  if (isUnionType(type)) {
+    return canonicalUnion(type.union.map((member) => substituteInType(member, params, args)))
   }
-  return type
+  return mapChildTypes(type, (child) => substituteInType(child, params, args))
 }
 
 function substitutePorts(ports: Ports, params: string[], args: Type[]): Ports {

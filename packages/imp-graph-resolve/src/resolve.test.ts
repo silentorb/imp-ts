@@ -3,7 +3,7 @@ import { coreNodeLibrary, graphSource } from "imp-core-types"
 import { collectionTransformsLibrary } from "imp-collection-transforms"
 import {
   createRegistry,
-  loadGraphLibrary,
+  loadImpFile,
   loadNodeLibrary,
 } from "imp-registry"
 import {
@@ -44,7 +44,7 @@ const passthroughLibrary = {
 }
 
 function buildRegistry() {
-  return loadGraphLibrary(
+  return loadImpFile(
     loadNodeLibrary(
       loadNodeLibrary(createRegistry(), coreNodeLibrary),
       collectionTransformsLibrary,

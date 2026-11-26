@@ -22,8 +22,11 @@ import {
 import { assignable } from "./assignable"
 import { formatType } from "./unify"
 import { checkTypeParamBounds } from "./check-type-param-bounds"
+import { typeReferenceProblems } from "./check-type-definitions"
+import { prepare } from "./normalize"
 
 export function checkGraph(source: GraphSource, registry: Registry): TypeCheckError[] {
+  ({ source, registry } = prepare(source, registry))
   const errors: TypeCheckError[] = []
   const { selected, subst, unknownTypes } = resolveSelections(source, registry)
 
@@ -57,6 +60,9 @@ export function checkGraph(source: GraphSource, registry: Registry): TypeCheckEr
     }
 
     const definition = selected.get(node.id)!
+    for (const problem of new Set((node.typeArgs ?? []).flatMap((arg) => typeReferenceProblems(arg, registry)))) {
+      errors.push({ nodeId: node.id, message: problem })
+    }
     if (node.typeArgs) {
       const expected = definition.typeParams?.length ?? 0
       if (node.typeArgs.length !== expected) {
